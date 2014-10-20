@@ -161,7 +161,7 @@
 
     function refreshAccessTokenCookie() {
         if (settings.refreshAccessTokenUrl) {
-            return $.get(this.settings.refreshAccessTokenUrl);
+            return $.get(settings.refreshAccessTokenUrl);
         }
 
         return false;
