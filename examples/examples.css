@@ -10,16 +10,19 @@ header .login {
 }
 
 .documents,
+.folders,
 .files {
     padding: 10px 0 0 0;
 }
 
 .documents-cta,
+.folders-cta,
 .files-cta {
     margin: 20px 0;
 }
 
 .documents .document-view,
+.folders .folders-view,
 .files .document-view  {
     background: #eee;
     border-radius: 4px;
@@ -32,6 +35,7 @@ header .login {
 
 .created-document,
 .documents .item,
+.folders .item,
 .files .item {
     margin: 10px 0;
     padding: 10px;
@@ -39,6 +43,7 @@ header .login {
 
 .created-document,
 .documents .item:nth-child(odd),
+.folders .item:nth-child(odd),
 .files .item:nth-child(odd) {
     background-color: #ddd;
 }
