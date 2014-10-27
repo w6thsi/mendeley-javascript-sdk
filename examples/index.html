@@ -59,7 +59,7 @@ $('.get-folders').click(getFolders);
 
 var getFolders = function (event) {
     MendeleySDK.API.folders
-        .list({ sort: 'created', order: 'desc' })
+        .list()
         .done(renderFoldersList)
         .fail(errorHandler);
     event.preventDefault();
