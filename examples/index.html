@@ -42,6 +42,32 @@ var getDocuments = function (event) {
                 </pre>
             </div>
         </div>
+
+        <div class="folders row">
+            <div class="folders-cta col-md-12">
+                <h4>Get Folders</h4>
+                <button class="get-folders btn btn-primary">Get folders</button>
+            </div>
+            <div class="col-md-6">
+                <ul class="folders-view list">
+                    <li class="item">No folders</li>
+                </ul>
+            </div>
+            <div class="col-md-6">
+                <pre class="example-code">
+$('.get-folders').click(getFolders);
+
+var getFolders = function (event) {
+    MendeleySDK.API.folders
+        .list()
+        .done(renderFoldersList)
+        .fail(errorHandler);
+    event.preventDefault();
+};
+                </pre>
+            </div>
+        </div>
+
         <div class="documents row">
             <div class="documents-cta col-md-12">
                 <h4>Create Document</h4>
@@ -130,6 +156,13 @@ var getFiles = function (event) {
                 <span class="added"></span>
             </li>
         </script>
+        <script type="text/template" id="foldersTemplate">
+            <li class="item" data-id="" data-pos="0">
+                <h5 class="title"></h5>
+                <p class="metadata"></p>
+                <span class="added"></span>
+            </li>
+        </script>
         <script type="text/template" id="fileTemplate">
             <li class="item" data-id="" data-pos="0">
                 <h5 class="title"></h5>
@@ -165,6 +198,7 @@ var getFiles = function (event) {
 
                 // Set up event handlers
                 $('.get-documents').click(getDocuments);
+                $('.get-folders').click(getFolders);
                 $('.create-document').click(createDocument);
                 $('.clear-documents').click(clearDocuments);
                 $('.get-files').click(getFiles);
