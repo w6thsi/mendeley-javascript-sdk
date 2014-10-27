@@ -4,7 +4,7 @@
 'use strict';
 
 var renderDocumentList = function (docs) {
-    var i, j, len, jlen, doc, author, $doc, 
+    var i, j, len, jlen, doc, author, $doc,
         $list = $('.documents').find('.list').empty().removeClass('populated'),
         documentTemplate = $('#documentTemplate').html(),
         authorTemplate = $('#authorElement').html();
@@ -30,7 +30,7 @@ var renderDocumentList = function (docs) {
 };
 
 var renderFoldersList = function (folders) {
-    var i, j, len, jlen, folder, author, $folder,
+    var i, j, len, jlen, folder, $folder,
         $list = $('.folders').find('.list').empty().removeClass('populated'),
         documentTemplate = $('#foldersTemplate').html(),
         authorTemplate = $('#authorElement').html();
