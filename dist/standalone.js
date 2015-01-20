@@ -413,7 +413,8 @@
         folders: folders(),
         files: files(),
         catalog: catalog(),
-        trash: trash()
+        trash: trash(),
+        followers: followers()
     };
 
     function setAuthFlow(auth) {
@@ -499,6 +500,16 @@
                     return listFolder.call(this, folderId, callParams);
                 }
             },
+
+            /**
+             * Search documents
+             *
+             * @method
+             * @memberof api.documents
+             * @param {object} params - Search paramaters
+             * @returns {promise}
+             */
+            search: requestFun('GET', '/search/documents'),
 
             /**
              * Move a document to the trash
@@ -882,6 +893,30 @@
     }
 
     /**
+     * Follwers API
+     *
+     * @namespace
+     * @name api.followers
+     */
+    function followers() {
+        var dataHeaders = {
+            'Content-Type': 'application/vnd.mendeley-follow-request.1+json'
+        };
+
+        return {
+            /**
+             * Follow another profile id
+             *
+             * @method
+             * @memberof api.followers
+             * @param {object} data - { followed: <profile id> }
+             * @returns {promise}
+             */
+            follow: requestWithDataFun('POST', '/followers', false, dataHeaders, false)
+        };
+    }
+
+    /**
      * Set the current pagination links for a given API by extracting
      * looking at the headers retruend with the response.
      *
@@ -995,13 +1030,16 @@
 
     /**
      * Get a request function that sends data i.e. for POST, PUT, PATCH
+	 * The data will be taken from the calling argument after any uriVar arguments.
      *
      * @private
-     * @param {string} method
-     * @param {string} uriTemplate
-     * @param {array} uriVars
-     * @param {array} headers
-     * @param {function} dataFun - Function for preparing data
+     * @param {string} method - The HTTP method
+     * @param {string} uriTemplate - A URI template e.g. /documents/{id}
+     * @param {array} uriVars - The variables for the URI template in the order
+	 * they will be passed to the function e.g. ['id']
+     * @param {object} headers - Any additional headers to send
+	 * 	e.g. { 'Content-Type': 'application/vnd.mendeley-documents+1.json'}
+     * @param {bool} followLocation - follow the returned location header? Default is false
      * @returns {function}
      */
     function requestWithDataFun(method, uriTemplate, uriVars, headers, followLocation) {
