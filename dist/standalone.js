@@ -22,7 +22,11 @@
 
     root.MendeleySDK.Auth = define(function() {
 
+	'use strict';
+
     var defaults = {
+		win: window,
+        authenticateOnStart: true,
         apiAuthenticateUrl: 'https://api.mendeley.com/oauth/authorize',
         accessTokenCookieName: 'accessToken',
         scope: 'all'
@@ -43,7 +47,7 @@
     return {
         implicitGrantFlow: implicitGrantFlow,
         authCodeFlow: authCodeFlow
-    }
+    };
 
     function implicitGrantFlow(options) {
 
@@ -56,7 +60,7 @@
 
         // OAuth redirect url defaults to current url
         if (!settings.redirectUrl) {
-            var loc = window.location;
+            var loc = settings.win.location;
             settings.redirectUrl = loc.protocol + '//' + loc.host + loc.pathname;
         }
 
@@ -66,7 +70,7 @@
             '&scope=' + settings.scope +
             '&response_type=token';
 
-        if (!getAccessTokenCookieOrUrl()) {
+        if (settings.authenticateOnStart && !getAccessTokenCookieOrUrl()) {
             authenticate();
         }
 
@@ -74,19 +78,19 @@
             authenticate: authenticate,
             getToken: getAccessTokenCookieOrUrl,
             refreshToken: noop()
-        }
+        };
     }
 
     function authCodeFlow(options) {
 
-        settings = $.extend({}, defaults, defaultsImplicitFlow, options || {});
+        settings = $.extend({}, defaults, defaultsAuthCodeFlow, options || {});
 
         if (!settings.apiAuthenticateUrl) {
             console.error('You must provide an apiAuthenticateUrl for auth code flow');
             return false;
         }
 
-        if (!getAccessTokenCookie()) {
+        if (settings.authenticateOnStart && !getAccessTokenCookie()) {
             authenticate();
         }
 
@@ -94,20 +98,20 @@
             authenticate: authenticate,
             getToken: getAccessTokenCookie,
             refreshToken: refreshAccessTokenCookie
-        }
+        };
     }
 
     function noop() {
-        return function() { return false };
+        return function() { return false; };
     }
 
     function authenticate() {
         clearAccessTokenCookie();
-        window.location = settings.apiAuthenticateUrl;
+        settings.win.location = settings.apiAuthenticateUrl;
     }
 
     function getAccessTokenCookieOrUrl() {
-        var location = window.location,
+        var location = settings.win.location,
             hash = location.hash ? location.hash.split('=')[1] : '',
             cookie = getAccessTokenCookie();
 
@@ -131,7 +135,7 @@
 
     function getAccessTokenCookie() {
         var name = settings.accessTokenCookieName + '=',
-            ca = document.cookie.split(';');
+            ca = settings.win.document.cookie.split(';');
 
         for(var i = 0; i < ca.length; i++) {
             var c = ca[i];
@@ -150,9 +154,9 @@
 
     function setAccessTokenCookie(accessToken, expireHours) {
         var d = new Date();
-        d.setTime(d.getTime() + (expireHours*60*60*1000));
+        d.setTime(d.getTime() + ((expireHours || 1)*60*60*1000));
         var expires = 'expires=' + d.toUTCString();
-        document.cookie = settings.accessTokenCookieName + '=' + accessToken + '; ' + expires;
+        settings.win.document.cookie = settings.accessTokenCookieName + '=' + accessToken + '; ' + expires;
     }
 
     function clearAccessTokenCookie() {
