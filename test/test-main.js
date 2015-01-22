@@ -23,6 +23,7 @@ require.config({
         'es5-shim': 'bower_components/es5-shim/es5-shim',
         api: 'lib/api',
         request: 'lib/request',
+        auth: 'lib/auth',
         mocks: 'test/mocks'
     },
 
