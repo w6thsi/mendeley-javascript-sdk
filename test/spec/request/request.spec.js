@@ -16,7 +16,7 @@ define(function(require) {
     describe('request', function() {
 
         var request = require('request');
-        var mockAuth = require('../mocks/auth');
+        var mockAuth = require('mocks/auth');
 
         it ('should have a request type property', function() {
             var myRequest = request.create({ type: 'GET' }, { authFlow: mockAuth.mockImplicitGrantFlow() });
@@ -154,7 +154,7 @@ define(function(require) {
                 );
                 var ajaxSpy = spyOn($, 'ajax').and.callFake(fun);
 
-                myRequest.send().done(function(data) {
+                myRequest.send().done(function() {
                     expect(ajaxSpy.calls.count()).toEqual(10);
                     done();
                 });

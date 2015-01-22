@@ -22,7 +22,8 @@ require.config({
         // Load it with `require('es5-shim')` in tests for PhantomJS
         'es5-shim': 'bower_components/es5-shim/es5-shim',
         api: 'lib/api',
-        request: 'lib/request'
+        request: 'lib/request',
+        mocks: 'test/mocks'
     },
 
     // dynamically load all test files

@@ -10,7 +10,7 @@ define(function(require) {
         var trashApi = api.trash;
         var baseUrl = 'https://api.mendeley.com';
 
-        var mockAuth = require('../mocks/auth');
+        var mockAuth = require('mocks/auth');
         api.setAuthFlow(mockAuth.mockImplicitGrantFlow());
 
         describe('retrieve method', function() {

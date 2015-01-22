@@ -10,7 +10,7 @@ define(function(require) {
         var filesApi = api.files;
         var baseUrl = 'https://api.mendeley.com';
 
-        var mockAuth = require('../mocks/auth');
+        var mockAuth = require('mocks/auth');
         api.setAuthFlow(mockAuth.mockImplicitGrantFlow());
 
         // Helper for getting a file blob in phantom vs. others

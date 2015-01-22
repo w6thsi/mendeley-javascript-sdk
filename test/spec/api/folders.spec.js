@@ -10,7 +10,7 @@ define(function(require) {
         var foldersApi = api.folders;
         var baseUrl = 'https://api.mendeley.com';
 
-        var mockAuth = require('../mocks/auth');
+        var mockAuth = require('mocks/auth');
         api.setAuthFlow(mockAuth.mockImplicitGrantFlow());
 
         describe('create method', function() {

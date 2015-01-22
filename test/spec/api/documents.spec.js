@@ -20,7 +20,7 @@ define(function(require) {
         var documentsApi = api.documents;
         var baseUrl = 'https://api.mendeley.com';
 
-        var mockAuth = require('../mocks/auth');
+        var mockAuth = require('mocks/auth');
         api.setAuthFlow(mockAuth.mockImplicitGrantFlow());
 
         // Mock methods for getting headers

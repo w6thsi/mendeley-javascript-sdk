@@ -10,7 +10,7 @@ define(function(require) {
         var catalogApi = api.catalog;
         var baseUrl = 'https://api.mendeley.com';
 
-        var mockAuth = require('../mocks/auth');
+        var mockAuth = require('mocks/auth');
         api.setAuthFlow(mockAuth.mockImplicitGrantFlow());
 
         describe('search method', function() {
