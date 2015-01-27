@@ -13,7 +13,7 @@ define(function(require) {
         var mockAuth = require('mocks/auth');
         api.setAuthFlow(mockAuth.mockImplicitGrantFlow());
 
-        describe('follow method', function() {
+        describe('create method', function() {
             var ajaxSpy;
             var ajaxRequest;
             var params = {
@@ -21,9 +21,9 @@ define(function(require) {
             };
 
             it('should be defined', function() {
-                expect(typeof followersApi.follow).toBe('function');
+                expect(typeof followersApi.create).toBe('function');
                 ajaxSpy = spyOn($, 'ajax').and.returnValue($.Deferred().resolve());
-                followersApi.follow(params);
+                followersApi.create(params);
                 expect(ajaxSpy).toHaveBeenCalled();
                 ajaxRequest = ajaxSpy.calls.mostRecent().args[0];
             });
@@ -47,6 +47,79 @@ define(function(require) {
 
             it('should allow paramaters', function() {
                 expect(ajaxRequest.data).toEqual('{"followed":"c52e97f5-dd72-3cbe-a4cc-14bea2ed88f0"}');
+            });
+
+        });
+
+        describe('list method', function() {
+
+            var ajaxRequest;
+            var params = {
+                follower: 'c52e97f5-dd72-3cbe-a4cc-14bea2ed88f0',
+                limit: 50
+            };
+
+            it('should be defined', function() {
+                expect(typeof followersApi.list).toBe('function');
+                var ajaxSpy = spyOn($, 'ajax').and.returnValue($.Deferred().resolve());
+
+                followersApi.list(params);
+                expect(ajaxSpy).toHaveBeenCalled();
+                ajaxRequest = ajaxSpy.calls.mostRecent().args[0];
+            });
+
+            it('should use GET', function() {
+                expect(ajaxRequest.type).toBe('GET');
+            });
+
+            it('should use endpoint /followers', function() {
+                expect(ajaxRequest.url).toBe(baseUrl + '/followers');
+            });
+
+            it('should NOT have a Content-Type header', function() {
+                expect(ajaxRequest.headers['Content-Type']).not.toBeDefined();
+            });
+
+            it('should have an Authorization header', function() {
+                expect(ajaxRequest.headers.Authorization).toBeDefined();
+                expect(ajaxRequest.headers.Authorization).toBe('Bearer auth');
+            });
+
+            it('should apply request params', function() {
+                expect(ajaxRequest.data).toEqual(params);
+            });
+
+        });
+
+        describe('remove method', function() {
+
+            var ajaxRequest;
+            var relationshipId = 'c52e97f5-dd72-3cbe-a4cc-14bea2ed88f0';
+
+            it('should be defined', function() {
+                expect(typeof followersApi.remove).toBe('function');
+                var ajaxSpy = spyOn($, 'ajax').and.returnValue($.Deferred().resolve());
+
+                followersApi.remove(relationshipId);
+                expect(ajaxSpy).toHaveBeenCalled();
+                ajaxRequest = ajaxSpy.calls.mostRecent().args[0];
+            });
+
+            it('should use DELETE', function() {
+                expect(ajaxRequest.type).toBe('DELETE');
+            });
+
+            it('should use endpoint /followers/{id}', function() {
+                expect(ajaxRequest.url).toBe(baseUrl + '/followers/' + relationshipId);
+            });
+
+            it('should NOT have a Content-Type header', function() {
+                expect(ajaxRequest.headers['Content-Type']).not.toBeDefined();
+            });
+
+            it('should have an Authorization header', function() {
+                expect(ajaxRequest.headers.Authorization).toBeDefined();
+                expect(ajaxRequest.headers.Authorization).toBe('Bearer auth');
             });
 
         });

@@ -100,7 +100,7 @@ define(function(require) {
                 expect(ajaxRequest.type).toBe('POST');
             });
 
-            it('should use endpoint /documents/', function() {
+            it('should use endpoint /documents', function() {
                 expect(ajaxRequest.url).toBe(baseUrl + '/documents');
             });
 
