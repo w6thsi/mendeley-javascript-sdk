@@ -24,7 +24,9 @@
     "**/.*",
     "node_modules",
     "bower_components",
-    "bin"
+    "bin",
+    "test",
+    "tests"
   ],
   "devDependencies": {
     "es5-shim": "~4.0.3"
