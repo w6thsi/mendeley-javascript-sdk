@@ -90,7 +90,7 @@ define(function(require) {
         describe('pagination', function() {
 
             var sendMendeleyCountHeader = true,
-            folderCount = 56,
+            groupCount = 56,
             sendLinks = true,
             linkNext = baseUrl + '/groups/?limit=5&reverse=false&marker=03726a18-140d-3e79-9c2f-b63473668359',
             linkLast = baseUrl + '/groups/?limit=5&reverse=true';
@@ -101,7 +101,7 @@ define(function(require) {
                         if (headerName === 'Link' && sendLinks) {
                             return ['<' + linkNext + '>; rel="next"', '<' + linkLast + '>; rel="last"'].join(', ');
                         } else if (headerName === 'Mendeley-Count' && sendMendeleyCountHeader) {
-                            return folderCount.toString();
+                            return groupCount.toString();
                         }
 
                         return null;
@@ -150,12 +150,12 @@ define(function(require) {
                 expect(groupApi.count).toEqual(56);
 
                 sendMendeleyCountHeader = false;
-                folderCount = 999;
+                groupCount = 999;
                 groupApi.list();
                 expect(groupApi.count).toEqual(56);
 
                 sendMendeleyCountHeader = true;
-                folderCount = 0;
+                groupCount = 0;
                 groupApi.list();
                 expect(groupApi.count).toEqual(0);
             });
