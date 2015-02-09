@@ -438,6 +438,9 @@
      * @name api.profiles
      */
     function profiles() {
+        var dataHeaders = {
+            'Content-Type': 'application/vnd.mendeley-profiles.1+json'
+        };
 
         return {
 
@@ -448,7 +451,17 @@
              * @memberof api.profiles
              * @returns {promise}
              */
-            me: requestFun('GET', '/profiles/me')
+            me: requestFun('GET', '/profiles/me'),
+
+            /**
+             * Update profiles
+             *
+             * @method
+             * @memberof api.profiles
+             * @param {object} data - The new profiles data
+             * @returns {promise}
+             */
+            update: requestWithDataFun('PATCH', '/profiles?link={id}', ['id'], dataHeaders, true)
 
         };
     }

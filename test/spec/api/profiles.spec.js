@@ -13,6 +13,30 @@ define(function(require) {
         var mockAuth = require('mocks/auth');
         api.setAuthFlow(mockAuth.mockImplicitGrantFlow());
 
+        // Mock methods for getting headers
+        var getResponseHeaderLocation = function(header) {
+            return header === 'Location' ? baseUrl + '/profiles?link=michael-granitzer' : null;
+        };
+
+        var getAllResponseHeaders = function() {
+            return '';
+        };
+
+        var mockPromiseUpdate = $.Deferred().resolve({ id: 'michael-granitzer'}, 1, {
+            status: 200,
+            getResponseHeader: getResponseHeaderLocation,
+            getAllResponseHeaders: getAllResponseHeaders
+        }).promise();
+
+        // Get a function to return promises in order
+        function getMockPromises() {
+            var responses = Array.prototype.slice.call(arguments);
+            var calls = 0;
+            return function() {
+                return responses[calls++];
+            };
+        }
+
         describe('me method', function() {
 
             var ajaxSpy;
@@ -45,6 +69,41 @@ define(function(require) {
 
             it('should NOT have a body', function() {
                 expect(ajaxRequest.data).toBeUndefined();
+            });
+
+        });
+
+        describe('update method', function() {
+
+            var ajaxRequest;
+
+            it('should be defined', function() {
+                expect(typeof profilesApi.update).toBe('function');
+                var ajaxSpy = spyOn($, 'ajax').and.callFake(getMockPromises(mockPromiseUpdate));
+                profilesApi.update("michael-granitzer", {first_name: 'Michael', last_name: 'Granitzer'});
+                expect(ajaxSpy).toHaveBeenCalled();
+                ajaxRequest = ajaxSpy.calls.mostRecent().args[0];
+            });
+
+            it('should use PATCH', function() {
+                expect(ajaxRequest.type).toBe('PATCH');
+            });
+
+            it('should use endpoint /profiles?link={id}/', function() {
+                expect(ajaxRequest.url).toBe(baseUrl + '/profiles?link=michael-granitzer');
+            });
+
+            it('should have a Content-Type header', function() {
+                expect(ajaxRequest.headers['Content-Type']).toBeDefined();
+            });
+
+            it('should have an Authorization header', function() {
+                expect(ajaxRequest.headers.Authorization).toBeDefined();
+                expect(ajaxRequest.headers.Authorization).toBe('Bearer auth');
+            });
+
+            it('should have a body of JSON string', function() {
+                expect(ajaxRequest.data).toBe('{"first_name":"Michael","last_name":"Granitzer"}');
             });
 
         });
