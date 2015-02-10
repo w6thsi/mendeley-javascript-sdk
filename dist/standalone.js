@@ -180,6 +180,7 @@
     var defaults = {
         authFlow: false,
         maxRetries: 0,
+        maxAuthRetries: 1,
         followLocation: false,
         fileUpload: false,
         extractHeaders: ['Mendeley-Count', 'Link']
@@ -196,6 +197,7 @@
         this.request = request;
         this.settings = settings;
         this.retries = 0;
+        this.authRetries = 0;
     }
 
     function send(dfd, request) {
@@ -238,14 +240,15 @@
     }
 
     function onFail(dfd, xhr) {
-        // 504 Gateway timeout
+        // 504 Gateway timeout or communication error
         if ((xhr.status === 504 || xhr.status === 0) && this.retries < this.settings.maxRetries) {
             this.retries++;
             this.send(dfd);
         }
         // 401 Unauthorized and refesh token URL set
-        else if (xhr.status === 401) {
+        else if (xhr.status === 401 && this.authRetries < this.settings.maxAuthRetries) {
             // Try refreshing the token
+            this.authRetries++;
             var refresh = this.settings.authFlow.refreshToken();
             if (refresh) {
                 $.when(refresh)
