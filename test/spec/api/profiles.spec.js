@@ -15,14 +15,14 @@ define(function(require) {
 
         // Mock methods for getting headers
         var getResponseHeaderLocation = function(header) {
-            return header === 'Location' ? baseUrl + '/profiles?link=michael-granitzer' : null;
+            return header === 'Location' ? baseUrl + '/profiles/me' : null;
         };
 
         var getAllResponseHeaders = function() {
             return '';
         };
 
-        var mockPromiseUpdate = $.Deferred().resolve({ id: 'michael-granitzer'}, 1, {
+        var mockPromiseUpdate = $.Deferred().resolve([], 1, {
             status: 200,
             getResponseHeader: getResponseHeaderLocation,
             getAllResponseHeaders: getAllResponseHeaders
@@ -80,7 +80,7 @@ define(function(require) {
             it('should be defined', function() {
                 expect(typeof profilesApi.update).toBe('function');
                 var ajaxSpy = spyOn($, 'ajax').and.callFake(getMockPromises(mockPromiseUpdate));
-                profilesApi.update("michael-granitzer", {first_name: 'Michael', last_name: 'Granitzer'});
+                profilesApi.update({first_name: 'John', last_name: 'Doe'});
                 expect(ajaxSpy).toHaveBeenCalled();
                 ajaxRequest = ajaxSpy.calls.mostRecent().args[0];
             });
@@ -89,8 +89,8 @@ define(function(require) {
                 expect(ajaxRequest.type).toBe('PATCH');
             });
 
-            it('should use endpoint /profiles?link={id}/', function() {
-                expect(ajaxRequest.url).toBe(baseUrl + '/profiles?link=michael-granitzer');
+            it('should use endpoint /profiles/me', function() {
+                expect(ajaxRequest.url).toBe(baseUrl + '/profiles/me');
             });
 
             it('should have a Content-Type header', function() {
@@ -103,7 +103,7 @@ define(function(require) {
             });
 
             it('should have a body of JSON string', function() {
-                expect(ajaxRequest.data).toBe('{"first_name":"Michael","last_name":"Granitzer"}');
+                expect(ajaxRequest.data).toBe('{"first_name":"John","last_name":"Doe"}');
             });
 
         });

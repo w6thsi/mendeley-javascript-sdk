@@ -461,7 +461,7 @@
              * @param {object} data - The new profiles data
              * @returns {promise}
              */
-            update: requestWithDataFun('PATCH', '/profiles?link={id}', ['id'], dataHeaders, true)
+            update: requestWithDataFun('PATCH', '/profiles/me', [], dataHeaders, true)
 
         };
     }
