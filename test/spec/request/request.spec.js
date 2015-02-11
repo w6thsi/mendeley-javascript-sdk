@@ -70,7 +70,7 @@ define(function(require) {
                     $.Deferred().resolve({}, 1, { status: 200 }).promise() // Original request success
                 );
                 var ajaxSpy = spyOn($, 'ajax').and.callFake(fun);
-                var authRefreshSpy = spyOn(mockAuthInterface, 'refreshToken').and.returnValue($.Deferred().reject());
+                var authRefreshSpy = spyOn(mockAuthInterface, 'refreshToken').and.returnValue($.Deferred().reject({ status: 500 }));
                 var authAuthenticateSpy = spyOn(mockAuthInterface, 'authenticate').and.callThrough();
 
                 myRequest.send().fail(function() {
