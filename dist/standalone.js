@@ -442,7 +442,7 @@
      */
     function profiles() {
         var dataHeaders = {
-            'Content-Type': 'application/vnd.mendeley-profiles.1+json'
+            'Content-Type': 'application/vnd.mendeley-profile-amendment.1+json'
         };
 
         return {
