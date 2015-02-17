@@ -121,7 +121,7 @@ Here's an example using [requirejs][]:
 
 ## Logging api events
 
-For logging api communication e.g. warning and error, you can attach a notifier that will send a message to a delegated logger function when a relevant event happens.
+For logging api communication e.g. warning and error, you can attach a notifier that will send a message to a delegated logger function when a relevant event happens. If you want to limit the verbosity of the notifier just pass the minimum log level as the second parameter of the notifier creator.
 
 The message structure is :
     {
@@ -139,9 +139,12 @@ Here's an example using the browser console as logger.
         var auth = require('mendeley-javascript-sdk/auth');
         var notifier = require('mendeley-javascript-sdk/notifier');
 
-        var apiNotifier = notifier.createNotifier(function(message) {
+        var logger = function(message) {
             console[message.level](message);
-        });
+        };
+
+        // notifier.createNotifier(<logger function>, <minimum log level>)
+        var apiNotifier = notifier.createNotifier(logger, 'warn');
 
         api.setAuthFlow(auth.authCodeFlow(authSettings));
         api.setNotifier(apiNotifier);

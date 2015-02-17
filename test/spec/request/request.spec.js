@@ -93,8 +93,9 @@ define(function(require) {
                 myRequest.send().fail(function() {
                     expect(ajaxSpy.calls.count()).toEqual(1);
                     expect(authRefreshSpy.calls.count()).toEqual(1);
-                    expect(mockNotifier.calls.count()).toEqual(2);
+                    expect(mockNotifier.calls.count()).toEqual(3);
                     expect(mockNotifier.calls.allArgs()).toEqual([
+                        ['startInfo', [ 'GET', undefined ], { type : 'GET', headers : { Authorization : 'Bearer auth' } } ],
                         ['authWarning', [ 401, 1, 2 ], { type : 'GET', headers : { Authorization : 'Bearer auth' } }, { status : 401 } ],
                         ['refreshError', [500], { type : 'GET', headers : { Authorization : 'Bearer auth' } }, { status : 500 }  ]
                         ]);
@@ -113,8 +114,9 @@ define(function(require) {
                 myRequest.send().fail(function() {
                     expect(ajaxSpy.calls.count()).toEqual(1);
                     expect(authRefreshSpy.calls.count()).toEqual(1);
-                    expect(mockNotifier.calls.count()).toEqual(2);
+                    expect(mockNotifier.calls.count()).toEqual(3);
                     expect(mockNotifier.calls.allArgs()).toEqual([
+                        ['startInfo', [ 'GET', undefined ], { type : 'GET', headers : { Authorization : 'Bearer auth' } } ],
                         ['authWarning', [ 401, 1, 2 ], { type : 'GET', headers : { Authorization : 'Bearer auth' } }, { status : 401 } ],
                         ['refreshNotConfigured', [] ]
                         ]);
@@ -153,8 +155,9 @@ define(function(require) {
                     expect(authRefreshSpy.calls.count()).toEqual(2);
                     expect(authAuthenticateSpy.calls.count()).toEqual(1);
 
-                    expect(mockNotifier.calls.count()).toEqual(3);
+                    expect(mockNotifier.calls.count()).toEqual(4);
                     expect(mockNotifier.calls.allArgs()).toEqual([
+                        ['startInfo', [ 'GET', undefined ], { type : 'GET', headers : { Authorization : 'Bearer auth-refreshed' } } ],
                         ['authWarning', [ 401, 1, 2 ], { type : 'GET', headers : { Authorization : 'Bearer auth-refreshed' } }, { status : 401 } ],
                         ['authWarning', [ 401, 2, 2 ], { type : 'GET', headers : { Authorization : 'Bearer auth-refreshed' } }, { status : 401 } ],
                         ['authError', [ 401, 2 ], { type : 'GET', headers : { Authorization : 'Bearer auth-refreshed' } }, { status : 401 } ]
@@ -238,8 +241,9 @@ define(function(require) {
                 myRequest.send().fail(function() {
                     expect(ajaxSpy.calls.count()).toEqual(3);
 
-                    expect(mockNotifier.calls.count()).toEqual(3);
+                    expect(mockNotifier.calls.count()).toEqual(4);
                     expect(mockNotifier.calls.allArgs()).toEqual([
+                        ['startInfo', [ 'GET', undefined ], { type : 'GET', headers : { Authorization : 'Bearer auth' } } ],
                         ['commWarning', [ 504, 1, 2 ], { type : 'GET', headers : { Authorization : 'Bearer auth' } }, { status : 504 } ],
                         ['commWarning', [ 504, 2, 2 ], { type : 'GET', headers : { Authorization : 'Bearer auth' } }, { status : 504 } ],
                         ['commError', [ 504, 2 ], { type : 'GET', headers : { Authorization : 'Bearer auth' } }, { status : 504 } ]
@@ -274,8 +278,9 @@ define(function(require) {
                 myRequest.send().fail(function() {
                     expect(ajaxSpy.calls.count()).toEqual(1);
 
-                    expect(mockNotifier.calls.count()).toEqual(1);
+                    expect(mockNotifier.calls.count()).toEqual(2);
                     expect(mockNotifier.calls.allArgs()).toEqual([
+                        ['startInfo', [ 'GET', undefined ], { type : 'GET', headers : { Authorization : 'Bearer auth' } } ],
                         ['reqError', [ 404 ], { type : 'GET', headers : { Authorization : 'Bearer auth' } }, { status : 404 } ]
                         ]);
                     done();
