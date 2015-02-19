@@ -420,6 +420,7 @@
         documents: documents(),
         folders: folders(),
         files: files(),
+        metadata: metadata(),
         catalog: catalog(),
         trash: trash(),
         followers: followers(),
@@ -810,6 +811,25 @@
     }
 
     /**
+     * Metadata API
+     *
+     * @namespace
+     * @name api.metadata
+     */
+    function metadata() {
+        return {
+            /**
+             * Retrieve a document metadata
+             *
+             * @method
+             * @memberof api.metadata
+             * @returns {promise}
+             */
+            retrieve: requestFun('GET', '/metadata')
+        };
+    }
+
+    /**
      * Catalog API
      *
      * @namespace
@@ -825,7 +845,17 @@
              * @param {object} params - A catalogue search filter
              * @returns {promise}
              */
-            search: requestFun('GET', '/catalog')
+            search: requestFun('GET', '/catalog'),
+
+            /**
+             * Retrieve a document data from catalog
+             *
+             * @method
+             * @memberof api.catalog
+             * @param {string} id - A catalog UUID
+             * @returns {promise}
+             */
+            retrieve: requestFun('GET', '/catalog/{id}', ['id'])
         };
     }
 
