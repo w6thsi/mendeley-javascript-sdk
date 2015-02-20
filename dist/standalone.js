@@ -823,6 +823,7 @@
              *
              * @method
              * @memberof api.metadata
+             * @param {object} params - A metadata search filter
              * @returns {promise}
              */
             retrieve: requestFun('GET', '/metadata')
@@ -853,6 +854,7 @@
              * @method
              * @memberof api.catalog
              * @param {string} id - A catalog UUID
+             * @param {object} params - A catalog search filter
              * @returns {promise}
              */
             retrieve: requestFun('GET', '/catalog/{id}', ['id'])
