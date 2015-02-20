@@ -34,6 +34,7 @@
         "expect",
         "fixtures",
         "it",
+        "jasmine",
         "requirejs",
         "setupComponent",
         "spyOn",

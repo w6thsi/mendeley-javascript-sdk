@@ -119,6 +119,39 @@ Here's an example using [requirejs][]:
         });
 
 
+## Logging api events
+
+For logging api communication e.g. warning and error, you can attach a notifier that will send a message to a delegated logger function when a relevant event happens. If you want to limit the verbosity of the notifier just pass the minimum log level as the second parameter of the notifier creator.
+
+The message structure is :
+    {
+    code: 'Unique numeric identification of the error ',
+    level: 'Severity level of the message (error, warn, info, debug)'
+    message: 'Textual explanation of the error',
+    request : 'If available, the request who generated the event',
+    response : 'If available, the response who generated the event'
+    }
+
+Here's an example using the browser console as logger.
+
+    define(function(require) {
+        var api = require('mendeley-javascript-sdk/api');
+        var auth = require('mendeley-javascript-sdk/auth');
+        var notifier = require('mendeley-javascript-sdk/notifier');
+
+        var logger = function(message) {
+            console[message.level](message);
+        };
+
+        // notifier.createNotifier(<logger function>, <minimum log level>)
+        var apiNotifier = notifier.createNotifier(logger, 'warn');
+
+        api.setAuthFlow(auth.authCodeFlow(authSettings));
+        api.setNotifier(apiNotifier);
+    });
+
+
+
 ## Examples
 
 There are more examples in the `examples/` directory. To try the examples you will need [nodejs][] installed. *Note:* nodejs is not required to use this library, it is only used to serve the examples from a local URL you can use with OAuth2.

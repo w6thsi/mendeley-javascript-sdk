@@ -22,6 +22,7 @@ require.config({
         // Load it with `require('es5-shim')` in tests for PhantomJS
         'es5-shim': 'bower_components/es5-shim/es5-shim',
         api: 'lib/api',
+        notifier: 'lib/notifier',
         request: 'lib/request',
         auth: 'lib/auth',
         mocks: 'test/mocks'

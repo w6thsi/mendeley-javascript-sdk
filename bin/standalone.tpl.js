@@ -20,6 +20,7 @@
         }
     }
 
+    root.MendeleySDK.Notifier = NOTIFIER_MODULE
     root.MendeleySDK.Auth = AUTH_MODULE
     root.MendeleySDK.Request = REQUEST_MODULE
     root.MendeleySDK.API = API_MODULE
