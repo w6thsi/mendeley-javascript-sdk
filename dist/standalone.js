@@ -20,6 +20,129 @@
         }
     }
 
+    root.MendeleySDK.Notifier = define(function() {
+
+    'use strict';
+    var levelClass = {
+        debug: 0,
+        info: 1000,
+        warn: 2000,
+        error: 3000
+    };
+    var notifications = {
+        startInfo: {
+            code: 1001,
+            level: 'info',
+            message: 'Request Start : $0 $1'
+        },
+        redirectInfo: {
+            code: 1002,
+            level: 'info',
+            message: 'Redirection followed'
+        },
+        successInfo: {
+            code: 1003,
+            level: 'info',
+            message: 'Request Success'
+        },
+        uploadSuccessInfo: {
+            code: 1004,
+            level: 'info',
+            message: 'Upload Success'
+        },
+
+        commWarning: {
+            code: 2001,
+            level: 'warn',
+            message: 'Communication error (status code $0). Retrying ($1/$2).'
+        },
+        authWarning: {
+            code: 2002,
+            level: 'warn',
+            message: 'Authentication error (status code $0). Refreshing access token ($1/$2).'
+        },
+
+        reqError: {
+            code: 3001,
+            level: 'error',
+            message: 'Request error (status code $0).'
+        },
+        commError: {
+            code: 3002,
+            level: 'error',
+            message: 'Communication error (status code $0).  Maximun number of retries reached ($1).'
+        },
+        authError: {
+            code: 3003,
+            level: 'error',
+            message: 'Authentication error (status code $0).  Maximun number of retries reached ($1).'
+        },
+        refreshNotConfigured: {
+            code: 3004,
+            level: 'error',
+            message: 'Refresh token error. Refresh flow not configured.'
+        },
+        refreshError: {
+            code: 3005,
+            level: 'error',
+            message: 'Refresh token error. Request failed (status code $0).'
+        },
+        tokenError: {
+            code: 3006,
+            level: 'error',
+            message: 'Missing access token.'
+        },
+        parseError: {
+            code: 3007,
+            level: 'error',
+            message: 'JSON Parsing error.'
+        },
+        uploadError: {
+            code: 3008,
+            level: 'error',
+            message: 'Upload $0 ($1 %)'
+        }
+    };
+
+    function createMessage(notificationId, notificationData, request, response) {
+        var notification = $.extend({}, notifications[notificationId] || {});
+
+        if (notificationData) {
+            notification.message =  notification.message.replace(/\$(\d+)/g, function(m, key) {
+                return '' + (notificationData[+key] !== undefined ? notificationData[+key] : '');
+            });
+        }
+        if (request) {
+            notification.request = request;
+        }
+        if (response) {
+            notification.response = response;
+        }
+        return notification;
+    }
+
+    function createNotifier(logger, minLogLevel) {
+        if (!logger || typeof logger !== 'function') {
+            return false;
+        }
+        var minCode = levelClass[minLogLevel] || 0;
+
+        return {
+            notify: function notify(notificationId, notificationData, request, response) {
+                var notification = createMessage(notificationId, notificationData, request, response);
+                if(notification.code > minCode) {
+                    logger(notification);
+                }
+
+            }
+        };
+    }
+
+    return {
+        createNotifier: createNotifier
+        };
+});
+
     root.MendeleySDK.Auth = define(function() {
 
 	'use strict';
@@ -185,12 +308,13 @@
         fileUpload: false,
         extractHeaders: ['Mendeley-Count', 'Link']
     };
+    var noopNotifier = { notify: function() {}};
 
-    function create(request, settings) {
-        return new Request(request, $.extend({}, defaults, settings));
+    function create(request, settings, notifier) {
+        return new Request(request, $.extend({}, defaults, settings), notifier);
     }
 
-    function Request(request, settings) {
+    function Request(request, settings, notifier) {
         if (!settings.authFlow) {
             throw new Error('Please provide an authentication interface');
         }
@@ -198,6 +322,9 @@
         this.settings = settings;
         this.retries = 0;
         this.authRetries = 0;
+        this.notifier = notifier || noopNotifier;
+
+        this.notifier.notify('startInfo', [this.request.type, this.request.url], this.request);
     }
 
     function send(dfd, request) {
@@ -209,8 +336,9 @@
         // If no token at all (maybe cookie deleted) then authenticate
         // because if you send 'Bearer ' you get a 400 rather than a 401 - is that a bug in the api?
         if (!token) {
-            this.settings.authFlow.authenticate();
+            this.notifier.notify('tokenError', null, this.request);
             dfd.reject(this.request);
+            this.settings.authFlow.authenticate(200);
             return dfd.promise();
         }
         request.headers.Authorization = 'Bearer ' + token;
@@ -218,7 +346,7 @@
         if (this.settings.fileUpload) {
             // Undocumented way to access XHR so we can add upload progress listeners
             var xhr = $.ajaxSettings.xhr();
-            request.xhr = function () { return xhr; };
+            request.xhr = function() { return xhr; };
 
             // The response may have JSON Content-Type which makes jQuery invoke JSON.parse
             // on the reponse, but there isn't one so there's an error which causes the deferred
@@ -240,34 +368,36 @@
     }
 
     function onFail(dfd, xhr) {
-        // 504 Gateway timeout or communication error
-        if ((xhr.status === 504 || xhr.status === 0) && this.retries < this.settings.maxRetries) {
-            this.retries++;
-            this.send(dfd);
-        }
-        // 401 Unauthorized and refesh token URL set
-        else if (xhr.status === 401 && this.authRetries < this.settings.maxAuthRetries) {
-            // Try refreshing the token
-            this.authRetries++;
-            var refresh = this.settings.authFlow.refreshToken();
-            if (refresh) {
-                $.when(refresh)
-                    // If OK update the access token and re-send the request
-                    .done(function() {
-                        this.send(dfd);
-                    }.bind(this))
-                    // If fails then we need to re-authenticate
-                    .fail(function() {
-                        this.settings.authFlow.authenticate();
-                        dfd.reject(this.request, xhr);
-                    }.bind(this));
-            } else {
-                this.settings.authFlow.authenticate();
+        switch (xhr.status) {
+            case 0:
+            case 504:
+                // 504 Gateway timeout or communication error
+                if (this.retries < this.settings.maxRetries) {
+                    this.retries++;
+                    this.notifier.notify('commWarning', [xhr.status, this.retries, this.settings.maxRetries], this.request, xhr);
+                    this.send(dfd);
+                } else {
+                    this.notifier.notify('commError', [xhr.status, this.settings.maxRetries], this.request, xhr);
+                    dfd.reject(this.request, xhr);
+                }
+                break;
+
+            case 401:
+                // 401 Unauthorized
+                if (this.authRetries < this.settings.maxAuthRetries) {
+                    this.authRetries++;
+                    this.notifier.notify('authWarning', [xhr.status, this.authRetries, this.settings.maxAuthRetries], this.request, xhr);
+                    refreshToken.call(this, dfd, xhr);
+                } else {
+                    this.notifier.notify('authError', [xhr.status, this.settings.maxAuthRetries], this.request, xhr);
+                    dfd.reject(this.request, xhr);
+                    this.settings.authFlow.authenticate(200);
+                }
+                break;
+
+            default:
+                this.notifier.notify('reqError', [xhr.status], this.request, xhr);
                 dfd.reject(this.request, xhr);
-            }
-        }
-        else {
-            dfd.reject(this.request, xhr);
         }
     }
 
@@ -282,9 +412,9 @@
                 url: locationHeader,
                 dataType: 'json'
             };
+            this.notifier.notify('redirectInfo', null, this.request, redirect);
             this.send(dfd, redirect);
-        }
-        else {
+        } else {
             if (this.settings.extractHeaders) {
                 headers = extractHeaders.call(this, xhr);
             }
@@ -293,14 +423,37 @@
             if (this.settings.fileUpload) {
                 try {
                     response = JSON.parse(response);
+                    this.notifier.notify('uploadSuccessInfo', null, this.request, response);
                     dfd.resolve(response, xhr);
-                } catch(error) {
+                } catch (error) {
+                    this.notifier.notify('parseError', null, this.request, xhr);
                     dfd.reject(error);
                 }
-            }
-            else {
+            } else {
+                this.notifier.notify('successInfo', null, this.request, response);
                 dfd.resolve(response, headers);
             }
+        }
+    }
+
+    function refreshToken(dfd, xhr) {
+        var refresh = this.settings.authFlow.refreshToken();
+        if (refresh) {
+            $.when(refresh)
+                // If OK update the access token and re-send the request
+                .done(function() {
+                    this.send(dfd);
+                }.bind(this))
+                // If fails then we need to re-authenticate
+                .fail(function(refreshxhr) {
+                    this.notifier.notify('refreshError', [refreshxhr.status], this.request, refreshxhr);
+                    dfd.reject(this.request, xhr);
+                    this.settings.authFlow.authenticate(200);
+                }.bind(this));
+        } else {
+            this.notifier.notify('refreshNotConfigured', []);
+            dfd.reject(this.request, xhr);
+            this.settings.authFlow.authenticate(200);
         }
     }
 
@@ -318,16 +471,17 @@
         var bytesTotal;
         var bytesSent;
 
-        return function (progressEvent) {
+        return function(progressEvent) {
             var eventType = progressEvent.type;
 
             if (progressEvent.lengthComputable) {
                 bytesSent = progressEvent.loaded || progressEvent.position; // position is deprecated
                 bytesTotal = progressEvent.total;
-                progressPercent = Math.round(100*bytesSent/bytesTotal);
+                progressPercent = Math.round(100 * bytesSent / bytesTotal);
                 dfd.notify(progressEvent, progressPercent, bytesSent, bytesTotal);
             }
             if (eventType === 'abort' || eventType === 'timeout' || eventType === 'error') {
+                this.notifier.notify('uploadError', [eventType, progressPercent], request, xhr);
                 dfd.reject(request, xhr, { event: progressEvent, percent: progressPercent });
             }
         };
@@ -382,7 +536,7 @@
         }
         // Tidy into nice object like {next: 'http://example.com/?p=1'}
         var tokens, url, rel, linksArray = links.split(','), value = {};
-        for(var i=0, l = linksArray.length; i < l; i++) {
+        for (var i = 0, l = linksArray.length; i < l; i++) {
             tokens = linksArray[i].split(';');
             url = tokens[0].replace(/[<>]/g, '').trim();
             rel = tokens[1].trim().split('=')[1].replace(/"/g, '');
@@ -406,7 +560,7 @@
 
     var apiBaseUrl = 'https://api.mendeley.com';
     var authFlow = false;
-
+    var notifier = false;
     /**
      * API
      *
@@ -416,6 +570,7 @@
     return {
         setAuthFlow: setAuthFlow,
         setApiBaseUrl: setApiBaseUrl,
+        setNotifier: setNotifier,
         profiles: profiles(),
         documents: documents(),
         folders: folders(),
@@ -435,6 +590,9 @@
         apiBaseUrl = url;
     }
 
+    function setNotifier(newNotifier) {
+        notifier = newNotifier;
+    }
     /**
      * Profiles API
      *
@@ -1178,7 +1336,7 @@
                 settings.maxRetries = 1;
             }
 
-            var promise = Request.create(request, settings).send();
+            var promise = Request.create(request, settings, notifier).send();
             promise.done(function(response, headers) {
                 setPaginationLinks.call(this, headers);
             }.bind(this));
@@ -1213,7 +1371,7 @@
                 maxRetries: 1
             };
 
-            var promise = Request.create(request, settings).send();
+            var promise = Request.create(request, settings, notifier).send();
             promise.done(function(response, headers) {
                 setPaginationLinks.call(this, headers);
             }.bind(this));
@@ -1256,7 +1414,7 @@
                 followLocation: followLocation
             };
 
-            return Request.create(request, settings).send();
+            return Request.create(request, settings, notifier).send();
         };
     }
 
@@ -1289,7 +1447,7 @@
                 fileUpload: true
             };
 
-            return Request.create(request, settings).send();
+            return Request.create(request, settings, notifier).send();
         };
     }
 

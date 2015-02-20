@@ -13,7 +13,7 @@ var REQUEST_MODULE = fs.readFileSync('./lib/request.js').toString();
 var API_MODULE = fs.readFileSync('./lib/api.js').toString();
 
 var STANDALONE = TPL.replace('NOTIFIER_MODULE', NOTIFIER_MODULE)
-	.TPL.replace('AUTH_MODULE', AUTH_MODULE)
+	.replace('AUTH_MODULE', AUTH_MODULE)
     .replace('REQUEST_MODULE', REQUEST_MODULE)
     .replace('API_MODULE', API_MODULE);
 
