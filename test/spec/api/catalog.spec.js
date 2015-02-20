@@ -50,5 +50,43 @@ define(function(require) {
             });
 
         });
+
+        describe('retrieve method', function() {
+            var ajaxSpy;
+            var ajaxRequest;
+            var params = {
+                view: 'all'
+            };
+
+            it('should be defined', function() {
+                expect(typeof catalogApi.retrieve).toBe('function');
+                ajaxSpy = spyOn($, 'ajax').and.returnValue($.Deferred().resolve());
+                catalogApi.retrieve('catalogId', params);
+                expect(ajaxSpy).toHaveBeenCalled();
+                ajaxRequest = ajaxSpy.calls.mostRecent().args[0];
+            });
+
+            it('should use GET', function() {
+                expect(ajaxRequest.type).toBe('GET');
+            });
+
+            it('should use endpoint /catalog/catalogId', function() {
+                expect(ajaxRequest.url).toBe(baseUrl + '/catalog/catalogId');
+            });
+
+            it('should have a NOT have a Content-Type header', function() {
+                expect(ajaxRequest.headers['Content-Type']).not.toBeDefined();
+            });
+
+            it('should have an Authorization header', function() {
+                expect(ajaxRequest.headers.Authorization).toBeDefined();
+                expect(ajaxRequest.headers.Authorization).toBe('Bearer auth');
+            });
+
+            it('should allow paramaters', function() {
+                expect(ajaxRequest.data).toEqual(params);
+            });
+
+        });
     });
 });
