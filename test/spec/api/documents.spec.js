@@ -197,7 +197,26 @@ define(function(require) {
                 });
             });
         });
+        describe('createFromFile method with groupId parameter', function() {
 
+            var ajaxSpy;
+            var apiRequest;
+            var ajaxRequest;
+            var file = getBlob('hello', 'text/plain');
+            file.name = '中文file name(1).pdf';
+
+            it('should be defined', function() {
+                expect(typeof documentsApi.createFromFile).toBe('function');
+                ajaxSpy = spyOn($, 'ajax').and.callFake(getMockPromises(mockPromiseCreateFromFile));
+                apiRequest = documentsApi.createFromFile(file, 123);
+                expect(ajaxSpy).toHaveBeenCalled();
+                ajaxRequest = ajaxSpy.calls.first().args[0];
+            });
+
+            it('should have an Link header', function() {
+                expect(ajaxRequest.headers.Link).toBe('<' + baseUrl + '/groups/123>; rel="group"');
+            });
+        });
         describe('retrieve method', function() {
 
             var ajaxRequest;
