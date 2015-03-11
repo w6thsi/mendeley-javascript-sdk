@@ -197,7 +197,7 @@ define(function(require) {
                 });
             });
         });
-        describe('createFromFile method with groupId parameter', function() {
+        describe('createFromFileInGroup method', function() {
 
             var ajaxSpy;
             var apiRequest;
@@ -208,7 +208,7 @@ define(function(require) {
             it('should be defined', function() {
                 expect(typeof documentsApi.createFromFile).toBe('function');
                 ajaxSpy = spyOn($, 'ajax').and.callFake(getMockPromises(mockPromiseCreateFromFile));
-                apiRequest = documentsApi.createFromFile(file, 123);
+                apiRequest = documentsApi.createFromFileInGroup(file, 123);
                 expect(ajaxSpy).toHaveBeenCalled();
                 ajaxRequest = ajaxSpy.calls.first().args[0];
             });
