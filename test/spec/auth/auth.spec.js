@@ -94,6 +94,21 @@ define(function(require) {
                 expect(win.location).toEqual('/login');
             });
 
+            it('should support using a function to get the auth URL', function() {
+                var win = require('mocks/window')();
+                var options = {
+                  win: win,
+                  clientId: 9999,
+                  authenticateOnStart: false,
+                  apiAuthenticateUrl: function() {
+                      return '/login?state=foo';
+                  }
+               };
+
+                auth.authCodeFlow(options).authenticate();
+                expect(win.location).toEqual('/login?state=foo');
+            });
+
             it('should read the access token from a cookie', function() {
                 var win = require('mocks/window')();
                 win.document.cookie = 'accessToken=auth';
