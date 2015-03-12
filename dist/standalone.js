@@ -229,8 +229,11 @@
     }
 
     function authenticate() {
+        var url = typeof settings.apiAuthenticateUrl === 'function' ?
+            settings.apiAuthenticateUrl() : settings.apiAuthenticateUrl;
+
         clearAccessTokenCookie();
-        settings.win.location = settings.apiAuthenticateUrl;
+        settings.win.location = url;
     }
 
     function getAccessTokenCookieOrUrl() {
@@ -664,6 +667,17 @@
             createFromFile: requestWithFileFun('POST', '/documents'),
 
             /**
+             * Create a new group document from a file
+             *
+             * @method
+             * @memberof api.documents
+             * @param {object} file - A file object
+             * @param {string} groupId - A group UUID
+             * @returns {promise}
+             */
+            createFromFileInGroup: requestWithFileFun('POST', '/documents', 'group'),
+
+            /**
              * Retrieve a document
              *
              * @method
@@ -944,7 +958,7 @@
              * @param {string} documentId - A document UUID
              * @returns {promise}
              */
-            create: requestWithFileFun('POST', '/files'),
+            create: requestWithFileFun('POST', '/files', 'document'),
 
             /**
              * Get a list of files for a document
@@ -1426,18 +1440,18 @@
      * @param {string} uriTemplate
      * @returns {function}
      */
-    function requestWithFileFun(method, uriTemplate) {
+    function requestWithFileFun(method, uriTemplate, linkType) {
 
         return function() {
 
             var args = Array.prototype.slice.call(arguments, 0);
             var url = getUrl(uriTemplate, [], args);
             var file = args[0];
-            var documentId = args[1];
+            var linkId = args[1];
             var request = {
                 type: method,
                 url: url,
-                headers: getRequestHeaders(uploadHeaders(file, documentId), method),
+                headers: getRequestHeaders(uploadHeaders(file, linkId, linkType), method),
                 data: file,
                 processData: false
             };
@@ -1475,13 +1489,20 @@
      * @param {string} documentId
      * @returns {string}
      */
-    function uploadHeaders(file, documentId) {
+    function uploadHeaders(file, linkId, linkType) {
         var headers = {
             'Content-Type': !!file.type ? file.type : 'application/octet-stream',
             'Content-Disposition': 'attachment; filename*=UTF-8\'\'' + encodeRFC5987ValueChars(file.name)
         };
-        if(documentId) {
-            headers.Link = '<' + apiBaseUrl + '/documents/' + documentId +'>; rel="document"';
+        if (linkType && linkId) {
+            switch(linkType) {
+                case 'group':
+                    headers.Link = '<' + apiBaseUrl + '/groups/' + linkId +'>; rel="group"';
+                    break;
+                case 'document':
+                    headers.Link = '<' + apiBaseUrl + '/documents/' + linkId +'>; rel="document"';
+                    break;
+            }
         }
 
         return headers;
