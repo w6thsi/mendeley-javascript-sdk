@@ -45,8 +45,13 @@
             level: 'info',
             message: 'Request Success'
         },
-        uploadSuccessInfo: {
+        uploadProgressInfo: {
             code: 1004,
+            level: 'info',
+            message: 'Bytes $1 from $2 uploaded ($0%)'
+        },
+        uploadSuccessInfo: {
+            code: 1005,
             level: 'info',
             message: 'Upload Success'
         },
@@ -359,8 +364,8 @@
             // Decorate the xhr with upload progress events
             ['loadstart', 'loadend', 'load', 'progress', 'abort', 'error', 'timeout']
                 .forEach(function(uploadEvent) {
-                    xhr.upload.addEventListener(uploadEvent, uploadProgressFun(dfd, request, xhr));
-                });
+                    xhr.upload.addEventListener(uploadEvent, uploadProgressFun.call(this, dfd, request, xhr));
+                }.bind(this));
         }
 
         $.ajax(request)
@@ -422,16 +427,19 @@
                 headers = extractHeaders.call(this, xhr);
             }
 
-            // File uploads have type set to test, so if there is some JSON parse it manually
+            // File uploads have type set to text, so if there is some JSON parse it manually
             if (this.settings.fileUpload) {
-                try {
-                    response = JSON.parse(response);
-                    this.notifier.notify('uploadSuccessInfo', null, this.request, response);
-                    dfd.resolve(response, xhr);
-                } catch (error) {
-                    this.notifier.notify('parseError', null, this.request, xhr);
-                    dfd.reject(error);
+                if (response) {
+                    try {
+                        response = JSON.parse(response);
+                    } catch (error) {
+                        this.notifier.notify('parseError', null, this.request, xhr);
+                        dfd.reject(error);
+                        return;
+                    }
                 }
+                this.notifier.notify('uploadSuccessInfo', null, this.request, response);
+                dfd.resolve(response, xhr);
             } else {
                 this.notifier.notify('successInfo', null, this.request, response);
                 dfd.resolve(response, headers);
@@ -482,12 +490,16 @@
                 bytesTotal = progressEvent.total;
                 progressPercent = Math.round(100 * bytesSent / bytesTotal);
                 dfd.notify(progressEvent, progressPercent, bytesSent, bytesTotal);
+
+                if (eventType === 'progress') {
+                    this.notifier.notify('uploadProgressInfo', [progressPercent, bytesSent, bytesTotal], request, xhr);
+                }
             }
             if (eventType === 'abort' || eventType === 'timeout' || eventType === 'error') {
                 this.notifier.notify('uploadError', [eventType, progressPercent], request, xhr);
                 dfd.reject(request, xhr, { event: progressEvent, percent: progressPercent });
             }
-        };
+        }.bind(this);
     }
 
     function getResponseHeader(xhr, name) {
@@ -582,6 +594,7 @@
         catalog: catalog(),
         trash: trash(),
         followers: followers(),
+        photos: photos(),
         groups: groups()
     };
 
@@ -1192,6 +1205,26 @@
              * @returns {promise}
              */
             remove: requestFun('DELETE', '/followers/{id}', ['id'])
+        };
+    }
+
+    /**
+     * Photos API
+     *
+     * @namespace
+     * @name api.photos
+     */
+    function photos() {
+        return {
+            /**
+             * Upload a new original photo asset for my profile
+             *
+             * @method
+             * @memberof api.photos
+             * @param {object} file - a file object
+             * @returns {promise}
+             */
+            me: requestWithFileFun('POST', '/photos/me')
         };
     }
 
