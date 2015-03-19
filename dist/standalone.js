@@ -573,7 +573,7 @@
 
     'use strict';
 
-    var apiBaseUrl = 'https://api.mendeley.com';
+    var baseUrl = 'https://api.mendeley.com';
     var authFlow = false;
     var notifier = false;
     /**
@@ -583,27 +583,31 @@
      * @name api
      */
     return {
+        setApiBaseUrl: setBaseUrl, // Deprecated
+
         setAuthFlow: setAuthFlow,
-        setApiBaseUrl: setApiBaseUrl,
+        setBaseUrl: setBaseUrl,
         setNotifier: setNotifier,
-        profiles: profiles(),
-        documents: documents(),
-        folders: folders(),
-        files: files(),
-        metadata: metadata(),
+
         catalog: catalog(),
-        trash: trash(),
+        documents: documents(),
+        files: files(),
+        folders: folders(),
         followers: followers(),
+        groups: groups(),
+        institutions: institutions(),
+        metadata: metadata(),
         photos: photos(),
-        groups: groups()
+        profiles: profiles(),
+        trash: trash()
     };
 
     function setAuthFlow(auth) {
         authFlow = auth;
     }
 
-    function setApiBaseUrl(url) {
-        apiBaseUrl = url;
+    function setBaseUrl(url) {
+        baseUrl = url;
     }
 
     function setNotifier(newNotifier) {
@@ -1028,7 +1032,7 @@
              *
              * @method
              * @memberof api.catalog
-             * @param {object} params - A catalogue search filter
+             * @param {object} params - A catalog search filter
              * @returns {promise}
              */
             search: requestFun('GET', '/catalog'),
@@ -1043,6 +1047,36 @@
              * @returns {promise}
              */
             retrieve: requestFun('GET', '/catalog/{id}', ['id'])
+        };
+    }
+
+    /**
+     * Institutions API
+     *
+     * @namespace
+     * @name api.institutions
+     */
+    function institutions() {
+        return {
+            /**
+             * Search for the institutions
+             *
+             * @method
+             * @memberof api.institutions
+             * @param {object} params - A institutions search filter
+             * @returns {promise}
+             */
+            search: requestFun('GET', '/institutions'),
+
+            /**
+             * Retrieve an institution data
+             *
+             * @method
+             * @memberof api.institutions
+             * @param {string} id - A institutions UUID
+             * @returns {promise}
+             */
+            retrieve: requestFun('GET', '/institutions/{id}', ['id'])
         };
     }
 
@@ -1530,10 +1564,10 @@
         if (linkType && linkId) {
             switch(linkType) {
                 case 'group':
-                    headers.Link = '<' + apiBaseUrl + '/groups/' + linkId +'>; rel="group"';
+                    headers.Link = '<' + baseUrl + '/groups/' + linkId +'>; rel="group"';
                     break;
                 case 'document':
-                    headers.Link = '<' + apiBaseUrl + '/documents/' + linkId +'>; rel="document"';
+                    headers.Link = '<' + baseUrl + '/documents/' + linkId +'>; rel="document"';
                     break;
             }
         }
@@ -1552,14 +1586,14 @@
      */
     function getUrl(uriTemplate, uriProps, uriValues) {
         if (!uriProps.length) {
-            return apiBaseUrl + uriTemplate;
+            return baseUrl + uriTemplate;
         }
         var uriParams = {};
         uriProps.forEach(function(prop, i) {
             uriParams[prop] = uriValues[i];
         });
 
-        return apiBaseUrl + expandUriTemplate(uriTemplate, uriParams);
+        return baseUrl + expandUriTemplate(uriTemplate, uriParams);
     }
 
     /**
