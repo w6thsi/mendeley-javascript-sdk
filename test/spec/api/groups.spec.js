@@ -4,7 +4,7 @@ define(function(require) {
 
     require('es5-shim');
 
-    describe('files api', function() {
+    describe('groups api', function() {
 
         var api = require('api');
         var groupApi = api.groups;
