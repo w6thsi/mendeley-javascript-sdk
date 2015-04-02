@@ -599,6 +599,7 @@
         metadata: metadata(),
         photos: photos(),
         profiles: profiles(),
+        recommendations: recommendations(),
         trash: trash()
     };
 
@@ -1077,6 +1078,29 @@
              * @returns {promise}
              */
             retrieve: requestFun('GET', '/institutions/{id}', ['id'])
+        };
+    }
+
+    /**
+     * Recommendations API
+     *
+     * @namespace
+     * @name api.recommendations
+     */
+    function recommendations() {
+        var dataHeaders = {
+            'Content-Type': 'application/vnd.mendeley-recommendation-trace.1+json'
+        };
+
+        return {
+            /**
+             * Trace token in a url
+             *
+             * @method
+             * @memberof api.recommendations
+             * @returns {promise}
+             */
+            trace: requestWithDataFun('POST', '/recommendations/trace', false, dataHeaders, false)
         };
     }
 
