@@ -237,7 +237,7 @@ define(function(require) {
                 expect(ajaxRequest.url).toBe(baseUrl + '/documents/15');
             });
 
-            it('should have a NOT have a Content-Type header', function() {
+            it('should NOT have a Content-Type header', function() {
                 expect(ajaxRequest.headers['Content-Type']).not.toBeDefined();
             });
 
