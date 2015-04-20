@@ -19,7 +19,7 @@ module.exports = function(config) {
             'bower_components/jquery/dist/jquery.js',
             'test/test-main.js',
             {pattern: 'bower_components/es5-shim/es5-shim.js', included: false },
-            {pattern: 'lib/*.js', included: false},
+            {pattern: 'lib/**/*.js', included: false},
             {pattern: 'test/mocks/*.js', included: false},
             {pattern: 'test/spec/**/*.spec.js', included: false}
         ],
