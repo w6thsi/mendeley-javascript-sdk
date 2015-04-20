@@ -1,8 +1,5 @@
 # Mendeley JavaScript SDK
 
-**Import note: this is an early pre-release version and is subject to change**
-
-
 ## About the SDK
 
 The SDK provides a convenient library for accessing the Mendeley API with client-side JavaScript.
