@@ -17,7 +17,7 @@ module.exports = {
     resolve: {
         modulesDirectories: [
             'node_modules',
-            'vendor/bower',
+            'bower_components',
             'lib'
         ]
     },
