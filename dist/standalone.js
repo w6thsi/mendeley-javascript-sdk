@@ -90,9 +90,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	        followers: __webpack_require__(10)(),
 	        groups: __webpack_require__(11)(),
 	        institutions: __webpack_require__(12)(),
-	        metadata: __webpack_require__(13)(),
-	        profiles: __webpack_require__(14)(),
-	        trash: __webpack_require__(15)()
+	        locations: __webpack_require__(13)(),
+	        metadata: __webpack_require__(14)(),
+	        profiles: __webpack_require__(15)(),
+	        trash: __webpack_require__(16)()
 	    };
 
 	}.call(exports, __webpack_require__, exports, module), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
@@ -1617,17 +1618,17 @@ return /******/ (function(modules) { // webpackBootstrap
 	             *
 	             * @method
 	             * @memberof api.institutions
-	             * @param {object} params - A institutions search filter
+	             * @param {object} params - An institutions search filter
 	             * @returns {promise}
 	             */
 	            search: utils.requestFun('GET', '/institutions'),
 
 	            /**
-	             * Retrieve an institution data
+	             * Retrieve an institution object
 	             *
 	             * @method
 	             * @memberof api.institutions
-	             * @param {string} id - A institutions UUID
+	             * @param {string} id - An institution ID
 	             * @returns {promise}
 	             */
 	            retrieve: utils.requestFun('GET', '/institutions/{id}', ['id'])
@@ -1640,6 +1641,49 @@ return /******/ (function(modules) { // webpackBootstrap
 
 /***/ },
 /* 13 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__(5)], __WEBPACK_AMD_DEFINE_RESULT__ = function(utils) {
+
+	    'use strict';
+
+	    /**
+	     * Locations API
+	     *
+	     * @namespace
+	     * @name api.locations
+	     */
+	    return function locations() {
+	        return {
+
+	            /**
+	             * Search for the locations
+	             *
+	             * @method
+	             * @memberof api.locations
+	             * @param {object} params - A locations search filter
+	             * @returns {promise}
+	             */
+	            search: utils.requestFun('GET', '/locations'),
+
+	            /**
+	             * Retrieve a location object
+	             *
+	             * @method
+	             * @memberof api.locations
+	             * @param {string} id - A location ID
+	             * @returns {promise}
+	             */
+	            retrieve: utils.requestFun('GET', '/locations/{id}', ['id'])
+
+	        };
+	    };
+
+	}.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
+
+
+/***/ },
+/* 14 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__(5)], __WEBPACK_AMD_DEFINE_RESULT__ = function(utils) {
@@ -1676,7 +1720,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 14 */
+/* 15 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__(5)], __WEBPACK_AMD_DEFINE_RESULT__ = function(utils) {
@@ -1722,7 +1766,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 15 */
+/* 16 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__(5)], __WEBPACK_AMD_DEFINE_RESULT__ = function(utils) {
