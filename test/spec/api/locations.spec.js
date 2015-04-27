@@ -4,10 +4,10 @@ define(function(require) {
 
     require('es5-shim');
 
-    describe('institutions api', function() {
+    describe('locations api', function() {
 
         var api = require('api');
-        var institutionsApi = api.institutions;
+        var locationsApi = api.locations;
         var baseUrl = 'https://api.mendeley.com';
 
         var mockAuth = require('mocks/auth');
@@ -17,14 +17,14 @@ define(function(require) {
             var ajaxSpy;
             var ajaxRequest;
             var params = {
-                hint: 'lon',
+                prefix: 'lon',
                 limit: 10
             };
 
             it('should be defined', function() {
-                expect(typeof institutionsApi.search).toBe('function');
+                expect(typeof locationsApi.search).toBe('function');
                 ajaxSpy = spyOn($, 'ajax').and.returnValue($.Deferred().resolve());
-                institutionsApi.search(params);
+                locationsApi.search(params);
                 expect(ajaxSpy).toHaveBeenCalled();
                 ajaxRequest = ajaxSpy.calls.mostRecent().args[0];
             });
@@ -33,8 +33,8 @@ define(function(require) {
                 expect(ajaxRequest.type).toBe('GET');
             });
 
-            it('should use endpoint /institutions', function() {
-                expect(ajaxRequest.url).toBe(baseUrl + '/institutions');
+            it('should use endpoint /locations', function() {
+                expect(ajaxRequest.url).toBe(baseUrl + '/locations');
             });
 
             it('should NOT have a Content-Type header', function() {
@@ -57,9 +57,9 @@ define(function(require) {
             var ajaxRequest;
 
             it('should be defined', function() {
-                expect(typeof institutionsApi.retrieve).toBe('function');
+                expect(typeof locationsApi.retrieve).toBe('function');
                 ajaxSpy = spyOn($, 'ajax').and.returnValue($.Deferred().resolve());
-                institutionsApi.retrieve('some-id');
+                locationsApi.retrieve('some-id');
                 expect(ajaxSpy).toHaveBeenCalled();
                 ajaxRequest = ajaxSpy.calls.mostRecent().args[0];
             });
@@ -68,8 +68,8 @@ define(function(require) {
                 expect(ajaxRequest.type).toBe('GET');
             });
 
-            it('should use endpoint /institutions/some-id', function() {
-                expect(ajaxRequest.url).toBe(baseUrl + '/institutions/some-id');
+            it('should use endpoint /locations/some-id', function() {
+                expect(ajaxRequest.url).toBe(baseUrl + '/locations/some-id');
             });
 
             it('should NOT have a Content-Type header', function() {
