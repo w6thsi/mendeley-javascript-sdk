@@ -1653,6 +1653,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	     * @name api.metadata
 	     */
 	    return function metadata() {
+	        var dataHeaders = {
+	                'Accept': 'application/vnd.mendeley-document-lookup.1+json'
+	            };
+
 	        return {
 
 	            /**
@@ -1663,7 +1667,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	             * @param {object} params - A metadata search filter
 	             * @returns {promise}
 	             */
-	            retrieve: utils.requestFun('GET', '/metadata')
+	            retrieve: utils.requestFun('GET', '/metadata', false, dataHeaders, false)
 
 	        };
 	    };
