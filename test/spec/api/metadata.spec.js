@@ -40,6 +40,10 @@ define(function(require) {
                 expect(ajaxRequest.headers['Content-Type']).not.toBeDefined();
             });
 
+            it('should have a Accept header', function() {
+                expect(ajaxRequest.headers['Accept']).toBeDefined();
+            });
+
             it('should have an Authorization header', function() {
                 expect(ajaxRequest.headers.Authorization).toBeDefined();
                 expect(ajaxRequest.headers.Authorization).toBe('Bearer auth');
