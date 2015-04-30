@@ -156,6 +156,41 @@ define(function(require) {
                 expect(ajaxRequest.data).toBeUndefined();
             });
         });
+        
+        describe('patchByAnnotationId method', function() {
+        	var ajaxSpy;
+        	var ajaxRequest;
+        	
+        	it('should be defined', function() {
+        		expect(typeof annotationsApi.patchByAnnotationId).toBe('function');
+        		ajaxSpy = spyOn($, 'ajax').and.returnValue($.Deferred().resolve());
+        		annotationsApi.patchByAnnotationId(123, 'updated annotation');
+                expect(ajaxSpy).toHaveBeenCalled();
+        		ajaxRequest = ajaxSpy.calls.mostRecent().args[0];
+        	});
+        	
+        	it('should use PATCH', function() {
+        		expect(ajaxRequest.type).toBe('PATCH');
+        	});
+        	
+        	it('should use endpoint /annotations?annotation_id={id}&body=\u007B"text":"{text}"\u007D', function() {
+        		expect(ajaxRequest.url).toBe(baseUrl + '/annotations?annotation_id=123&body={"text":"updated annotation"}');
+        	});
+
+            it('should NOT have a Content-Type header', function() {
+                expect(ajaxRequest.headers['Content-Type']).not.toBeDefined();
+            });
+
+            it('should have an Authorization header', function() {
+                expect(ajaxRequest.headers.Authorization).toBeDefined();
+                expect(ajaxRequest.headers.Authorization).toBe('Bearer auth');
+            });
+
+            it('should NOT have a body', function() {
+                expect(ajaxRequest.data).toBeUndefined();
+            });
+        	
+        });
 
         describe('pagination', function() {
 
