@@ -191,6 +191,36 @@ define(function(require) {
         	
         });
         
+        describe('deleteAnnotation method', function() {
+        	var ajaxSpy, ajaxRequest;
+        	
+        	it('should be defined', function() {
+        		expect(typeof annotationsApi.deleteAnnotation).toBe('function');
+        		ajaxSpy = spyOn($, 'ajax').and.returnValue($.Deferred().resolve());
+        		annotationsApi.deleteAnnotation(123);
+                expect(ajaxSpy).toHaveBeenCalled();
+        		ajaxRequest = ajaxSpy.calls.mostRecent().args[0];
+        	});
+        	
+        	it('should use DELETE', function() {
+        		expect(ajaxRequest.type).toBe('DELETE');
+        	});
+        	
+        	it('should use endpoint https://api.mendeley.com/annotations/{annotation_id}', function() {
+        		expect(ajaxRequest.url).toBe(baseUrl + '/annotations/123');
+        	});
+
+            it('should have an Authorization header', function() {
+                expect(ajaxRequest.headers.Authorization).toBeDefined();
+                expect(ajaxRequest.headers.Authorization).toBe('Bearer auth');
+            });
+            
+            it('should not have a response body', function() {
+                expect(ajaxRequest.data).toBeUndefined;
+            });
+        	
+        });
+        
         describe('patchByAnnotationId method', function() {
         	var ajaxSpy, ajaxRequest;
         	
