@@ -83,17 +83,18 @@ return /******/ (function(modules) { // webpackBootstrap
 	        setBaseUrl:  utils.setBaseUrl,
 	        setNotifier: utils.setNotifier,
 
-	        catalog: __webpack_require__(6)(),
-	        documents: __webpack_require__(7)(),
-	        files: __webpack_require__(8)(),
-	        folders: __webpack_require__(9)(),
-	        followers: __webpack_require__(10)(),
-	        groups: __webpack_require__(11)(),
-	        institutions: __webpack_require__(12)(),
-	        locations: __webpack_require__(13)(),
-	        metadata: __webpack_require__(14)(),
-	        profiles: __webpack_require__(15)(),
-	        trash: __webpack_require__(16)()
+	        annotations: __webpack_require__(6)(),
+	        catalog: __webpack_require__(7)(),
+	        documents: __webpack_require__(8)(),
+	        files: __webpack_require__(9)(),
+	        folders: __webpack_require__(10)(),
+	        followers: __webpack_require__(11)(),
+	        groups: __webpack_require__(12)(),
+	        institutions: __webpack_require__(13)(),
+	        locations: __webpack_require__(14)(),
+	        metadata: __webpack_require__(15)(),
+	        profiles: __webpack_require__(16)(),
+	        trash: __webpack_require__(17)()
 	    };
 
 	}.call(exports, __webpack_require__, exports, module), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
@@ -1005,6 +1006,127 @@ return /******/ (function(modules) { // webpackBootstrap
 	    'use strict';
 
 	    /**
+	     * Annotations API
+	     *
+	     * @namespace
+	     * @name api.annotations
+	     */
+	    return function annotations() {
+
+	        return {
+
+	            /**
+	             * Retrieve an annotation
+	             *
+	             * @method
+	             * @memberof api.annotations
+	             * @param {string} id - A annotation UUID
+	             * @returns {promise}
+	             */
+	            retrieve: utils.requestFun('GET', '/annotations/{id}', ['id']),
+
+	            /**
+	             * Get annotations from a document
+	             *
+	             * @method
+	             * @memberof api.annotations
+	             * @param {String} id - A document UUID
+	             * @returns {Promise}
+	             */
+	            retrieveByDocumentId: utils.requestFun('GET', '/annotations?document_id={id}', ['id']),
+
+	            /**
+	             * Get a type of annotation from a document id
+	             *
+	             * @method
+	             * @memberof api.annotations
+	             * @param {String} type - An annotation type
+	             * @param {String} id - A document UUID
+	             * @returns {Promise}
+	             */
+	            retrieveByDocIdAndType: utils.requestFun('GET', '/annotations?type={type}&document_id={id}', ['type', 'id']),
+
+	            /**
+	             * Get a list of annotations
+	             *
+	             * @method
+	             * @memberof api.annotations
+	             * @returns {promise}
+	             */
+	            list: utils.requestFun('GET', '/annotations/'),
+
+	            /**
+	             * The total number of annotations - set after the first call to annotations.list()
+	             *
+	             * @var
+	             * @memberof api.annotations
+	             * @type {integer}
+	             */
+	            count: 0,
+
+	            /**
+	             * Get the next page of annotations
+	             *
+	             * @method
+	             * @memberof api.annotations
+	             * @returns {promise}
+	             */
+	            nextPage: utils.requestPageFun('next'),
+
+	            /**
+	             * Get the previous page of annotations
+	             *
+	             * @method
+	             * @memberof api.annotations
+	             * @returns {promise}
+	             */
+	            previousPage: utils.requestPageFun('previous'),
+
+	            /**
+	             * Get the last page of annotations
+	             *
+	             * @method
+	             * @memberof api.annotations
+	             * @returns {promise}
+	             */
+	            lastPage: utils.requestPageFun('last'),
+
+	            /**
+	             * Get pagination links
+	             *
+	             * @method
+	             * @memberof api.annotations
+	             * @returns {object}
+	             */
+	            paginationLinks: {
+	                last: false,
+	                next: false,
+	                previous: false
+	            },
+
+	            /**
+	             * Reset all pagination links
+	             *
+	             * @method
+	             * @memberof api.annotations
+	             */
+	            resetPagination: utils.resetPaginationLinks
+
+	        };
+	    };
+
+	}.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
+
+
+/***/ },
+/* 7 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__(5)], __WEBPACK_AMD_DEFINE_RESULT__ = function(utils) {
+
+	    'use strict';
+
+	    /**
 	     * Catalog API
 	     *
 	     * @namespace
@@ -1041,7 +1163,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 7 */
+/* 8 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__(5)], __WEBPACK_AMD_DEFINE_RESULT__ = function(utils) {
@@ -1220,7 +1342,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 8 */
+/* 9 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__(5)], __WEBPACK_AMD_DEFINE_RESULT__ = function(utils) {
@@ -1274,7 +1396,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 9 */
+/* 10 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__(5)], __WEBPACK_AMD_DEFINE_RESULT__ = function(utils) {
@@ -1430,7 +1552,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 10 */
+/* 11 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__(5)], __WEBPACK_AMD_DEFINE_RESULT__ = function(utils) {
@@ -1498,7 +1620,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 11 */
+/* 12 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__(5)], __WEBPACK_AMD_DEFINE_RESULT__ = function(utils) {
@@ -1597,7 +1719,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 12 */
+/* 13 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__(5)], __WEBPACK_AMD_DEFINE_RESULT__ = function(utils) {
@@ -1640,7 +1762,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 13 */
+/* 14 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__(5)], __WEBPACK_AMD_DEFINE_RESULT__ = function(utils) {
@@ -1683,7 +1805,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 14 */
+/* 15 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__(5)], __WEBPACK_AMD_DEFINE_RESULT__ = function(utils) {
@@ -1720,7 +1842,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 15 */
+/* 16 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__(5)], __WEBPACK_AMD_DEFINE_RESULT__ = function(utils) {
@@ -1766,7 +1888,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 16 */
+/* 17 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__(5)], __WEBPACK_AMD_DEFINE_RESULT__ = function(utils) {
