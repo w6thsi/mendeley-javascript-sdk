@@ -1356,6 +1356,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	     * @name api.files
 	     */
 	    return function files() {
+	        var dataHeaders = {
+	                'Accept': 'application/vnd.mendeley-file.1+json'
+	            };
+
 	        return {
 
 	            /**
@@ -1377,7 +1381,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	             * @param {string} id - A document UUID
 	             * @returns {promise}
 	             */
-	            list: utils.requestFun('GET', '/files?document_id={id}', ['id']),
+	            list: utils.requestFun('GET', '/files?document_id={id}', ['id'], dataHeaders),
 
 	            /**
 	             * Delete a file
