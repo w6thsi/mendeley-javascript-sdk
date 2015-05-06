@@ -115,6 +115,10 @@ define(function(require) {
                 expect(ajaxRequest.url).toBe(baseUrl + '/files?document_id=someId');
             });
 
+            it('should have an Accept header', function() {
+                expect(ajaxRequest.headers['Accept']).toBeDefined();
+            });
+
             it('should NOT have a Content-Type header', function() {
                 expect(ajaxRequest.headers['Content-Type']).not.toBeDefined();
             });
