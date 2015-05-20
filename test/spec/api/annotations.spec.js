@@ -156,6 +156,104 @@ define(function(require) {
                 expect(ajaxRequest.data).toBeUndefined();
             });
         });
+        
+        describe('createAnnotation method', function() {
+        	var ajaxSpy, ajaxRequest;
+        	
+        	it('should be defined', function() {
+        		expect(typeof annotationsApi.createAnnotation).toBe('function');
+        		ajaxSpy = spyOn($, 'ajax').and.returnValue($.Deferred().resolve());
+        		annotationsApi.createAnnotation({document_id: 123, text: 'new annotation'});
+        		expect(ajaxSpy).toHaveBeenCalled();
+        		ajaxRequest = ajaxSpy.calls.mostRecent().args[0];
+        	});
+        	
+        	it('should use POST', function() {
+        		expect(ajaxRequest.type).toBe('POST');
+        	});
+        	
+        	it('should use endpoint https://api.mendeley.com/annotations/', function() {
+        		expect(ajaxRequest.url).toBe(baseUrl + '/annotations/');
+        	});
+
+            it('should have a Content-Type header', function() {
+                expect(ajaxRequest.headers['Content-Type']).toBeDefined();
+            });
+
+            it('should have an Authorization header', function() {
+                expect(ajaxRequest.headers.Authorization).toBeDefined();
+                expect(ajaxRequest.headers.Authorization).toBe('Bearer auth');
+            });
+            
+            it('should have a body of JSON string', function() {
+                expect(ajaxRequest.data).toBe('{"document_id":123,"text":"new annotation"}');
+            });
+        	
+        });
+        
+        describe('deleteAnnotation method', function() {
+        	var ajaxSpy, ajaxRequest;
+        	
+        	it('should be defined', function() {
+        		expect(typeof annotationsApi.deleteAnnotation).toBe('function');
+        		ajaxSpy = spyOn($, 'ajax').and.returnValue($.Deferred().resolve());
+        		annotationsApi.deleteAnnotation(123);
+                expect(ajaxSpy).toHaveBeenCalled();
+        		ajaxRequest = ajaxSpy.calls.mostRecent().args[0];
+        	});
+        	
+        	it('should use DELETE', function() {
+        		expect(ajaxRequest.type).toBe('DELETE');
+        	});
+        	
+        	it('should use endpoint https://api.mendeley.com/annotations/{annotation_id}', function() {
+        		expect(ajaxRequest.url).toBe(baseUrl + '/annotations/123');
+        	});
+
+            it('should have an Authorization header', function() {
+                expect(ajaxRequest.headers.Authorization).toBeDefined();
+                expect(ajaxRequest.headers.Authorization).toBe('Bearer auth');
+            });
+            
+            it('should not have a response body', function() {
+                expect(ajaxRequest.data).toBeUndefined;
+            });
+        	
+        });
+        
+        describe('patchByAnnotationId method', function() {
+        	var ajaxSpy, ajaxRequest;
+        	
+        	it('should be defined', function() {
+        		expect(typeof annotationsApi.patchByAnnotationId).toBe('function');
+        		ajaxSpy = spyOn($, 'ajax').and.returnValue($.Deferred().resolve());
+        		annotationsApi.patchByAnnotationId(123, {text: 'updated annotation'});
+                expect(ajaxSpy).toHaveBeenCalled();
+        		ajaxRequest = ajaxSpy.calls.mostRecent().args[0];
+        	});
+        	
+        	it('should use PATCH', function() {
+        		expect(ajaxRequest.type).toBe('PATCH');
+        	});
+        	
+        	it('should use endpoint https://api.mendeley.com/annotations/{annotation_id}', function() {
+        		expect(ajaxRequest.url).toBe(baseUrl + '/annotations/123');
+        	});
+
+            it('should have a Content-Type header', function() {
+                expect(ajaxRequest.headers['Content-Type']).toBeDefined();
+            });
+
+            it('should have an Authorization header', function() {
+                expect(ajaxRequest.headers.Authorization).toBeDefined();
+                expect(ajaxRequest.headers.Authorization).toBe('Bearer auth');
+            });
+            
+            it('should have a body of JSON', function() {
+                expect(ajaxRequest.data).toBe('{"text":"updated annotation"}');
+            });
+        	
+        });
 
         describe('pagination', function() {
 
