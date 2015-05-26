@@ -194,6 +194,7 @@ All contributions should be made by pull request (even if you have commit rights
 In lieu of a formal styleguide, take care to maintain the existing coding style.
 
 Please add unit tests for any new or changed functionality. Tests use karma and jasmine, run them with:
+
     $ npm test
 
 If you make changes please check coverage reports under `/coverage` to make sure you haven't left any new code untested.
