@@ -17,8 +17,10 @@ Or clone the git repository:
 
 The SDK is available as an AMD module or a standalone library. To use the standalone library add a link from your HTML page. It has a dependency on jquery which must be loaded first.
 
-        <script src="//ajax.googleapis.com/ajax/libs/jquery/1.1.11/jquery.min.js"></script>
-        <script src="/your/path/to/mendeley-javascript-sdk/dist/standalone.js"></script>
+```html
+<script src="//ajax.googleapis.com/ajax/libs/jquery/1.1.11/jquery.min.js"></script>
+<script src="/your/path/to/mendeley-javascript-sdk/dist/standalone.js"></script>
+```
 
 To use as an AMD module you'll need an AMD loader like [requirejs][] or [webpack][].
 
@@ -42,9 +44,11 @@ To begin a session you must set an authentication flow. This SDK includes code f
 
 For purely client-side applications you can use the implicit grant flow which only requires a client id. To initiate the flow call:
 
-    var options = { clientId: /* YOUR CLIENT ID */ };
-    var auth = MendeleySDK.Auth.implicitGrantFlow(options);
-    MendeleySDK.API.setAuthFlow(auth);
+```javascript
+var options = { clientId: /* YOUR CLIENT ID */ };
+var auth = MendeleySDK.Auth.implicitGrantFlow(options);
+MendeleySDK.API.setAuthFlow(auth);
+```
 
 The options are:
 
@@ -60,12 +64,14 @@ For server applications you can use the authorization code flow. This requires s
 
 The main difference is the server will do the token exchange and set the access token cookie. From the client-side point of view you start the flow like:
 
-    var options = {
-        apiAuthenticateUrl: '/login',
-        refreshAccessTokenUrl: '/refresh-token'
-    };
-    var auth = MendeleySDK.Auth.authCodeFlow(options);
-    MendeleySDK.API.setAuthFlow(auth);
+```javascript
+var options = {
+    apiAuthenticateUrl: '/login',
+    refreshAccessTokenUrl: '/refresh-token'
+};
+var auth = MendeleySDK.Auth.authCodeFlow(options);
+MendeleySDK.API.setAuthFlow(auth);
+```
 
 The options are:
 
@@ -81,7 +87,30 @@ Each API is exposed as a property of the SDK, for example `MendeleySDK.documents
 
 Methods that make API calls use [jquery deferred objects][] and return promises. Each call will either resolve with some data or reject with the original request and the API response. Here's an example using the standalone version:
 
-    MendeleySDK.API.documents.list().done(function(docs) {
+```javascript
+MendeleySDK.API.documents.list().done(function(docs) {
+
+    console.log('Success!');
+    console.log(docs);
+
+}).fail(function(request, response) {
+
+    console.log('Failed!');
+    console.log('URL:', request.url);
+    console.log('Status:', response.status);
+
+});
+```
+
+Here's an example using [requirejs][]:
+
+```javascript
+define(function(require) {
+    var api = require('mendeley-javascript-sdk/lib/api');
+    var auth = require('mendeley-javascript-sdk/lib/auth');
+    api.setAuthFlow(auth.authCodeFlow());
+
+    api.documents.list().done(function() {
 
         console.log('Success!');
         console.log(docs);
@@ -93,61 +122,44 @@ Methods that make API calls use [jquery deferred objects][] and return promises.
         console.log('Status:', response.status);
 
     });
-
-Here's an example using [requirejs][]:
-
-        define(function(require) {
-            var api = require('mendeley-javascript-sdk/lib/api');
-            var auth = require('mendeley-javascript-sdk/lib/auth');
-            api.setAuthFlow(auth.authCodeFlow());
-
-            api.documents.list().done(function() {
-
-                console.log('Success!');
-                console.log(docs);
-
-            }).fail(function(request, response) {
-
-                console.log('Failed!');
-                console.log('URL:', request.url);
-                console.log('Status:', response.status);
-
-            });
-        });
-
+});
+```
 
 ## Logging api events
 
 For logging api communication e.g. warning and error, you can attach a notifier that will send a message to a delegated logger function when a relevant event happens. If you want to limit the verbosity of the notifier just pass the minimum log level as the second parameter of the notifier creator.
 
 The message structure is :
-    {
+
+```javascript
+{
     code: 'Unique numeric identification of the error ',
     level: 'Severity level of the message (error, warn, info, debug)'
     message: 'Textual explanation of the error',
     request : 'If available, the request who generated the event',
     response : 'If available, the response who generated the event'
-    }
+}
+```
 
 Here's an example using the browser console as logger.
 
-    define(function(require) {
-        var api = require('mendeley-javascript-sdk/api');
-        var auth = require('mendeley-javascript-sdk/auth');
-        var notifier = require('mendeley-javascript-sdk/notifier');
+```javascript
+define(function(require) {
+    var api = require('mendeley-javascript-sdk/api');
+    var auth = require('mendeley-javascript-sdk/auth');
+    var notifier = require('mendeley-javascript-sdk/notifier');
 
-        var logger = function(message) {
-            console[message.level](message);
-        };
+    var logger = function(message) {
+        console[message.level](message);
+    };
 
-        // notifier.createNotifier(<logger function>, <minimum log level>)
-        var apiNotifier = notifier.createNotifier(logger, 'warn');
+    // notifier.createNotifier(<logger function>, <minimum log level>)
+    var apiNotifier = notifier.createNotifier(logger, 'warn');
 
-        api.setAuthFlow(auth.authCodeFlow(authSettings));
-        api.setNotifier(apiNotifier);
-    });
-
-
+    api.setAuthFlow(auth.authCodeFlow(authSettings));
+    api.setNotifier(apiNotifier);
+});
+```
 
 ## Examples
 
