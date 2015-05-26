@@ -13,7 +13,7 @@ Installation can be done with [bower][]:
 
 Or clone the git repository:
 
-  $ git clone https://github.com/Mendeley/mendeley-javascript-sdk
+    $ git clone https://github.com/Mendeley/mendeley-javascript-sdk
 
 The SDK is available as an AMD module or a standalone library. To use the standalone library add a link from your HTML page. It has a dependency on jquery which must be loaded first.
 
@@ -157,8 +157,8 @@ To run the examples you will need to [register your application][] to get a clie
 
 The default example setup uses the implicit grant flow. To use this copy `examples/oauth-config.implicit-grant.js.dist` to `examples/oauth-config.js`, fill in your client ID, then run:
 
-        $ npm install
-        $ npm start
+    $ npm install
+    $ npm start
 
 Go to http://localhost:8111/examples/ in your browser and you should be redirected to log-in to Mendeley. Once logged in you'll be redirected back to the examples.
 
