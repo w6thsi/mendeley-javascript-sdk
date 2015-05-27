@@ -83,7 +83,7 @@ The options are:
 
 Once the OAuth flow is complete you can start grabbing data for the user. CORS is enabled by default for all clients so there's no need to do anything special to implement the cross-domain requests (unless you need to support browsers that don't have CORS).
 
-Each API is exposed as a property of the SDK, for example `MendeleySDK.documents`, `MendeleySDK.folders`.
+Each API is exposed as a property of the SDK, for example `MendeleySDK.API.documents`, `MendeleySDK.API.folders`.
 
 Methods that make API calls use [jquery deferred objects][] and return promises. Each call will either resolve with some data or reject with the original request and the API response. Here's an example using the standalone version:
 
