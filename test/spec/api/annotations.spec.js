@@ -1,3 +1,4 @@
+/* jshint camelcase: false */
 define(function(require) {
 
     'use strict';
@@ -278,3 +279,4 @@ define(function(require) {
         });
     });
 });
+/* jshint camelcase: true */
