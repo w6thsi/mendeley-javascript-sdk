@@ -55,6 +55,12 @@ define(function(require) {
             getAllResponseHeaders: getAllResponseHeaders
         }).promise();
 
+        var mockPromiseClone = $.Deferred().resolve({ id: '16', title: 'foo', 'group_id': 'bar' }, 1, {
+            status: 200,
+            getResponseHeader: getResponseHeaderLocation,
+            getAllResponseHeaders: getAllResponseHeaders
+        }).promise();
+
         var mockPromiseList = $.Deferred().resolve([{ id: '15', title: 'foo' }], 1, {
             status: 200,
             getResponseHeader: getResponseHeaderLocation,
@@ -298,6 +304,42 @@ define(function(require) {
             });
 
         });
+
+        describe('clone method', function() {
+
+            var ajaxRequest;
+
+            it('should be defined', function() {
+                expect(typeof documentsApi.clone).toBe('function');
+                var ajaxSpy = spyOn($, 'ajax').and.callFake(getMockPromises(mockPromiseClone));
+                documentsApi.clone(15, { 'group_id': 'bar' });
+                expect(ajaxSpy).toHaveBeenCalled();
+                ajaxRequest = ajaxSpy.calls.mostRecent().args[0];
+            });
+
+            it('should use POST', function() {
+                expect(ajaxRequest.type).toBe('POST');
+            });
+
+            it('should use endpoint /documents/{id}/actions/cloneTo', function() {
+                expect(ajaxRequest.url).toBe(baseUrl + '/documents/15/actions/cloneTo');
+            });
+
+            it('should have a Content-Type header', function() {
+                expect(ajaxRequest.headers['Content-Type']).toBeDefined();
+            });
+
+            it('should have an Authorization header', function() {
+                expect(ajaxRequest.headers.Authorization).toBeDefined();
+                expect(ajaxRequest.headers.Authorization).toBe('Bearer auth');
+            });
+
+            it('should have a body of JSON string', function() {
+                expect(ajaxRequest.data).toBe('{"group_id":"bar"}');
+            });
+
+        });
+
 
         describe('list method', function() {
 
