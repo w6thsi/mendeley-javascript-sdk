@@ -307,12 +307,13 @@ define(function(require) {
 
         describe('clone method', function() {
 
-            var ajaxRequest;
+            var ajaxRequest,
+                apiRequest;;
 
             it('should be defined', function() {
                 expect(typeof documentsApi.clone).toBe('function');
                 var ajaxSpy = spyOn($, 'ajax').and.callFake(getMockPromises(mockPromiseClone));
-                documentsApi.clone(15, { 'group_id': 'bar' });
+                apiRequest = documentsApi.clone(15, { 'group_id': 'bar' });
                 expect(ajaxSpy).toHaveBeenCalled();
                 ajaxRequest = ajaxSpy.calls.mostRecent().args[0];
             });
@@ -338,8 +339,12 @@ define(function(require) {
                 expect(ajaxRequest.data).toBe('{"group_id":"bar"}');
             });
 
+            it('should resolve with the response', function() {
+                apiRequest.done(function(data) {
+                    expect(data).toEqual({ id : '16', title : 'foo', 'group_id' : 'bar' });
+                });
+            });
         });
-
 
         describe('list method', function() {
 
