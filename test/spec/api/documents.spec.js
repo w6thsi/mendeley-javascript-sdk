@@ -308,7 +308,7 @@ define(function(require) {
         describe('clone method', function() {
 
             var ajaxRequest,
-                apiRequest;;
+                apiRequest;
 
             it('should be defined', function() {
                 expect(typeof documentsApi.clone).toBe('function');
