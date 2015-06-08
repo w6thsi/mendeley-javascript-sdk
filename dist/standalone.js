@@ -1273,6 +1273,16 @@ return /******/ (function(modules) { // webpackBootstrap
 	            update: utils.requestWithDataFun('PATCH', '/documents/{id}', ['id'], dataHeaders, true),
 
 	            /**
+	             * Clone a document from user library to a group ( or vice versa )
+	             *
+	             * @method
+	             * @memberof api.documents
+	             * @param {object} id - A document UUID
+	             * @returns {promise}
+	             */
+	            clone: utils.requestWithDataFun('POST', '/documents/{id}/actions/cloneTo', ['id'], dataHeaders, true),
+
+	            /**
 	             * List documents
 	             *
 	             * @method
@@ -1281,7 +1291,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	             * @returns {promise}
 	             */
 	            list: function(params) {
-	                if(!params || typeof params.folderId === 'undefined') {
+	                if (!params || typeof params.folderId === 'undefined') {
 	                    return listDocuments.call(this, params);
 	                } else {
 	                    var folderId = params.folderId,
