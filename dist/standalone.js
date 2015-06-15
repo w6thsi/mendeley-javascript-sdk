@@ -1013,7 +1013,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	     * @name api.annotations
 	     */
 	    return function annotations() {
-	    
+
 	    	var dataHeaders = {
 				annotation: { 'Content-Type': 'application/vnd.mendeley-annotation.1+json' }
 			};
@@ -1030,27 +1030,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	             */
 	            retrieve: utils.requestFun('GET', '/annotations/{id}', ['id']),
 
-	            /**
-	             * Get annotations from a document
-	             *
-	             * @method
-	             * @memberof api.annotations
-	             * @param {String} id - A document UUID
-	             * @returns {Promise}
-	             */
-	            retrieveByDocumentId: utils.requestFun('GET', '/annotations?document_id={id}', ['id']),
-
-	            /**
-	             * Get a type of annotation from a document id
-	             *
-	             * @method
-	             * @memberof api.annotations
-	             * @param {String} type - An annotation type
-	             * @param {String} id - A document UUID
-	             * @returns {Promise}
-	             */
-	            retrieveByDocIdAndType: utils.requestFun('GET', '/annotations?type={type}&document_id={id}', ['type', 'id']),
-
 				/**
 	             * Patch a single annotation
 	             *
@@ -1060,8 +1039,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	             * @param {object} text - The updated note text
 	             * @returns {Promise}
 	             */
-	            patchByAnnotationId: utils.requestWithDataFun('PATCH', '/annotations/{id}', ['id'], dataHeaders.annotation, true),
-	            
+	            patch: utils.requestWithDataFun('PATCH', '/annotations/{id}', ['id'], dataHeaders.annotation, true),
+
 	            /**
 	             * Create a single annotation
 	             *
@@ -1070,8 +1049,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	             * @param {object} text - Note text
 	             * @returns {Promise}
 	             */
-	            createAnnotation: utils.requestWithDataFun('POST', '/annotations/', [], dataHeaders.annotation, true),
-	            
+	            create: utils.requestWithDataFun('POST', '/annotations/', [], dataHeaders.annotation, true),
+
 	             /**
 	             * Delete a single annotation
 	             *
@@ -1080,7 +1059,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	             * @param {String} id - Annotation UUID
 	             * @returns {Promise}
 	             */
-	            deleteAnnotation: utils.requestFun('DELETE', '/annotations/{id}', ['id']),
+	            delete: utils.requestFun('DELETE', '/annotations/{id}', ['id']),
 
 	            /**
 	             * Get a list of annotations
