@@ -24,7 +24,7 @@ To use as an AMD module you'll need an AMD loader like [requirejs][] or [webpack
 
 The only hard-dependency is jquery 1.1.10 or above (it may work with earlier versions but these are untested).
 
-Some EcmaScript5 features are used so for older browsers you may need to shim these methods, for example with [es5-shim][].
+Some ECMAScript5 features are used so for older browsers you may need to shim these methods, for example with [es5-shim][].
 
 
 ## Registering a Client
@@ -33,12 +33,11 @@ To use the API you first need to register your application to get a client ID wh
 
 Go to [the Mendeley developers site][], sign-in with your Mendeley account details and click on "My Apps" and follow the instructions to register a new application.
 
-
 ## OAuth2 Flows
 
 To begin a session you must set an authentication flow. This SDK includes code for the implict grant and auth code flows.
 
-### Implicit grant flow
+### Implicit Grant Flow
 
 For purely client-side applications you can use the implicit grant flow which only requires a client id. To initiate the flow call:
 
@@ -54,7 +53,7 @@ The options are:
 
 The API internally will handle stale cookies by redirecting to the log-in page if any request fails with a status of 401 Unauthorized.
 
-### Authorization code flow
+### Authorization Code Flow
 
 For server applications you can use the authorization code flow. This requires server-to-server communication in order to acquire an access token. Implementing this depends on your language, framework etc. so isn't included in this SDK, but there is a nodejs example included (more info below).
 
@@ -116,9 +115,9 @@ Here's an example using [requirejs][]:
         });
 
 
-## Logging api events
+## Logging API events
 
-For logging api communication e.g. warning and error, you can attach a notifier that will send a message to a delegated logger function when a relevant event happens. If you want to limit the verbosity of the notifier just pass the minimum log level as the second parameter of the notifier creator.
+For logging API communication e.g. warning and error, you can attach a notifier that will send a message to a delegated logger function when a relevant event happens. If you want to limit the verbosity of the notifier just pass the minimum log level as the second parameter of the notifier creator.
 
 The message structure is :
     {

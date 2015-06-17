@@ -4,7 +4,7 @@
  * This requires server-to-server communication to do a token exchange. There
  * is an example expressjs app in server.js that demonstrates one way to do this.
  *
- * To use this config copy it to examples/auth-config.js, fill in your clientId and
+ * To use this config copy it to oauth-config.js, fill in your clientId and
  * clientSecret.
  */
 try {
