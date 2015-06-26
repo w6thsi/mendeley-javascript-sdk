@@ -1195,6 +1195,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	        var dataHeaders = {
 	                'Content-Type': 'application/vnd.mendeley-document.1+json'
 	            },
+	            cloneDataHeaders = {
+	                'Content-Type': 'application/vnd.mendeley-document-clone.1+json'
+	            },
 
 	            listDocuments = utils.requestFun('GET', '/documents/'),
 	            listFolder = utils.requestFun('GET', '/folders/{id}/documents', ['id']);
@@ -1260,7 +1263,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	             * @param {object} id - A document UUID
 	             * @returns {promise}
 	             */
-	            clone: utils.requestWithDataFun('POST', '/documents/{id}/actions/cloneTo', ['id'], dataHeaders, true),
+	            clone: utils.requestWithDataFun('POST', '/documents/{id}/actions/cloneTo', ['id'], cloneDataHeaders, true),
 
 	            /**
 	             * List documents
