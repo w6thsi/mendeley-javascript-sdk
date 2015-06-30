@@ -1,3 +1,4 @@
+/* jshint sub: true */
 define(function(require) {
 
     'use strict';
@@ -171,3 +172,4 @@ define(function(require) {
         });
     });
 });
+/* jshint sub: false */
