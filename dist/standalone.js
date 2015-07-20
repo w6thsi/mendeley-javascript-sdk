@@ -1200,7 +1200,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	            },
 
 	            listDocuments = utils.requestFun('GET', '/documents/'),
-	            listFolder = utils.requestFun('GET', '/folders/{id}/documents', ['id']);
+	            listFolder = utils.requestFun('GET', '/macro/folder_documents');
 
 	        return {
 
@@ -1274,16 +1274,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	             * @returns {promise}
 	             */
 	            list: function(params) {
-	                if (!params || typeof params.folderId === 'undefined') {
-	                    return listDocuments.call(this, params);
-	                } else {
-	                    var folderId = params.folderId,
-	                        callParams = {
-	                            limit: params.limit
-	                        };
-	                    delete params.folderId;
-	                    return listFolder.call(this, folderId, callParams);
-	                }
+	                /* jshint camelcase: false */
+	                var list = (!params || typeof params.folder_id === 'undefined') ? listDocuments : listFolder;
+	                return list.call(this, params);
 	            },
 
 	            /**
