@@ -387,15 +387,14 @@ define(function(require) {
 
         });
 
-        describe('list with folder_id param', function() {
-            /* jshint camelcase: false */
+        describe('list with folderId param', function() {
 
             var ajaxRequest;
             var params = {
                 sort: 'created',
                 order: 'desc',
                 limit: 50,
-                folder_id: 'xyz'
+                folderId: 'xyz'
             };
 
             it('should use the folders API', function() {
@@ -409,8 +408,12 @@ define(function(require) {
                 expect(ajaxRequest.type).toBe('GET');
             });
 
-            it('should use endpoint /macro/folder_documents', function() {
-                expect(ajaxRequest.url).toBe(baseUrl + '/macro/folder_documents');
+            it('should use endpoint /folders/{id}/documents', function() {
+                expect(ajaxRequest.url).toBe(baseUrl + '/folders/xyz/documents');
+            });
+
+            it('should remove the all paramaters except limit', function() {
+                expect(ajaxRequest.data).toEqual({limit: 50});
             });
 
         });
