@@ -57,9 +57,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	// Exports Mendeley SDK
 	module.exports = {
 	    API: __webpack_require__(1),
-	    Auth: __webpack_require__(2),
+	    Auth: __webpack_require__(16),
 	    Request: __webpack_require__(3),
-	    Notifier: __webpack_require__(4)
+	    Notifier: __webpack_require__(17)
 	};
 
 
@@ -70,7 +70,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	var __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_DEFINE_RESULT__ = function(require) {
 	    'use strict';
 
-	    var utils = __webpack_require__(5);
+	    var utils = __webpack_require__(2);
 
 	    /**
 	     * API
@@ -83,18 +83,18 @@ return /******/ (function(modules) { // webpackBootstrap
 	        setBaseUrl:  utils.setBaseUrl,
 	        setNotifier: utils.setNotifier,
 
-	        annotations: __webpack_require__(6)(),
-	        catalog: __webpack_require__(7)(),
-	        documents: __webpack_require__(8)(),
-	        files: __webpack_require__(9)(),
-	        folders: __webpack_require__(10)(),
-	        followers: __webpack_require__(11)(),
-	        groups: __webpack_require__(12)(),
-	        institutions: __webpack_require__(13)(),
-	        locations: __webpack_require__(14)(),
-	        metadata: __webpack_require__(15)(),
-	        profiles: __webpack_require__(16)(),
-	        trash: __webpack_require__(17)()
+	        annotations: __webpack_require__(4)(),
+	        catalog: __webpack_require__(5)(),
+	        documents: __webpack_require__(6)(),
+	        files: __webpack_require__(7)(),
+	        folders: __webpack_require__(8)(),
+	        followers: __webpack_require__(9)(),
+	        groups: __webpack_require__(10)(),
+	        institutions: __webpack_require__(11)(),
+	        locations: __webpack_require__(12)(),
+	        metadata: __webpack_require__(13)(),
+	        profiles: __webpack_require__(14)(),
+	        trash: __webpack_require__(15)()
 	    };
 
 	}.call(exports, __webpack_require__, exports, module), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
@@ -102,571 +102,6 @@ return /******/ (function(modules) { // webpackBootstrap
 
 /***/ },
 /* 2 */
-/***/ function(module, exports, __webpack_require__) {
-
-	var __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_DEFINE_RESULT__ = function() {
-
-	    'use strict';
-
-	    var defaults = {
-	        win: window,
-	        authenticateOnStart: true,
-	        apiAuthenticateUrl: 'https://api.mendeley.com/oauth/authorize',
-	        accessTokenCookieName: 'accessToken',
-	        scope: 'all'
-	    };
-
-	    var defaultsImplicitFlow = {
-	        clientId: false,
-	        redirectUrl: false
-	    };
-
-	    var defaultsAuthCodeFlow = {
-	        apiAuthenticateUrl: '/login',
-	        refreshAccessTokenUrl: false
-	    };
-
-	    var settings = {};
-
-	    return {
-	        implicitGrantFlow: implicitGrantFlow,
-	        authCodeFlow: authCodeFlow
-	    };
-
-	    function implicitGrantFlow(options) {
-
-	        settings = $.extend({}, defaults, defaultsImplicitFlow, options || {});
-
-	        if (!settings.clientId) {
-	            console.error('You must provide a clientId for implicit grant flow');
-	            return false;
-	        }
-
-	        // OAuth redirect url defaults to current url
-	        if (!settings.redirectUrl) {
-	            var loc = settings.win.location;
-	            settings.redirectUrl = loc.protocol + '//' + loc.host + loc.pathname;
-	        }
-
-	        settings.apiAuthenticateUrl = settings.apiAuthenticateUrl +
-	            '?client_id=' + settings.clientId +
-	            '&redirect_uri=' + settings.redirectUrl +
-	            '&scope=' + settings.scope +
-	            '&response_type=token';
-
-	        if (settings.authenticateOnStart && !getAccessTokenCookieOrUrl()) {
-	            authenticate();
-	        }
-
-	        return {
-	            authenticate: authenticate,
-	            getToken: getAccessTokenCookieOrUrl,
-	            refreshToken: noop()
-	        };
-	    }
-
-	    function authCodeFlow(options) {
-
-	        settings = $.extend({}, defaults, defaultsAuthCodeFlow, options || {});
-
-	        if (!settings.apiAuthenticateUrl) {
-	            console.error('You must provide an apiAuthenticateUrl for auth code flow');
-	            return false;
-	        }
-
-	        if (settings.authenticateOnStart && !getAccessTokenCookie()) {
-	            authenticate();
-	        }
-
-	        return {
-	            authenticate: authenticate,
-	            getToken: getAccessTokenCookie,
-	            refreshToken: refreshAccessTokenCookie
-	        };
-	    }
-
-	    function noop() {
-	        return function() { return false; };
-	    }
-
-	    function authenticate() {
-	        var url = typeof settings.apiAuthenticateUrl === 'function' ?
-	            settings.apiAuthenticateUrl() : settings.apiAuthenticateUrl;
-
-	        clearAccessTokenCookie();
-	        settings.win.location = url;
-	    }
-
-	    function getAccessTokenCookieOrUrl() {
-	        var location = settings.win.location,
-	            hash = location.hash ? location.hash.split('=')[1] : '',
-	            cookie = getAccessTokenCookie();
-
-	        if (hash && !cookie) {
-	            setAccessTokenCookie(hash);
-	            return hash;
-	        }
-	        if (!hash && cookie) {
-	            return cookie;
-	        }
-	        if (hash && cookie) {
-	            if (hash !== cookie) {
-	                setAccessTokenCookie(hash);
-	                return hash;
-	            }
-	            return cookie;
-	        }
-
-	        return '';
-	    }
-
-	    function getAccessTokenCookie() {
-	        var name = settings.accessTokenCookieName + '=',
-	            ca = settings.win.document.cookie.split(';');
-
-	        for(var i = 0; i < ca.length; i++) {
-	            var c = ca[i];
-
-	            while (c.charAt(0) === ' ') {
-	                c = c.substring(1);
-	            }
-
-	            if (c.indexOf(name) !== -1) {
-	                return c.substring(name.length, c.length);
-	            }
-	        }
-
-	        return '';
-	    }
-
-	    function setAccessTokenCookie(accessToken, expireHours) {
-	        var d = new Date();
-	        d.setTime(d.getTime() + ((expireHours || 1)*60*60*1000));
-	        var expires = 'expires=' + d.toUTCString();
-	        settings.win.document.cookie = settings.accessTokenCookieName + '=' + accessToken + '; ' + expires;
-	    }
-
-	    function clearAccessTokenCookie() {
-	        setAccessTokenCookie('', -1);
-	    }
-
-	    function refreshAccessTokenCookie() {
-	        if (settings.refreshAccessTokenUrl) {
-	            return $.get(settings.refreshAccessTokenUrl);
-	        }
-
-	        return false;
-	    }
-	}.call(exports, __webpack_require__, exports, module), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
-
-
-
-/***/ },
-/* 3 */
-/***/ function(module, exports, __webpack_require__) {
-
-	var __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_DEFINE_RESULT__ = function() {
-
-	    'use strict';
-
-	    var defaults = {
-	        authFlow: false,
-	        maxRetries: 0,
-	        maxAuthRetries: 1,
-	        followLocation: false,
-	        fileUpload: false,
-	        extractHeaders: ['Mendeley-Count', 'Link']
-	    };
-	    var noopNotifier = { notify: function() {}};
-
-	    function create(request, settings, notifier) {
-	        return new Request(request, $.extend({}, defaults, settings), notifier);
-	    }
-
-	    function Request(request, settings, notifier) {
-	        if (!settings.authFlow) {
-	            throw new Error('Please provide an authentication interface');
-	        }
-	        this.request = request;
-	        this.settings = settings;
-	        this.retries = 0;
-	        this.authRetries = 0;
-	        this.notifier = notifier || noopNotifier;
-
-	        this.notifier.notify('startInfo', [this.request.type, this.request.url], this.request);
-	    }
-
-	    function send(dfd, request) {
-
-	        dfd = dfd || $.Deferred();
-	        request = request || this.request;
-	        request.headers = request.headers || {};
-	        var token = this.settings.authFlow.getToken();
-	        // If no token at all (cookie deleted or expired) refresh token if possible or authenticate
-	        // because if you send 'Bearer ' you get a 400 rather than a 401 - is that a bug in the api?
-	        if (!token) {
-	            this.authRetries++;
-	            this.notifier.notify('authWarning', ['n.a.', this.authRetries, this.settings.maxAuthRetries], this.request);
-	            refreshToken.call(this, dfd);
-	            return dfd.promise();
-	        }
-
-	        request.headers.Authorization = 'Bearer ' + token;
-
-	        if (this.settings.fileUpload) {
-	            // Undocumented way to access XHR so we can add upload progress listeners
-	            var xhr = $.ajaxSettings.xhr();
-	            request.xhr = function() { return xhr; };
-
-	            // The response may have JSON Content-Type which makes jQuery invoke JSON.parse
-	            // on the reponse, but there isn't one so there's an error which causes the deferred
-	            // to be rejected. Specifying a dataType of 'text' prevents this.
-	            request.dataType = 'text';
-
-	            // Decorate the xhr with upload progress events
-	            ['loadstart', 'loadend', 'load', 'progress', 'abort', 'error', 'timeout']
-	                .forEach(function(uploadEvent) {
-	                    xhr.upload.addEventListener(uploadEvent, uploadProgressFun.call(this, dfd, request, xhr));
-	                }.bind(this));
-	        }
-
-	        $.ajax(request)
-	            .fail(onFail.bind(this, dfd))
-	            .done(onDone.bind(this, dfd));
-
-	        return dfd.promise();
-	    }
-
-	    function onFail(dfd, xhr) {
-	        switch (xhr.status) {
-	            case 0:
-	            case 504:
-	                // 504 Gateway timeout or communication error
-	                if (this.retries < this.settings.maxRetries) {
-	                    this.retries++;
-	                    this.notifier.notify('commWarning', [xhr.status, this.retries, this.settings.maxRetries], this.request, xhr);
-	                    this.send(dfd);
-	                } else {
-	                    this.notifier.notify('commError', [xhr.status, this.settings.maxRetries], this.request, xhr);
-	                    dfd.reject(this.request, xhr);
-	                }
-	                break;
-
-	            case 401:
-	                // 401 Unauthorized
-	                if (this.authRetries < this.settings.maxAuthRetries) {
-	                    this.authRetries++;
-	                    this.notifier.notify('authWarning', [xhr.status, this.authRetries, this.settings.maxAuthRetries], this.request, xhr);
-	                    refreshToken.call(this, dfd, xhr);
-	                } else {
-	                    this.notifier.notify('authError', [xhr.status, this.settings.maxAuthRetries], this.request, xhr);
-	                    dfd.reject(this.request, xhr);
-	                    this.settings.authFlow.authenticate(200);
-	                }
-	                break;
-
-	            default:
-	                this.notifier.notify('reqError', [xhr.status], this.request, xhr);
-	                dfd.reject(this.request, xhr);
-	        }
-	    }
-
-	    function onDone(dfd, response, success, xhr) {
-
-	        var locationHeader = getResponseHeader(xhr, 'Location'),
-	            headers;
-
-	        if (locationHeader && this.settings.followLocation && xhr.status === 201) {
-	            var redirect = {
-	                type: 'GET',
-	                url: locationHeader,
-	                dataType: 'json'
-	            };
-	            this.notifier.notify('redirectInfo', null, this.request, redirect);
-	            this.send(dfd, redirect);
-	        } else {
-	            if (this.settings.extractHeaders) {
-	                headers = extractHeaders.call(this, xhr);
-	            }
-
-	            // File uploads have type set to text, so if there is some JSON parse it manually
-	            if (this.settings.fileUpload) {
-	                if (response) {
-	                    try {
-	                        response = JSON.parse(response);
-	                    } catch (error) {
-	                        this.notifier.notify('parseError', null, this.request, xhr);
-	                        dfd.reject(error);
-	                        return;
-	                    }
-	                }
-	                this.notifier.notify('uploadSuccessInfo', null, this.request, response);
-	                dfd.resolve(response, xhr);
-	            } else {
-	                this.notifier.notify('successInfo', null, this.request, response);
-	                dfd.resolve(response, headers);
-	            }
-	        }
-	    }
-
-	    function refreshToken(dfd, xhr) {
-	        var refresh = this.settings.authFlow.refreshToken();
-	        if (refresh) {
-	            $.when(refresh)
-	                // If OK update the access token and re-send the request
-	                .done(function() {
-	                    this.send(dfd);
-	                }.bind(this))
-	                // If fails then we need to re-authenticate
-	                .fail(function(refreshxhr) {
-	                    this.notifier.notify('refreshError', [refreshxhr.status], this.request, refreshxhr);
-	                    dfd.reject(this.request, xhr);
-	                    this.settings.authFlow.authenticate(200);
-	                }.bind(this));
-	        } else {
-	            this.notifier.notify('refreshNotConfigured', []);
-	            dfd.reject(this.request, xhr);
-	            this.settings.authFlow.authenticate(200);
-	        }
-	    }
-
-	    /**
-	     * Get a function to monitor upload progress and emit notify events
-	     * on a deferred.
-	     *
-	     * @private
-	     * @param {object} dfd - Deferred
-	     * @param {object} request - The original request
-	     * @param {object} xhr The original XHR
-	     */
-	    function uploadProgressFun(dfd, request, xhr) {
-	        var progressPercent;
-	        var bytesTotal;
-	        var bytesSent;
-
-	        return function(progressEvent) {
-	            var eventType = progressEvent.type;
-
-	            if (progressEvent.lengthComputable) {
-	                bytesSent = progressEvent.loaded || progressEvent.position; // position is deprecated
-	                bytesTotal = progressEvent.total;
-	                progressPercent = Math.round(100 * bytesSent / bytesTotal);
-	                dfd.notify(progressEvent, progressPercent, bytesSent, bytesTotal);
-
-	                if (eventType === 'progress') {
-	                    this.notifier.notify('uploadProgressInfo', [progressPercent, bytesSent, bytesTotal], request, xhr);
-	                }
-	            }
-	            if (eventType === 'abort' || eventType === 'timeout' || eventType === 'error') {
-	                this.notifier.notify('uploadError', [eventType, progressPercent], request, xhr);
-	                dfd.reject(request, xhr, { event: progressEvent, percent: progressPercent });
-	            }
-	        }.bind(this);
-	    }
-
-	    function getResponseHeader(xhr, name) {
-	        if (!xhr || !xhr.getResponseHeader) {
-	            return '';
-	        }
-
-	        return xhr.getResponseHeader(name);
-	    }
-
-	    function getAllResponseHeaders(xhr) {
-	        if (!xhr || !xhr.getAllResponseHeaders) {
-	            return '';
-	        }
-
-	        return xhr.getAllResponseHeaders();
-	    }
-
-	    function extractHeaders(xhr) {
-	        var headers = {}, headerValue;
-
-	        this.settings.extractHeaders.forEach(function(headerName) {
-	            headerValue = headerName === 'Link' ?
-	                extractLinkHeaders.call(this, xhr) : getResponseHeader(xhr, headerName);
-
-	            if (headerValue) {
-	                headers[headerName] = headerValue;
-	            }
-	        });
-
-	        return headers;
-	    }
-
-	    function extractLinkHeaders(xhr) {
-
-	        // Safe way to get multiple headers of same type in IE
-	        var headerName = 'Link';
-	        var links = getAllResponseHeaders(xhr).split('\n')
-	            .filter(function(row) {
-	                return row.match(new RegExp('^' + headerName + ':.*'));
-	            })
-	            .map(function(row) {
-	                return row.trim().substr(headerName.length + 1);
-	            })
-	            .join(',');
-
-	        if (!links) {
-	            return false;
-	        }
-	        // Tidy into nice object like {next: 'http://example.com/?p=1'}
-	        var tokens, url, rel, linksArray = links.split(','), value = {};
-	        for (var i = 0, l = linksArray.length; i < l; i++) {
-	            tokens = linksArray[i].split(';');
-	            url = tokens[0].replace(/[<>]/g, '').trim();
-	            rel = tokens[1].trim().split('=')[1].replace(/"/g, '');
-	            value[rel] = url;
-	        }
-
-	        return value;
-	    }
-
-	    Request.prototype = {
-	        send: send
-	    };
-
-	    return { create: create };
-
-	}.call(exports, __webpack_require__, exports, module), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
-
-
-/***/ },
-/* 4 */
-/***/ function(module, exports, __webpack_require__) {
-
-	var __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_DEFINE_RESULT__ = function() {
-
-	    'use strict';
-	    var levelClass = {
-	        debug: 0,
-	        info: 1000,
-	        warn: 2000,
-	        error: 3000
-	    };
-	    var notifications = {
-	        startInfo: {
-	            code: 1001,
-	            level: 'info',
-	            message: 'Request Start : $0 $1'
-	        },
-	        redirectInfo: {
-	            code: 1002,
-	            level: 'info',
-	            message: 'Redirection followed'
-	        },
-	        successInfo: {
-	            code: 1003,
-	            level: 'info',
-	            message: 'Request Success'
-	        },
-	        uploadProgressInfo: {
-	            code: 1004,
-	            level: 'info',
-	            message: 'Bytes $1 from $2 uploaded ($0%)'
-	        },
-	        uploadSuccessInfo: {
-	            code: 1005,
-	            level: 'info',
-	            message: 'Upload Success'
-	        },
-
-	        commWarning: {
-	            code: 2001,
-	            level: 'warn',
-	            message: 'Communication error (status code $0). Retrying ($1/$2).'
-	        },
-	        authWarning: {
-	            code: 2002,
-	            level: 'warn',
-	            message: 'Authentication error (status code $0). Refreshing access token ($1/$2).'
-	        },
-
-	        reqError: {
-	            code: 3001,
-	            level: 'error',
-	            message: 'Request error (status code $0).'
-	        },
-	        commError: {
-	            code: 3002,
-	            level: 'error',
-	            message: 'Communication error (status code $0).  Maximun number of retries reached ($1).'
-	        },
-	        authError: {
-	            code: 3003,
-	            level: 'error',
-	            message: 'Authentication error (status code $0).  Maximun number of retries reached ($1).'
-	        },
-	        refreshNotConfigured: {
-	            code: 3004,
-	            level: 'error',
-	            message: 'Refresh token error. Refresh flow not configured.'
-	        },
-	        refreshError: {
-	            code: 3005,
-	            level: 'error',
-	            message: 'Refresh token error. Request failed (status code $0).'
-	        },
-	        tokenError: {
-	            code: 3006,
-	            level: 'error',
-	            message: 'Missing access token.'
-	        },
-	        parseError: {
-	            code: 3007,
-	            level: 'error',
-	            message: 'JSON Parsing error.'
-	        },
-	        uploadError: {
-	            code: 3008,
-	            level: 'error',
-	            message: 'Upload $0 ($1 %)'
-	        }
-	    };
-
-	    function createMessage(notificationId, notificationData, request, response) {
-	        var notification = $.extend({}, notifications[notificationId] || {});
-
-	        if (notificationData) {
-	            notification.message =  notification.message.replace(/\$(\d+)/g, function(m, key) {
-	                return '' + (notificationData[+key] !== undefined ? notificationData[+key] : '');
-	            });
-	        }
-	        if (request) {
-	            notification.request = request;
-	        }
-	        if (response) {
-	            notification.response = response;
-	        }
-	        return notification;
-	    }
-
-	    function createNotifier(logger, minLogLevel) {
-	        if (!logger || typeof logger !== 'function') {
-	            return false;
-	        }
-	        var minCode = levelClass[minLogLevel] || 0;
-
-	        return {
-	            notify: function notify(notificationId, notificationData, request, response) {
-	                var notification = createMessage(notificationId, notificationData, request, response);
-	                if(notification.code > minCode) {
-	                    logger(notification);
-	                }
-
-	            }
-	        };
-	    }
-
-	    return {
-	        createNotifier: createNotifier
-	        };
-	}.call(exports, __webpack_require__, exports, module), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
-
-
-/***/ },
-/* 5 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__(3)], __WEBPACK_AMD_DEFINE_RESULT__ = function(Request) {
@@ -999,10 +434,281 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 6 */
+/* 3 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__(5)], __WEBPACK_AMD_DEFINE_RESULT__ = function(utils) {
+	var __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_DEFINE_RESULT__ = function() {
+
+	    'use strict';
+
+	    var defaults = {
+	        authFlow: false,
+	        maxRetries: 0,
+	        maxAuthRetries: 1,
+	        followLocation: false,
+	        fileUpload: false,
+	        extractHeaders: ['Mendeley-Count', 'Link']
+	    };
+	    var noopNotifier = { notify: function() {}};
+
+	    function create(request, settings, notifier) {
+	        return new Request(request, $.extend({}, defaults, settings), notifier);
+	    }
+
+	    function Request(request, settings, notifier) {
+	        if (!settings.authFlow) {
+	            throw new Error('Please provide an authentication interface');
+	        }
+	        this.request = request;
+	        this.settings = settings;
+	        this.retries = 0;
+	        this.authRetries = 0;
+	        this.notifier = notifier || noopNotifier;
+
+	        this.notifier.notify('startInfo', [this.request.type, this.request.url], this.request);
+	    }
+
+	    function send(dfd, request) {
+
+	        dfd = dfd || $.Deferred();
+	        request = request || this.request;
+	        request.headers = request.headers || {};
+	        var token = this.settings.authFlow.getToken();
+	        // If no token at all (cookie deleted or expired) refresh token if possible or authenticate
+	        // because if you send 'Bearer ' you get a 400 rather than a 401 - is that a bug in the api?
+	        if (!token) {
+	            this.authRetries++;
+	            this.notifier.notify('authWarning', ['n.a.', this.authRetries, this.settings.maxAuthRetries], this.request);
+	            refreshToken.call(this, dfd);
+	            return dfd.promise();
+	        }
+
+	        request.headers.Authorization = 'Bearer ' + token;
+
+	        if (this.settings.fileUpload) {
+	            // Undocumented way to access XHR so we can add upload progress listeners
+	            var xhr = $.ajaxSettings.xhr();
+	            request.xhr = function() { return xhr; };
+
+	            // The response may have JSON Content-Type which makes jQuery invoke JSON.parse
+	            // on the reponse, but there isn't one so there's an error which causes the deferred
+	            // to be rejected. Specifying a dataType of 'text' prevents this.
+	            request.dataType = 'text';
+
+	            // Decorate the xhr with upload progress events
+	            ['loadstart', 'loadend', 'load', 'progress', 'abort', 'error', 'timeout']
+	                .forEach(function(uploadEvent) {
+	                    xhr.upload.addEventListener(uploadEvent, uploadProgressFun.call(this, dfd, request, xhr));
+	                }.bind(this));
+	        }
+
+	        $.ajax(request)
+	            .fail(onFail.bind(this, dfd))
+	            .done(onDone.bind(this, dfd));
+
+	        return dfd.promise();
+	    }
+
+	    function onFail(dfd, xhr) {
+	        switch (xhr.status) {
+	            case 0:
+	            case 504:
+	                // 504 Gateway timeout or communication error
+	                if (this.retries < this.settings.maxRetries) {
+	                    this.retries++;
+	                    this.notifier.notify('commWarning', [xhr.status, this.retries, this.settings.maxRetries], this.request, xhr);
+	                    this.send(dfd);
+	                } else {
+	                    this.notifier.notify('commError', [xhr.status, this.settings.maxRetries], this.request, xhr);
+	                    dfd.reject(this.request, xhr);
+	                }
+	                break;
+
+	            case 401:
+	                // 401 Unauthorized
+	                if (this.authRetries < this.settings.maxAuthRetries) {
+	                    this.authRetries++;
+	                    this.notifier.notify('authWarning', [xhr.status, this.authRetries, this.settings.maxAuthRetries], this.request, xhr);
+	                    refreshToken.call(this, dfd, xhr);
+	                } else {
+	                    this.notifier.notify('authError', [xhr.status, this.settings.maxAuthRetries], this.request, xhr);
+	                    dfd.reject(this.request, xhr);
+	                    this.settings.authFlow.authenticate(200);
+	                }
+	                break;
+
+	            default:
+	                this.notifier.notify('reqError', [xhr.status], this.request, xhr);
+	                dfd.reject(this.request, xhr);
+	        }
+	    }
+
+	    function onDone(dfd, response, success, xhr) {
+
+	        var locationHeader = getResponseHeader(xhr, 'Location'),
+	            headers;
+
+	        if (locationHeader && this.settings.followLocation && xhr.status === 201) {
+	            var redirect = {
+	                type: 'GET',
+	                url: locationHeader,
+	                dataType: 'json'
+	            };
+	            this.notifier.notify('redirectInfo', null, this.request, redirect);
+	            this.send(dfd, redirect);
+	        } else {
+	            if (this.settings.extractHeaders) {
+	                headers = extractHeaders.call(this, xhr);
+	            }
+
+	            // File uploads have type set to text, so if there is some JSON parse it manually
+	            if (this.settings.fileUpload) {
+	                if (response) {
+	                    try {
+	                        response = JSON.parse(response);
+	                    } catch (error) {
+	                        this.notifier.notify('parseError', null, this.request, xhr);
+	                        dfd.reject(error);
+	                        return;
+	                    }
+	                }
+	                this.notifier.notify('uploadSuccessInfo', null, this.request, response);
+	                dfd.resolve(response, xhr);
+	            } else {
+	                this.notifier.notify('successInfo', null, this.request, response);
+	                dfd.resolve(response, headers);
+	            }
+	        }
+	    }
+
+	    function refreshToken(dfd, xhr) {
+	        var refresh = this.settings.authFlow.refreshToken();
+	        if (refresh) {
+	            $.when(refresh)
+	                // If OK update the access token and re-send the request
+	                .done(function() {
+	                    this.send(dfd);
+	                }.bind(this))
+	                // If fails then we need to re-authenticate
+	                .fail(function(refreshxhr) {
+	                    this.notifier.notify('refreshError', [refreshxhr.status], this.request, refreshxhr);
+	                    dfd.reject(this.request, xhr);
+	                    this.settings.authFlow.authenticate(200);
+	                }.bind(this));
+	        } else {
+	            this.notifier.notify('refreshNotConfigured', []);
+	            dfd.reject(this.request, xhr);
+	            this.settings.authFlow.authenticate(200);
+	        }
+	    }
+
+	    /**
+	     * Get a function to monitor upload progress and emit notify events
+	     * on a deferred.
+	     *
+	     * @private
+	     * @param {object} dfd - Deferred
+	     * @param {object} request - The original request
+	     * @param {object} xhr The original XHR
+	     */
+	    function uploadProgressFun(dfd, request, xhr) {
+	        var progressPercent;
+	        var bytesTotal;
+	        var bytesSent;
+
+	        return function(progressEvent) {
+	            var eventType = progressEvent.type;
+
+	            if (progressEvent.lengthComputable) {
+	                bytesSent = progressEvent.loaded || progressEvent.position; // position is deprecated
+	                bytesTotal = progressEvent.total;
+	                progressPercent = Math.round(100 * bytesSent / bytesTotal);
+	                dfd.notify(progressEvent, progressPercent, bytesSent, bytesTotal);
+
+	                if (eventType === 'progress') {
+	                    this.notifier.notify('uploadProgressInfo', [progressPercent, bytesSent, bytesTotal], request, xhr);
+	                }
+	            }
+	            if (eventType === 'abort' || eventType === 'timeout' || eventType === 'error') {
+	                this.notifier.notify('uploadError', [eventType, progressPercent], request, xhr);
+	                dfd.reject(request, xhr, { event: progressEvent, percent: progressPercent });
+	            }
+	        }.bind(this);
+	    }
+
+	    function getResponseHeader(xhr, name) {
+	        if (!xhr || !xhr.getResponseHeader) {
+	            return '';
+	        }
+
+	        return xhr.getResponseHeader(name);
+	    }
+
+	    function getAllResponseHeaders(xhr) {
+	        if (!xhr || !xhr.getAllResponseHeaders) {
+	            return '';
+	        }
+
+	        return xhr.getAllResponseHeaders();
+	    }
+
+	    function extractHeaders(xhr) {
+	        var headers = {}, headerValue;
+
+	        this.settings.extractHeaders.forEach(function(headerName) {
+	            headerValue = headerName === 'Link' ?
+	                extractLinkHeaders.call(this, xhr) : getResponseHeader(xhr, headerName);
+
+	            if (headerValue) {
+	                headers[headerName] = headerValue;
+	            }
+	        });
+
+	        return headers;
+	    }
+
+	    function extractLinkHeaders(xhr) {
+
+	        // Safe way to get multiple headers of same type in IE
+	        var headerName = 'Link';
+	        var links = getAllResponseHeaders(xhr).split('\n')
+	            .filter(function(row) {
+	                return row.match(new RegExp('^' + headerName + ':.*'));
+	            })
+	            .map(function(row) {
+	                return row.trim().substr(headerName.length + 1);
+	            })
+	            .join(',');
+
+	        if (!links) {
+	            return false;
+	        }
+	        // Tidy into nice object like {next: 'http://example.com/?p=1'}
+	        var tokens, url, rel, linksArray = links.split(','), value = {};
+	        for (var i = 0, l = linksArray.length; i < l; i++) {
+	            tokens = linksArray[i].split(';');
+	            url = tokens[0].replace(/[<>]/g, '').trim();
+	            rel = tokens[1].trim().split('=')[1].replace(/"/g, '');
+	            value[rel] = url;
+	        }
+
+	        return value;
+	    }
+
+	    Request.prototype = {
+	        send: send
+	    };
+
+	    return { create: create };
+
+	}.call(exports, __webpack_require__, exports, module), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
+
+
+/***/ },
+/* 4 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__(2)], __WEBPACK_AMD_DEFINE_RESULT__ = function(utils) {
 
 	    'use strict';
 
@@ -1134,10 +840,10 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 7 */
+/* 5 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__(5)], __WEBPACK_AMD_DEFINE_RESULT__ = function(utils) {
+	var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__(2)], __WEBPACK_AMD_DEFINE_RESULT__ = function(utils) {
 
 	    'use strict';
 
@@ -1178,10 +884,10 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 8 */
+/* 6 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__(5)], __WEBPACK_AMD_DEFINE_RESULT__ = function(utils) {
+	var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__(2)], __WEBPACK_AMD_DEFINE_RESULT__ = function(utils) {
 
 	    'use strict';
 
@@ -1200,7 +906,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	            },
 
 	            listDocuments = utils.requestFun('GET', '/documents/'),
-	            listFolder = utils.requestFun('GET', '/macro/folder_documents');
+	            listFolder = utils.requestFun('GET', '/folders/{id}/documents', ['id']);
 
 	        return {
 
@@ -1274,9 +980,16 @@ return /******/ (function(modules) { // webpackBootstrap
 	             * @returns {promise}
 	             */
 	            list: function(params) {
-	                /* jshint camelcase: false */
-	                var list = (!params || typeof params.folder_id === 'undefined') ? listDocuments : listFolder;
-	                return list.call(this, params);
+	                if (!params || typeof params.folderId === 'undefined') {
+	                    return listDocuments.call(this, params);
+	                } else {
+	                    var folderId = params.folderId,
+	                        callParams = {
+	                            limit: params.limit
+	                        };
+	                    delete params.folderId;
+	                    return listFolder.call(this, folderId, callParams);
+	                }
 	            },
 
 	            /**
@@ -1363,10 +1076,10 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 9 */
+/* 7 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__(5)], __WEBPACK_AMD_DEFINE_RESULT__ = function(utils) {
+	var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__(2)], __WEBPACK_AMD_DEFINE_RESULT__ = function(utils) {
 
 	    'use strict';
 
@@ -1421,10 +1134,10 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 10 */
+/* 8 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__(5)], __WEBPACK_AMD_DEFINE_RESULT__ = function(utils) {
+	var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__(2)], __WEBPACK_AMD_DEFINE_RESULT__ = function(utils) {
 
 	    'use strict';
 
@@ -1577,10 +1290,10 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 11 */
+/* 9 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__(5)], __WEBPACK_AMD_DEFINE_RESULT__ = function(utils) {
+	var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__(2)], __WEBPACK_AMD_DEFINE_RESULT__ = function(utils) {
 
 	    'use strict';
 
@@ -1645,10 +1358,10 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 12 */
+/* 10 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__(5)], __WEBPACK_AMD_DEFINE_RESULT__ = function(utils) {
+	var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__(2)], __WEBPACK_AMD_DEFINE_RESULT__ = function(utils) {
 
 	    'use strict';
 
@@ -1744,10 +1457,10 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 13 */
+/* 11 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__(5)], __WEBPACK_AMD_DEFINE_RESULT__ = function(utils) {
+	var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__(2)], __WEBPACK_AMD_DEFINE_RESULT__ = function(utils) {
 
 	    'use strict';
 
@@ -1787,10 +1500,10 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 14 */
+/* 12 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__(5)], __WEBPACK_AMD_DEFINE_RESULT__ = function(utils) {
+	var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__(2)], __WEBPACK_AMD_DEFINE_RESULT__ = function(utils) {
 
 	    'use strict';
 
@@ -1830,10 +1543,10 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 15 */
+/* 13 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__(5)], __WEBPACK_AMD_DEFINE_RESULT__ = function(utils) {
+	var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__(2)], __WEBPACK_AMD_DEFINE_RESULT__ = function(utils) {
 
 	    'use strict';
 
@@ -1867,10 +1580,10 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 16 */
+/* 14 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__(5)], __WEBPACK_AMD_DEFINE_RESULT__ = function(utils) {
+	var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__(2)], __WEBPACK_AMD_DEFINE_RESULT__ = function(utils) {
 
 	    'use strict';
 
@@ -1913,10 +1626,10 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 17 */
+/* 15 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__(5)], __WEBPACK_AMD_DEFINE_RESULT__ = function(utils) {
+	var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__(2)], __WEBPACK_AMD_DEFINE_RESULT__ = function(utils) {
 
 	    'use strict';
 
@@ -2030,6 +1743,300 @@ return /******/ (function(modules) { // webpackBootstrap
 	    };
 
 	}.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
+
+
+/***/ },
+/* 16 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_DEFINE_RESULT__ = function() {
+
+	    'use strict';
+
+	    var defaults = {
+	        win: window,
+	        authenticateOnStart: true,
+	        apiAuthenticateUrl: 'https://api.mendeley.com/oauth/authorize',
+	        accessTokenCookieName: 'accessToken',
+	        scope: 'all'
+	    };
+
+	    var defaultsImplicitFlow = {
+	        clientId: false,
+	        redirectUrl: false
+	    };
+
+	    var defaultsAuthCodeFlow = {
+	        apiAuthenticateUrl: '/login',
+	        refreshAccessTokenUrl: false
+	    };
+
+	    var settings = {};
+
+	    return {
+	        implicitGrantFlow: implicitGrantFlow,
+	        authCodeFlow: authCodeFlow
+	    };
+
+	    function implicitGrantFlow(options) {
+
+	        settings = $.extend({}, defaults, defaultsImplicitFlow, options || {});
+
+	        if (!settings.clientId) {
+	            console.error('You must provide a clientId for implicit grant flow');
+	            return false;
+	        }
+
+	        // OAuth redirect url defaults to current url
+	        if (!settings.redirectUrl) {
+	            var loc = settings.win.location;
+	            settings.redirectUrl = loc.protocol + '//' + loc.host + loc.pathname;
+	        }
+
+	        settings.apiAuthenticateUrl = settings.apiAuthenticateUrl +
+	            '?client_id=' + settings.clientId +
+	            '&redirect_uri=' + settings.redirectUrl +
+	            '&scope=' + settings.scope +
+	            '&response_type=token';
+
+	        if (settings.authenticateOnStart && !getAccessTokenCookieOrUrl()) {
+	            authenticate();
+	        }
+
+	        return {
+	            authenticate: authenticate,
+	            getToken: getAccessTokenCookieOrUrl,
+	            refreshToken: noop()
+	        };
+	    }
+
+	    function authCodeFlow(options) {
+
+	        settings = $.extend({}, defaults, defaultsAuthCodeFlow, options || {});
+
+	        if (!settings.apiAuthenticateUrl) {
+	            console.error('You must provide an apiAuthenticateUrl for auth code flow');
+	            return false;
+	        }
+
+	        if (settings.authenticateOnStart && !getAccessTokenCookie()) {
+	            authenticate();
+	        }
+
+	        return {
+	            authenticate: authenticate,
+	            getToken: getAccessTokenCookie,
+	            refreshToken: refreshAccessTokenCookie
+	        };
+	    }
+
+	    function noop() {
+	        return function() { return false; };
+	    }
+
+	    function authenticate() {
+	        var url = typeof settings.apiAuthenticateUrl === 'function' ?
+	            settings.apiAuthenticateUrl() : settings.apiAuthenticateUrl;
+
+	        clearAccessTokenCookie();
+	        settings.win.location = url;
+	    }
+
+	    function getAccessTokenCookieOrUrl() {
+	        var location = settings.win.location,
+	            hash = location.hash ? location.hash.split('=')[1] : '',
+	            cookie = getAccessTokenCookie();
+
+	        if (hash && !cookie) {
+	            setAccessTokenCookie(hash);
+	            return hash;
+	        }
+	        if (!hash && cookie) {
+	            return cookie;
+	        }
+	        if (hash && cookie) {
+	            if (hash !== cookie) {
+	                setAccessTokenCookie(hash);
+	                return hash;
+	            }
+	            return cookie;
+	        }
+
+	        return '';
+	    }
+
+	    function getAccessTokenCookie() {
+	        var name = settings.accessTokenCookieName + '=',
+	            ca = settings.win.document.cookie.split(';');
+
+	        for(var i = 0; i < ca.length; i++) {
+	            var c = ca[i];
+
+	            while (c.charAt(0) === ' ') {
+	                c = c.substring(1);
+	            }
+
+	            if (c.indexOf(name) !== -1) {
+	                return c.substring(name.length, c.length);
+	            }
+	        }
+
+	        return '';
+	    }
+
+	    function setAccessTokenCookie(accessToken, expireHours) {
+	        var d = new Date();
+	        d.setTime(d.getTime() + ((expireHours || 1)*60*60*1000));
+	        var expires = 'expires=' + d.toUTCString();
+	        settings.win.document.cookie = settings.accessTokenCookieName + '=' + accessToken + '; ' + expires;
+	    }
+
+	    function clearAccessTokenCookie() {
+	        setAccessTokenCookie('', -1);
+	    }
+
+	    function refreshAccessTokenCookie() {
+	        if (settings.refreshAccessTokenUrl) {
+	            return $.get(settings.refreshAccessTokenUrl);
+	        }
+
+	        return false;
+	    }
+	}.call(exports, __webpack_require__, exports, module), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
+
+
+
+/***/ },
+/* 17 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_DEFINE_RESULT__ = function() {
+
+	    'use strict';
+	    var levelClass = {
+	        debug: 0,
+	        info: 1000,
+	        warn: 2000,
+	        error: 3000
+	    };
+	    var notifications = {
+	        startInfo: {
+	            code: 1001,
+	            level: 'info',
+	            message: 'Request Start : $0 $1'
+	        },
+	        redirectInfo: {
+	            code: 1002,
+	            level: 'info',
+	            message: 'Redirection followed'
+	        },
+	        successInfo: {
+	            code: 1003,
+	            level: 'info',
+	            message: 'Request Success'
+	        },
+	        uploadProgressInfo: {
+	            code: 1004,
+	            level: 'info',
+	            message: 'Bytes $1 from $2 uploaded ($0%)'
+	        },
+	        uploadSuccessInfo: {
+	            code: 1005,
+	            level: 'info',
+	            message: 'Upload Success'
+	        },
+
+	        commWarning: {
+	            code: 2001,
+	            level: 'warn',
+	            message: 'Communication error (status code $0). Retrying ($1/$2).'
+	        },
+	        authWarning: {
+	            code: 2002,
+	            level: 'warn',
+	            message: 'Authentication error (status code $0). Refreshing access token ($1/$2).'
+	        },
+
+	        reqError: {
+	            code: 3001,
+	            level: 'error',
+	            message: 'Request error (status code $0).'
+	        },
+	        commError: {
+	            code: 3002,
+	            level: 'error',
+	            message: 'Communication error (status code $0).  Maximun number of retries reached ($1).'
+	        },
+	        authError: {
+	            code: 3003,
+	            level: 'error',
+	            message: 'Authentication error (status code $0).  Maximun number of retries reached ($1).'
+	        },
+	        refreshNotConfigured: {
+	            code: 3004,
+	            level: 'error',
+	            message: 'Refresh token error. Refresh flow not configured.'
+	        },
+	        refreshError: {
+	            code: 3005,
+	            level: 'error',
+	            message: 'Refresh token error. Request failed (status code $0).'
+	        },
+	        tokenError: {
+	            code: 3006,
+	            level: 'error',
+	            message: 'Missing access token.'
+	        },
+	        parseError: {
+	            code: 3007,
+	            level: 'error',
+	            message: 'JSON Parsing error.'
+	        },
+	        uploadError: {
+	            code: 3008,
+	            level: 'error',
+	            message: 'Upload $0 ($1 %)'
+	        }
+	    };
+
+	    function createMessage(notificationId, notificationData, request, response) {
+	        var notification = $.extend({}, notifications[notificationId] || {});
+
+	        if (notificationData) {
+	            notification.message =  notification.message.replace(/\$(\d+)/g, function(m, key) {
+	                return '' + (notificationData[+key] !== undefined ? notificationData[+key] : '');
+	            });
+	        }
+	        if (request) {
+	            notification.request = request;
+	        }
+	        if (response) {
+	            notification.response = response;
+	        }
+	        return notification;
+	    }
+
+	    function createNotifier(logger, minLogLevel) {
+	        if (!logger || typeof logger !== 'function') {
+	            return false;
+	        }
+	        var minCode = levelClass[minLogLevel] || 0;
+
+	        return {
+	            notify: function notify(notificationId, notificationData, request, response) {
+	                var notification = createMessage(notificationId, notificationData, request, response);
+	                if(notification.code > minCode) {
+	                    logger(notification);
+	                }
+
+	            }
+	        };
+	    }
+
+	    return {
+	        createNotifier: createNotifier
+	        };
+	}.call(exports, __webpack_require__, exports, module), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
 
 
 /***/ }
