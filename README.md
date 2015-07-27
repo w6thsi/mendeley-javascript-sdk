@@ -18,13 +18,13 @@ Or clone the git repository:
 The SDK is available as an AMD module or a standalone library. To use the standalone library add a link from your HTML page. It has a dependency on jquery which must be loaded first.
 
 ```html
-<script src="//ajax.googleapis.com/ajax/libs/jquery/1.1.11/jquery.min.js"></script>
+<script src="//cdnjs.cloudflare.com/ajax/libs/jquery/1.10.1/jquery.min.js"></script>
 <script src="/your/path/to/mendeley-javascript-sdk/dist/standalone.js"></script>
 ```
 
 To use as an AMD module you'll need an AMD loader like [requirejs][] or [webpack][].
 
-The only hard-dependency is jquery 1.1.10 or above (it may work with earlier versions but these are untested).
+The only hard-dependency is jquery 1.10.1 or above (it may work with earlier versions but these are untested).
 
 Some ECMAScript5 features are used so for older browsers you may need to shim these methods, for example with [es5-shim][].
 
