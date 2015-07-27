@@ -7,7 +7,7 @@
   },
   "scripts": {
     "lint": "./node_modules/.bin/jshint --config .jshintrc lib/*.js lib/api/*.js test/*.js test/mocks/*.js test/spec/**/*.js",
-    "test": "npm run lint && node_modules/karma/bin/karma start",
+    "test": "npm run lint && node_modules/karma/bin/karma start --single-run",
     "start": "node examples/app.js",
     "build-jsdoc": "node_modules/.bin/jsdoc -d docs/ lib/api.js",
     "build-dist": "./node_modules/.bin/webpack && ./node_modules/.bin/webpack --minify",
