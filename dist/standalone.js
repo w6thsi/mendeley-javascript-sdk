@@ -2,7 +2,7 @@
 	if(typeof exports === 'object' && typeof module === 'object')
 		module.exports = factory();
 	else if(typeof define === 'function' && define.amd)
-		define(factory);
+		define([], factory);
 	else if(typeof exports === 'object')
 		exports["MendeleySDK"] = factory();
 	else
@@ -264,9 +264,11 @@ return /******/ (function(modules) { // webpackBootstrap
 	     * @private
 	     * @param {string} method
 	     * @param {string} uriTemplate
+	     * @param {string} linkType - Type of the element to link this file to
+	     * @param {object} headers - Any additional headers to send
 	     * @returns {function}
 	     */
-	    function requestWithFileFun(method, uriTemplate, linkType) {
+	    function requestWithFileFun(method, uriTemplate, linkType, headers) {
 
 	        return function() {
 
@@ -274,10 +276,11 @@ return /******/ (function(modules) { // webpackBootstrap
 	            var url = getUrl(uriTemplate, [], args);
 	            var file = args[0];
 	            var linkId = args[1];
+	            var requestHeaders = $.extend(true, headers || {}, getRequestHeaders(uploadHeaders(file, linkId, linkType), method));
 	            var request = {
 	                type: method,
 	                url: url,
-	                headers: getRequestHeaders(uploadHeaders(file, linkId, linkType), method),
+	                headers: requestHeaders,
 	                data: file,
 	                processData: false
 	            };
@@ -1090,9 +1093,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	     * @name api.files
 	     */
 	    return function files() {
-	        var dataHeaders = {
-	                'Accept': 'application/vnd.mendeley-file.1+json'
-	            };
+	        var listHeaders   = { 'Accept': 'application/vnd.mendeley-file.1+json' },
+	            createHeaders = { 'Accept': 'application/vnd.mendeley-plain-document.1+json' };
 
 	        return {
 
@@ -1105,7 +1107,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	             * @param {string} documentId - A document UUID
 	             * @returns {promise}
 	             */
-	            create: utils.requestWithFileFun('POST', '/files', 'document'),
+	            create: utils.requestWithFileFun('POST', '/files', 'document', createHeaders),
 
 	            /**
 	             * Get a list of files for a document
@@ -1115,7 +1117,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	             * @param {string} id - A document UUID
 	             * @returns {promise}
 	             */
-	            list: utils.requestFun('GET', '/files?document_id={id}', ['id'], dataHeaders),
+	            list: utils.requestFun('GET', '/files?document_id={id}', ['id'], listHeaders),
 
 	            /**
 	             * Delete a file
