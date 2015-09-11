@@ -62,7 +62,7 @@ define(function(require) {
             });
 
             it('should have a valid Accept header', function() {
-                expect(ajaxRequest.headers['Accept']).toEqual('application/vnd.mendeley-plain-document.1+json');
+                expect(ajaxRequest.headers['Accept']).toEqual('application/vnd.mendeley-file.1+json');
             });
 
             it('should have a Content-Type header based on file type', function() {
