@@ -123,5 +123,38 @@ define(function(require) {
             });
 
         });
+
+        describe('accept method', function() {
+
+            var ajaxRequest;
+            var relationshipId = 'c52e97f5-dd72-3cbe-a4cc-14bea2ed88f0';
+
+            it('should be defined', function() {
+                expect(typeof followersApi.accept).toBe('function');
+                var ajaxSpy = spyOn($, 'ajax').and.returnValue($.Deferred().resolve());
+
+                followersApi.accept(relationshipId, { status: 'following' });
+                expect(ajaxSpy).toHaveBeenCalled();
+                ajaxRequest = ajaxSpy.calls.mostRecent().args[0];
+            });
+
+            it('should use PATCH', function() {
+                expect(ajaxRequest.type).toBe('PATCH');
+            });
+
+            it('should use endpoint /followers/{id}', function() {
+                expect(ajaxRequest.url).toBe(baseUrl + '/followers/' + relationshipId);
+            });
+
+            it('should have a Content-Type header', function() {
+                expect(ajaxRequest.headers['Content-Type']).toBeDefined();
+            });
+
+            it('should have an Authorization header', function() {
+                expect(ajaxRequest.headers.Authorization).toBeDefined();
+                expect(ajaxRequest.headers.Authorization).toBe('Bearer auth');
+            });
+
+        });
     });
 });
