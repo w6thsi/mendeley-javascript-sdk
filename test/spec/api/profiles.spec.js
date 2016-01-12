@@ -149,13 +149,16 @@ define(function(require) {
 
             var ajaxSpy;
             var ajaxRequest;
-
-            it('should be defined', function() {
-                expect(typeof profilesApi.retrieveByEmail).toBe('function');
+            
+            beforeEach(function() {
                 ajaxSpy = spyOn($, 'ajax').and.returnValue($.Deferred().resolve());
                 profilesApi.retrieveByEmail('test@test.com');
                 expect(ajaxSpy).toHaveBeenCalled();
                 ajaxRequest = ajaxSpy.calls.mostRecent().args[0];
+            });
+
+            it('should be defined', function() {
+                expect(typeof profilesApi.retrieveByEmail).toBe('function');
             });
 
             it('should use GET', function() {
@@ -171,12 +174,11 @@ define(function(require) {
             });
 
             it('should have an Authorization header', function() {
-                expect(ajaxRequest.headers.Authorization).toBeDefined();
                 expect(ajaxRequest.headers.Authorization).toBe('Bearer auth');
             });
 
             it('should NOT have a body', function() {
-                expect(ajaxRequest.data).toBeUndefined();
+                expect(ajaxRequest.data).not.toBeDefined();
             });
 
         });
