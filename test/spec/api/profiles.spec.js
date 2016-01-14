@@ -144,6 +144,44 @@ define(function(require) {
             });
 
         });
+        
+        describe('retrieve by email method', function() {
+
+            var ajaxSpy;
+            var ajaxRequest;
+            
+            beforeEach(function() {
+                ajaxSpy = spyOn($, 'ajax').and.returnValue($.Deferred().resolve());
+                profilesApi.retrieveByEmail('test@test.com');
+                expect(ajaxSpy).toHaveBeenCalled();
+                ajaxRequest = ajaxSpy.calls.mostRecent().args[0];
+            });
+
+            it('should be defined', function() {
+                expect(typeof profilesApi.retrieveByEmail).toBe('function');
+            });
+
+            it('should use GET', function() {
+                expect(ajaxRequest.type).toBe('GET');
+            });
+
+            it('should use endpoint /profiles?email=test@test.com', function() {
+                expect(ajaxRequest.url).toBe(baseUrl + '/profiles?email=test@test.com');
+            });
+
+            it('should NOT have a Content-Type header', function() {
+                expect(ajaxRequest.headers['Content-Type']).not.toBeDefined();
+            });
+
+            it('should have an Authorization header', function() {
+                expect(ajaxRequest.headers.Authorization).toBe('Bearer auth');
+            });
+
+            it('should NOT have a body', function() {
+                expect(ajaxRequest.data).not.toBeDefined();
+            });
+
+        });
 
     });
 
