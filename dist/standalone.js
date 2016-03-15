@@ -57,9 +57,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	// Exports Mendeley SDK
 	module.exports = {
 	    API: __webpack_require__(1),
-	    Auth: __webpack_require__(16),
+	    Auth: __webpack_require__(17),
 	    Request: __webpack_require__(3),
-	    Notifier: __webpack_require__(17)
+	    Notifier: __webpack_require__(18)
 	};
 
 
@@ -91,10 +91,11 @@ return /******/ (function(modules) { // webpackBootstrap
 	        followers: __webpack_require__(9)(),
 	        groups: __webpack_require__(10)(),
 	        institutions: __webpack_require__(11)(),
-	        locations: __webpack_require__(12)(),
-	        metadata: __webpack_require__(13)(),
-	        profiles: __webpack_require__(14)(),
-	        trash: __webpack_require__(15)()
+	        institutionTrees: __webpack_require__(12)(),
+	        locations: __webpack_require__(13)(),
+	        metadata: __webpack_require__(14)(),
+	        profiles: __webpack_require__(15)(),
+	        trash: __webpack_require__(16)()
 	    };
 
 	}.call(exports, __webpack_require__, exports, module), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
@@ -276,7 +277,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	            var url = getUrl(uriTemplate, [], args);
 	            var file = args[0];
 	            var linkId = args[1];
-	            var requestHeaders = $.extend(true, {}, headers, getRequestHeaders(uploadHeaders(file, linkId, linkType), method));
+	            var requestHeaders = $.extend(true, {}, getRequestHeaders(uploadHeaders(file, linkId, linkType), method), headers);
 	            var request = {
 	                type: method,
 	                url: url,
@@ -315,8 +316,11 @@ return /******/ (function(modules) { // webpackBootstrap
 	     *
 	     * @private
 	     * @param {object} file
-	     * @param {string} documentId
-	     * @returns {string}
+	     * @param {string} [file.type='application/octet-stream'] Value for the Content-Type header
+	     * @param {string} file.name File name e.g. 'foo.pdf'
+	     * @param {string} linkId
+	     * @param {string} linkType either 'group' or 'document'
+	     * @returns {object}
 	     */
 	    function uploadHeaders(file, linkId, linkType) {
 	        var headers = {
@@ -450,7 +454,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	        maxAuthRetries: 1,
 	        followLocation: false,
 	        fileUpload: false,
-	        extractHeaders: ['Mendeley-Count', 'Link']
+	        extractHeaders: ['Mendeley-Count', 'Link', 'Location']
 	    };
 	    var noopNotifier = { notify: function() {}};
 
@@ -734,7 +738,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	             *
 	             * @method
 	             * @memberof api.annotations
-	             * @param {string} id - A annotation UUID
+	             * @param {string} id - Annotation UUID
 	             * @returns {promise}
 	             */
 	            retrieve: utils.requestFun('GET', '/annotations/{id}', ['id']),
@@ -744,7 +748,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	             *
 	             * @method
 	             * @memberof api.annotations
-	             * @param {String} id - Annotation UUID
+	             * @param {string} id - Annotation UUID
 	             * @param {object} text - The updated note text
 	             * @returns {Promise}
 	             */
@@ -765,7 +769,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	             *
 	             * @method
 	             * @memberof api.annotations
-	             * @param {String} id - Annotation UUID
+	             * @param {string} id - Annotation UUID
 	             * @returns {Promise}
 	             */
 	            delete: utils.requestFun('DELETE', '/annotations/{id}', ['id']),
@@ -959,6 +963,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	             *
 	             * @method
 	             * @memberof api.documents
+	             * @param {string} id - A document UUID
 	             * @param {object} data - The new document data
 	             * @returns {promise}
 	             */
@@ -969,7 +974,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	             *
 	             * @method
 	             * @memberof api.documents
-	             * @param {object} id - A document UUID
+	             * @param {string} id - A document UUID
 	             * @returns {promise}
 	             */
 	            clone: utils.requestWithDataFun('POST', '/documents/{id}/actions/cloneTo', ['id'], cloneDataHeaders, true),
@@ -1010,7 +1015,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	             *
 	             * @method
 	             * @memberof api.documents
-	             * @param {object} id - A document UUID
+	             * @param {string} id - A document UUID
 	             * @returns {promise}
 	             */
 	            trash: utils.requestFun('POST', '/documents/{id}/trash', ['id'], dataHeaders),
@@ -1181,6 +1186,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	             *
 	             * @method
 	             * @memberof api.folders
+	             * @param {string} id - A folder UUID
 	             * @param {object} data - The folder data
 	             * @returns {promise}
 	             */
@@ -1213,7 +1219,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	             * @method
 	             * @memberof api.folders
 	             * @param {string} id - A folder UUID
-	             * @param {string} documentId - A document UUID
 	             * @returns {promise}
 	             */
 	            addDocument: utils.requestWithDataFun('POST', '/folders/{id}/documents', ['id'], dataHeaders.document, false),
@@ -1306,7 +1311,12 @@ return /******/ (function(modules) { // webpackBootstrap
 	     */
 	    return function followers() {
 	        var dataHeaders = {
-	            'Content-Type': 'application/vnd.mendeley-follow-request.1+json'
+	            create: {
+	                'Content-Type': 'application/vnd.mendeley-follow-request.1+json'
+	            },
+	            accept: {
+	                'Content-Type': 'application/vnd.mendeley-follow-acceptance.1+json'
+	            }
 	        };
 
 	        return {
@@ -1339,7 +1349,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	             * @param {object} data - { followed: <profile id> }
 	             * @returns {promise}
 	             */
-	            create: utils.requestWithDataFun('POST', '/followers', false, dataHeaders, false),
+	            create: utils.requestWithDataFun('POST', '/followers', false, dataHeaders.create, false),
 
 	            /**
 	             * Delete a follower relationship.
@@ -1350,7 +1360,20 @@ return /******/ (function(modules) { // webpackBootstrap
 	             * @memberof api.followers
 	             * @returns {promise}
 	             */
-	            remove: utils.requestFun('DELETE', '/followers/{id}', ['id'])
+	            remove: utils.requestFun('DELETE', '/followers/{id}', ['id']),
+
+	            /**
+	             * Accept a follower request by updating the relationship.
+	             *
+	             * This requires a relationship id which can be retrieved via the list() method.
+	             *
+	             * @method
+	             * @memberof api.followers
+	             * @param {string} id - The relationship id
+	             * @param {object} data - { status: "following" } (note "following" is currently the only supported status)
+	             * @returns {promise}
+	             */
+	            accept: utils.requestWithDataFun('PATCH', '/followers/{id}', ['id'], dataHeaders.accept, false)
 
 	        };
 	    };
@@ -1509,6 +1532,49 @@ return /******/ (function(modules) { // webpackBootstrap
 	    'use strict';
 
 	    /**
+	     * Institution trees API
+	     *
+	     * @namespace
+	     * @name api.institutionTrees
+	     */
+	    return function institutionTrees() {
+	        return {
+
+	            /**
+	             * Return all institution trees that the given institution is a member of
+	             *
+	             * @method
+	             * @memberof api.institution_trees
+	             * @param {object} params - An institution ID
+	             * @returns {promise}
+	             */
+	            list: utils.requestFun('GET', '/institution_trees'),
+
+	            /**
+	             * Return only the child nodes of a given institution
+	             *
+	             * @method
+	             * @memberof api.institution_trees
+	             * @param {string} id - An institution ID
+	             * @returns {promise}
+	             */
+	            retrieve: utils.requestFun('GET', '/institution_trees/{id}', ['id'])
+
+	        };
+	    };
+
+	}.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
+
+
+/***/ },
+/* 13 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__(2)], __WEBPACK_AMD_DEFINE_RESULT__ = function(utils) {
+
+	    'use strict';
+
+	    /**
 	     * Locations API
 	     *
 	     * @namespace
@@ -1544,7 +1610,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 13 */
+/* 14 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__(2)], __WEBPACK_AMD_DEFINE_RESULT__ = function(utils) {
@@ -1581,7 +1647,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 14 */
+/* 15 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__(2)], __WEBPACK_AMD_DEFINE_RESULT__ = function(utils) {
@@ -1611,6 +1677,16 @@ return /******/ (function(modules) { // webpackBootstrap
 	            me: utils.requestFun('GET', '/profiles/me'),
 
 	            /**
+	             * Retrieve a profile by id
+	             *
+	             * @method
+	             * @memberof api.profiles
+	             * @param {string} id - User id
+	             * @returns {promise}
+	             */
+	            retrieve: utils.requestFun('GET', '/profiles/{id}', ['id']),
+
+	            /**
 	             * Update profiles
 	             *
 	             * @method
@@ -1618,7 +1694,17 @@ return /******/ (function(modules) { // webpackBootstrap
 	             * @param {object} data - The new profiles data
 	             * @returns {promise}
 	             */
-	            update: utils.requestWithDataFun('PATCH', '/profiles/me', [], dataHeaders, true)
+	            update: utils.requestWithDataFun('PATCH', '/profiles/me', [], dataHeaders, true),
+	            
+	            /**
+	             * Retrieve a profile by email address
+	             *
+	             * @method
+	             * @memberof api.profiles
+	             * @param {string} email - Email address
+	             * @returns {promise}
+	             */
+	             retrieveByEmail: utils.requestFun('GET', '/profiles?email={email}', ['email'])
 
 	        };
 	    };
@@ -1627,7 +1713,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 15 */
+/* 16 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__(2)], __WEBPACK_AMD_DEFINE_RESULT__ = function(utils) {
@@ -1747,7 +1833,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 16 */
+/* 17 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_DEFINE_RESULT__ = function() {
@@ -1908,7 +1994,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 17 */
+/* 18 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_DEFINE_RESULT__ = function() {
