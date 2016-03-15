@@ -14,6 +14,7 @@ define(function(require) {
         api.setAuthFlow(mockAuth.mockImplicitGrantFlow());
 
         describe('list method', function() {
+            /* jshint camelcase: false */
             var ajaxSpy;
             var ajaxRequest;
             var params = {
