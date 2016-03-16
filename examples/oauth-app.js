@@ -30,7 +30,7 @@ module.exports = function(app, config) {
     });
 
     app.get(oauthPath, function (req, res) {
-        var authorizationUri = oauth2.AuthCode.authorizeURL({
+        var authorizationUri = oauth2.authCode.authorizeURL({
             redirect_uri: config.redirectUri,
             scope: config.scope || 'all'
         });
@@ -42,7 +42,7 @@ module.exports = function(app, config) {
     app.get(tokenExchangePath, function (req, res, next) {
         console.log('Starting token exchange');
         var code = req.query.code;
-        oauth2.AuthCode.getToken({
+        oauth2.authCode.getToken({
             redirect_uri: config.redirectUri,
             code: code,
         }, function(error, result) {
