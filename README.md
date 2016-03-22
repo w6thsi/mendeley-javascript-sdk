@@ -221,3 +221,7 @@ Please note the aim of this SDK is to connect to the existing Mendeley API, not 
 [register your application]:http://dev.mendeley.com
 [nodejs]:http://nodejs.org
 [bower]:http://bower.io
+
+## Build status
+
+![Travis CI](https://travis-ci.org/Mendeley/mendeley-javascript-sdk.svg?branch=master)
