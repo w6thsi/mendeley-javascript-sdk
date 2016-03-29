@@ -190,7 +190,7 @@ var getFiles = function (event) {
                     // Auth code flow can be configured with a couple fo extra URLs...
                     MendeleySDK.API.setAuthFlow(MendeleySDK.Auth.authCodeFlow({
                         // The API authentication goes through server, so this URL clears cookies and forces a redirect
-                        apiAuthenticateUrl: '/logout',
+                        apiAuthenticateUrl: '/login',
                         // You can optionally provide a URL on *your* server where the token can be refreshed
                         refreshAccessTokenUrl: '/oauth/refresh'
                     }));
