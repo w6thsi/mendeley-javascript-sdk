@@ -95,9 +95,9 @@ define(function(require) {
                     expect(authRefreshSpy.calls.count()).toEqual(1);
                     expect(mockNotifier.calls.count()).toEqual(3);
                     expect(mockNotifier.calls.allArgs()).toEqual([
-                        ['startInfo', [ 'GET', undefined ], { type : 'GET', headers : { Authorization : 'Bearer auth' } } ],
-                        ['authWarning', [ 401, 1, 2 ], { type : 'GET', headers : { Authorization : 'Bearer auth' } }, { status : 401 } ],
-                        ['refreshError', [500], { type : 'GET', headers : { Authorization : 'Bearer auth' } }, { status : 500 }  ]
+                        ['startInfo', [ 'GET', undefined ], { type : 'GET', headers : { Accept: '', Authorization : 'Bearer auth' } } ],
+                        ['authWarning', [ 401, 1, 2 ], { type : 'GET', headers : { Accept: '', Authorization : 'Bearer auth' } }, { status : 401 } ],
+                        ['refreshError', [500], { type : 'GET', headers : { Accept: '', Authorization : 'Bearer auth' } }, { status : 500 }  ]
                         ]);
                     done();
                     });
@@ -116,8 +116,8 @@ define(function(require) {
                     expect(authRefreshSpy.calls.count()).toEqual(1);
                     expect(mockNotifier.calls.count()).toEqual(3);
                     expect(mockNotifier.calls.allArgs()).toEqual([
-                        ['startInfo', [ 'GET', undefined ], { type : 'GET', headers : { Authorization : 'Bearer auth' } } ],
-                        ['authWarning', [ 401, 1, 2 ], { type : 'GET', headers : { Authorization : 'Bearer auth' } }, { status : 401 } ],
+                        ['startInfo', [ 'GET', undefined ], { type : 'GET', headers : { Accept: '', Authorization : 'Bearer auth' } } ],
+                        ['authWarning', [ 401, 1, 2 ], { type : 'GET', headers : { Accept: '', Authorization : 'Bearer auth' } }, { status : 401 } ],
                         ['refreshNotConfigured', [] ]
                         ]);
                     done();
@@ -157,10 +157,10 @@ define(function(require) {
 
                     expect(mockNotifier.calls.count()).toEqual(4);
                     expect(mockNotifier.calls.allArgs()).toEqual([
-                        ['startInfo', [ 'GET', undefined ], { type : 'GET', headers : { Authorization : 'Bearer auth-refreshed' } } ],
-                        ['authWarning', [ 401, 1, 2 ], { type : 'GET', headers : { Authorization : 'Bearer auth-refreshed' } }, { status : 401 } ],
-                        ['authWarning', [ 401, 2, 2 ], { type : 'GET', headers : { Authorization : 'Bearer auth-refreshed' } }, { status : 401 } ],
-                        ['authError', [ 401, 2 ], { type : 'GET', headers : { Authorization : 'Bearer auth-refreshed' } }, { status : 401 } ]
+                        ['startInfo', [ 'GET', undefined ], { type : 'GET', headers : { Accept: '', Authorization : 'Bearer auth-refreshed' } } ],
+                        ['authWarning', [ 401, 1, 2 ], { type : 'GET', headers : { Accept: '', Authorization : 'Bearer auth-refreshed' } }, { status : 401 } ],
+                        ['authWarning', [ 401, 2, 2 ], { type : 'GET', headers : { Accept: '', Authorization : 'Bearer auth-refreshed' } }, { status : 401 } ],
+                        ['authError', [ 401, 2 ], { type : 'GET', headers : { Accept: '', Authorization : 'Bearer auth-refreshed' } }, { status : 401 } ]
                         ]);
                     done();
                 });
@@ -243,10 +243,10 @@ define(function(require) {
 
                     expect(mockNotifier.calls.count()).toEqual(4);
                     expect(mockNotifier.calls.allArgs()).toEqual([
-                        ['startInfo', [ 'GET', undefined ], { type : 'GET', headers : { Authorization : 'Bearer auth' } } ],
-                        ['commWarning', [ 504, 1, 2 ], { type : 'GET', headers : { Authorization : 'Bearer auth' } }, { status : 504 } ],
-                        ['commWarning', [ 504, 2, 2 ], { type : 'GET', headers : { Authorization : 'Bearer auth' } }, { status : 504 } ],
-                        ['commError', [ 504, 2 ], { type : 'GET', headers : { Authorization : 'Bearer auth' } }, { status : 504 } ]
+                        ['startInfo', [ 'GET', undefined ], { type : 'GET', headers : { Accept: '', Authorization : 'Bearer auth' } } ],
+                        ['commWarning', [ 504, 1, 2 ], { type : 'GET', headers : { Accept: '', Authorization : 'Bearer auth' } }, { status : 504 } ],
+                        ['commWarning', [ 504, 2, 2 ], { type : 'GET', headers : { Accept: '', Authorization : 'Bearer auth' } }, { status : 504 } ],
+                        ['commError', [ 504, 2 ], { type : 'GET', headers : { Accept: '', Authorization : 'Bearer auth' } }, { status : 504 } ]
                         ]);
                     done();
                 });
@@ -280,8 +280,8 @@ define(function(require) {
 
                     expect(mockNotifier.calls.count()).toEqual(2);
                     expect(mockNotifier.calls.allArgs()).toEqual([
-                        ['startInfo', [ 'GET', undefined ], { type : 'GET', headers : { Authorization : 'Bearer auth' } } ],
-                        ['reqError', [ 404 ], { type : 'GET', headers : { Authorization : 'Bearer auth' } }, { status : 404 } ]
+                        ['startInfo', [ 'GET', undefined ], { type : 'GET', headers : { Accept: '', Authorization : 'Bearer auth' } } ],
+                        ['reqError', [ 404 ], { type : 'GET', headers : { Accept: '', Authorization : 'Bearer auth' } }, { status : 404 } ]
                         ]);
                     done();
                 });
