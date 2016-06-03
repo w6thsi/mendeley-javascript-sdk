@@ -2,6 +2,8 @@ define(function(require) {
 
     'use strict';
 
+    var Promise = require('bluebird');
+    var axios = require('axios');
     require('es5-shim');
 
     describe('trash api', function() {
@@ -20,14 +22,14 @@ define(function(require) {
 
             it('should be defined', function() {
                 expect(typeof trashApi.retrieve).toBe('function');
-                ajaxSpy = spyOn($, 'ajax').and.returnValue($.Deferred().resolve());
+                ajaxSpy = spyOn(axios, 'request').and.returnValue(Promise.resolve());
                 trashApi.retrieve(15);
                 expect(ajaxSpy).toHaveBeenCalled();
                 ajaxRequest = ajaxSpy.calls.mostRecent().args[0];
             });
 
             it('should use GET', function() {
-                expect(ajaxRequest.type).toBe('GET');
+                expect(ajaxRequest.method).toBe('get');
             });
 
             it('should use endpoint /trash/{id}', function() {
@@ -61,7 +63,7 @@ define(function(require) {
 
             it('be defined', function() {
                 expect(typeof trashApi.list).toBe('function');
-                ajaxSpy = spyOn($, 'ajax').and.returnValue($.Deferred().resolve());
+                ajaxSpy = spyOn(axios, 'request').and.returnValue(Promise.resolve());
 
                 trashApi.list(sampleData);
                 expect(ajaxSpy).toHaveBeenCalled();
@@ -69,7 +71,7 @@ define(function(require) {
             });
 
             it('should use GET', function() {
-                expect(ajaxRequest.type).toBe('GET');
+                expect(ajaxRequest.method).toBe('get');
             });
 
             it('should use endpoint /trash/', function() {
@@ -86,7 +88,7 @@ define(function(require) {
             });
 
             it('should apply request params', function() {
-                expect(ajaxRequest.data).toEqual(sampleData);
+                expect(ajaxRequest.params).toEqual(sampleData);
             });
 
         });
@@ -98,14 +100,14 @@ define(function(require) {
 
             it('should be defined', function() {
                 expect(typeof trashApi.restore).toBe('function');
-                ajaxSpy = spyOn($, 'ajax').and.returnValue($.Deferred().resolve());
+                ajaxSpy = spyOn(axios, 'request').and.returnValue(Promise.resolve());
                 trashApi.restore(15);
                 expect(ajaxSpy).toHaveBeenCalled();
                 ajaxRequest = ajaxSpy.calls.mostRecent().args[0];
             });
 
             it('should use POST', function() {
-                expect(ajaxRequest.type).toBe('POST');
+                expect(ajaxRequest.method).toBe('post');
             });
 
             it('should use endpoint /trash/{id}/restore', function() {
@@ -131,13 +133,13 @@ define(function(require) {
 
             it('should reject restore errors with the request and response', function() {
                 var ajaxFailureResponse = function() {
-                    var dfd = $.Deferred();
+                    var dfd = Promise;
                     dfd.reject({ status: 404 });
                     return dfd.promise();
                 };
-                spyOn($, 'ajax').and.callFake(ajaxFailureResponse);
+                spyOn(axios, 'request').and.callFake(ajaxFailureResponse);
                 trashApi.restore().fail(function(request, response) {
-                    expect(request.type).toEqual('POST');
+                    expect(request.method).toEqual('post');
                     expect(response).toEqual({ status: 404 });
                 });
             });
@@ -151,14 +153,14 @@ define(function(require) {
 
             it('should be defined', function() {
                 expect(typeof trashApi.destroy).toBe('function');
-                ajaxSpy = spyOn($, 'ajax').and.returnValue($.Deferred().resolve());
+                ajaxSpy = spyOn(axios, 'request').and.returnValue(Promise.resolve());
                 trashApi.destroy(15);
                 expect(ajaxSpy).toHaveBeenCalled();
                 ajaxRequest = ajaxSpy.calls.mostRecent().args[0];
             });
 
             it('should use DELETE', function() {
-                expect(ajaxRequest.type).toBe('DELETE');
+                expect(ajaxRequest.method).toBe('delete');
             });
 
             it('should use endpoint /trash/{id}', function() {
@@ -187,7 +189,7 @@ define(function(require) {
                 sendLinks = true;
 
             function ajaxSpy() {
-                return spyOn($, 'ajax').and.returnValue($.Deferred().resolve([], 'success', {
+                return spyOn(axios, 'request').and.returnValue(Promise.resolve([], 'success', {
                     getResponseHeader: function(headerName) {
                         if (headerName === 'Link' && sendLinks) {
                             return '<' + baseUrl + '/trash/' +

@@ -6,6 +6,9 @@ define(function(require) {
 
         var utils = require('utilities');
         var mockAuth = require('mocks/auth');
+        var axios = require('axios');
+        var Promise = require('bluebird');
+
         utils.setAuthFlow(mockAuth.mockImplicitGrantFlow());
 
         describe('requestWithFileFun', function() {
@@ -13,7 +16,9 @@ define(function(require) {
             var ajaxSpy;
 
             beforeEach(function() {
-                ajaxSpy = spyOn($, 'ajax').and.returnValue($.Deferred().resolve());
+                ajaxSpy = spyOn(axios, 'request').and.returnValue(Promise.resolve({
+                    headers: {}
+                }));
             });
 
             it('should allow a custom content-type to be set against a request', function() {

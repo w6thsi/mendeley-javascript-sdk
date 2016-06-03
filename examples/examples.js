@@ -81,7 +81,8 @@ var renderDocument = function (doc) {
     $list.addClass('populated');
 };
 
-var errorHandler = function (req, res) {
+var errorHandler = function (res) {
+    console.log('Error', res);
     var response;
 
     console.error('Request failed with status code:', res.status);
@@ -99,17 +100,17 @@ var errorHandler = function (req, res) {
 
 var getDocuments = function (event) {
     MendeleySDK.API.documents
-        .list({ sort: 'created', order: 'desc' })
-        .done(renderDocumentList)
-        .fail(errorHandler);
+        .list({ sort: 'created', order: 'desc', limit: 5 })
+        .then(renderDocumentList)
+        .catch(errorHandler);
     event.preventDefault();
 };
 
 var getFolders = function (event) {
     MendeleySDK.API.folders
         .list()
-        .done(renderFoldersList)
-        .fail(errorHandler);
+        .then(renderFoldersList)
+        .catch(errorHandler);
     event.preventDefault();
 };
 
@@ -119,16 +120,32 @@ var createDocument = function (event) {
             title: $('.document-title').val() || 'A new document',
             type: $('.document-type').val() || 'journal'
         })
-        .done(renderDocument)
-        .fail(errorHandler);
+        .then(renderDocument)
+        .catch(errorHandler);
     event.preventDefault();
 };
 
 var getFiles = function (event) {
     MendeleySDK.API.files
         .list($('.file-id').val())
-        .done(renderFileList)
-        .fail(errorHandler);
+        .then(renderFileList)
+        .catch(errorHandler);
+    event.preventDefault();
+};
+
+var uploadDocument = function (event) {
+    var file = $('.upload-file')[0].files[0];
+    if (!file) {
+        return;
+    }
+
+    MendeleySDK.API.documents
+        .createFromFile(file, function(ev) {
+            var progress = (ev.loaded / ev.total) * 100;
+
+            $('.progress-bar').width(progress + '%').text(progress + '%').attr('aria-valuenow', progress);
+        })
+        .catch(errorHandler);
     event.preventDefault();
 };
 

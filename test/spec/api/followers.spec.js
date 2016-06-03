@@ -2,6 +2,8 @@ define(function(require) {
 
     'use strict';
 
+    var Promise = require('bluebird');
+    var axios = require('axios');
     require('es5-shim');
 
     describe('followers api', function() {
@@ -22,7 +24,7 @@ define(function(require) {
 
             it('should be defined', function() {
                 expect(typeof followersApi.create).toBe('function');
-                ajaxSpy = spyOn($, 'ajax').and.returnValue($.Deferred().resolve());
+                ajaxSpy = spyOn(axios, 'request').and.returnValue(Promise.resolve());
                 followersApi.create(params);
                 expect(ajaxSpy).toHaveBeenCalled();
                 ajaxRequest = ajaxSpy.calls.mostRecent().args[0];
@@ -61,7 +63,7 @@ define(function(require) {
 
             it('should be defined', function() {
                 expect(typeof followersApi.list).toBe('function');
-                var ajaxSpy = spyOn($, 'ajax').and.returnValue($.Deferred().resolve());
+                var ajaxSpy = spyOn(axios, 'request').and.returnValue(Promise.resolve());
 
                 followersApi.list(params);
                 expect(ajaxSpy).toHaveBeenCalled();
@@ -98,7 +100,7 @@ define(function(require) {
 
             it('should be defined', function() {
                 expect(typeof followersApi.remove).toBe('function');
-                var ajaxSpy = spyOn($, 'ajax').and.returnValue($.Deferred().resolve());
+                var ajaxSpy = spyOn(axios, 'request').and.returnValue(Promise.resolve());
 
                 followersApi.remove(relationshipId);
                 expect(ajaxSpy).toHaveBeenCalled();
@@ -131,7 +133,7 @@ define(function(require) {
 
             it('should be defined', function() {
                 expect(typeof followersApi.accept).toBe('function');
-                var ajaxSpy = spyOn($, 'ajax').and.returnValue($.Deferred().resolve());
+                var ajaxSpy = spyOn(axios, 'request').and.returnValue(Promise.resolve());
 
                 followersApi.accept(relationshipId, { status: 'following' });
                 expect(ajaxSpy).toHaveBeenCalled();

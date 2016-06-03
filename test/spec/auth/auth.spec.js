@@ -2,6 +2,8 @@ define(function(require) {
 
     'use strict';
 
+    var Promise = require('bluebird');
+    var axios = require('axios');
     require('es5-shim');
 
     describe('auth', function() {
@@ -128,7 +130,7 @@ define(function(require) {
 
             it('should support refresh token URL', function() {
                 var ajaxRequest;
-                var ajaxSpy = spyOn($, 'ajax').and.returnValue($.Deferred().resolve());
+                var ajaxSpy = spyOn(axios, 'request').and.returnValue(Promise.resolve());
                 var win = require('mocks/window')();
                 var options = {win: win, clientId: 9999, refreshAccessTokenUrl: '/refresh'};
 

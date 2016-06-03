@@ -18,7 +18,8 @@ module.exports = {
         modulesDirectories: [
             'node_modules',
             'bower_components',
-            'lib'
+            'lib',
+            'test'
         ]
     },
     devtool: minify ? "source-map" : "",

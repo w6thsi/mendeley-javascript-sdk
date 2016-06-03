@@ -2,6 +2,8 @@ define(function(require) {
 
     'use strict';
 
+    var Promise = require('bluebird');
+    var axios = require('axios');
     require('es5-shim');
 
     describe('groups api', function() {
@@ -23,7 +25,7 @@ define(function(require) {
 
             it('be defined', function() {
                 expect(typeof groupApi.list).toBe('function');
-                ajaxSpy = spyOn($, 'ajax').and.returnValue($.Deferred().resolve());
+                ajaxSpy = spyOn(axios, 'request').and.returnValue(Promise.resolve());
 
                 groupApi.list(params);
                 expect(ajaxSpy).toHaveBeenCalled();
@@ -59,7 +61,7 @@ define(function(require) {
 
             it('should be defined', function() {
                 expect(typeof groupApi.retrieve).toBe('function');
-                ajaxSpy = spyOn($, 'ajax').and.returnValue($.Deferred().resolve());
+                ajaxSpy = spyOn(axios, 'request').and.returnValue(Promise.resolve());
                 groupApi.retrieve(123);
                 expect(ajaxSpy).toHaveBeenCalled();
                 ajaxRequest = ajaxSpy.calls.mostRecent().args[0];
@@ -96,7 +98,7 @@ define(function(require) {
             linkLast = baseUrl + '/groups/?limit=5&reverse=true';
 
             function ajaxSpy() {
-                return spyOn($, 'ajax').and.returnValue($.Deferred().resolve([], 'success', {
+                return spyOn(axios, 'request').and.returnValue(Promise.resolve([], 'success', {
                     getResponseHeader: function(headerName) {
                         if (headerName === 'Link' && sendLinks) {
                             return ['<' + linkNext + '>; rel="next"', '<' + linkLast + '>; rel="last"'].join(', ');

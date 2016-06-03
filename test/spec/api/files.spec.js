@@ -3,6 +3,8 @@ define(function(require) {
 
     'use strict';
 
+    var Promise = require('bluebird');
+    var axios = require('axios');
     require('es5-shim');
 
     describe('files api', function() {
@@ -30,7 +32,7 @@ define(function(require) {
             var ajaxSpy;
             var ajaxRequest;
             var ajaxResponse = function() {
-                var dfd = $.Deferred();
+                var dfd = Promise;
                 var fileResource = {
                     url: 'http://mendeley.cdn.com/123'
                 };
@@ -46,7 +48,7 @@ define(function(require) {
 
             it('should be defined', function() {
                 expect(typeof filesApi.create).toBe('function');
-                ajaxSpy = spyOn($, 'ajax').and.callFake(ajaxResponse);
+                ajaxSpy = spyOn(axios, 'request').and.callFake(ajaxResponse);
                 filesApi.create(file, 123);
                 expect(ajaxSpy).toHaveBeenCalled();
                 ajaxRequest = ajaxSpy.calls.first().args[0];
@@ -88,7 +90,7 @@ define(function(require) {
             it('should use Content-Type application/octet-stream if no type', function() {
                 var typelessFile = getBlob('hello', '');
                 typelessFile.name = 'filename.pdf';
-                ajaxSpy = spyOn($, 'ajax').and.callFake(ajaxResponse);
+                ajaxSpy = spyOn(axios, 'request').and.callFake(ajaxResponse);
 
                 filesApi.create(123, typelessFile);
 
@@ -106,7 +108,7 @@ define(function(require) {
 
             it('be defined', function() {
                 expect(typeof filesApi.list).toBe('function');
-                ajaxSpy = spyOn($, 'ajax').and.returnValue($.Deferred().resolve());
+                ajaxSpy = spyOn(axios, 'request').and.returnValue(Promise.resolve());
                 filesApi.list('someId');
                 expect(ajaxSpy).toHaveBeenCalled();
                 ajaxRequest = ajaxSpy.calls.mostRecent().args[0];
@@ -146,7 +148,7 @@ define(function(require) {
 
             it('be defined', function() {
                 expect(typeof filesApi.remove).toBe('function');
-                ajaxSpy = spyOn($, 'ajax').and.returnValue($.Deferred().resolve());
+                ajaxSpy = spyOn(axios, 'request').and.returnValue(Promise.resolve());
                 filesApi.remove('fileId');
                 expect(ajaxSpy).toHaveBeenCalled();
                 ajaxRequest = ajaxSpy.calls.mostRecent().args[0];

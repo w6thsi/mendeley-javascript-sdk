@@ -2,6 +2,8 @@ define(function(require) {
 
     'use strict';
 
+    var Promise = require('bluebird');
+    var axios = require('axios');
     require('es5-shim');
 
     describe('institutions api', function() {
@@ -23,7 +25,7 @@ define(function(require) {
 
             it('should be defined', function() {
                 expect(typeof institutionsApi.search).toBe('function');
-                ajaxSpy = spyOn($, 'ajax').and.returnValue($.Deferred().resolve());
+                ajaxSpy = spyOn(axios, 'request').and.returnValue(Promise.resolve());
                 institutionsApi.search(params);
                 expect(ajaxSpy).toHaveBeenCalled();
                 ajaxRequest = ajaxSpy.calls.mostRecent().args[0];
@@ -58,7 +60,7 @@ define(function(require) {
 
             it('should be defined', function() {
                 expect(typeof institutionsApi.retrieve).toBe('function');
-                ajaxSpy = spyOn($, 'ajax').and.returnValue($.Deferred().resolve());
+                ajaxSpy = spyOn(axios, 'request').and.returnValue(Promise.resolve());
                 institutionsApi.retrieve('some-id');
                 expect(ajaxSpy).toHaveBeenCalled();
                 ajaxRequest = ajaxSpy.calls.mostRecent().args[0];

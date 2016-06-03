@@ -3,6 +3,8 @@ define(function(require) {
 
     'use strict';
 
+    var Promise = require('bluebird');
+    var axios = require('axios');
     require('es5-shim');
 
     describe('profiles api', function() {
@@ -23,7 +25,7 @@ define(function(require) {
             return '';
         };
 
-        var mockPromiseUpdate = $.Deferred().resolve([], 1, {
+        var mockPromiseUpdate = Promise.resolve([], 1, {
             status: 200,
             getResponseHeader: getResponseHeaderLocation,
             getAllResponseHeaders: getAllResponseHeaders
@@ -45,7 +47,7 @@ define(function(require) {
 
             it('should be defined', function() {
                 expect(typeof profilesApi.me).toBe('function');
-                ajaxSpy = spyOn($, 'ajax').and.returnValue($.Deferred().resolve());
+                ajaxSpy = spyOn(axios, 'request').and.returnValue(Promise.resolve());
                 profilesApi.me();
                 expect(ajaxSpy).toHaveBeenCalled();
                 ajaxRequest = ajaxSpy.calls.mostRecent().args[0];
@@ -81,7 +83,7 @@ define(function(require) {
 
             it('should be defined', function() {
                 expect(typeof profilesApi.retrieve).toBe('function');
-                ajaxSpy = spyOn($, 'ajax').and.returnValue($.Deferred().resolve());
+                ajaxSpy = spyOn(axios, 'request').and.returnValue(Promise.resolve());
                 profilesApi.retrieve(123);
                 expect(ajaxSpy).toHaveBeenCalled();
                 ajaxRequest = ajaxSpy.calls.mostRecent().args[0];
@@ -116,7 +118,7 @@ define(function(require) {
 
             it('should be defined', function() {
                 expect(typeof profilesApi.update).toBe('function');
-                var ajaxSpy = spyOn($, 'ajax').and.callFake(getMockPromises(mockPromiseUpdate));
+                var ajaxSpy = spyOn(axios, 'request').and.callFake(getMockPromises(mockPromiseUpdate));
                 profilesApi.update({first_name: 'John', last_name: 'Doe'});
                 expect(ajaxSpy).toHaveBeenCalled();
                 ajaxRequest = ajaxSpy.calls.mostRecent().args[0];
@@ -151,7 +153,7 @@ define(function(require) {
             var ajaxRequest;
             
             beforeEach(function() {
-                ajaxSpy = spyOn($, 'ajax').and.returnValue($.Deferred().resolve());
+                ajaxSpy = spyOn(axios, 'request').and.returnValue(Promise.resolve());
                 profilesApi.retrieveByEmail('test@test.com');
                 expect(ajaxSpy).toHaveBeenCalled();
                 ajaxRequest = ajaxSpy.calls.mostRecent().args[0];

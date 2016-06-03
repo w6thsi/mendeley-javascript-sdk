@@ -1,10 +1,22 @@
-define(function() {
+define(['bluebird'], function(Promise) {
 
     'use strict';
 
+    var unauthorisedError = new Error();
+    unauthorisedError.status = 401;
+
+    var timeoutError = new Error();
+    timeoutError.status = 504;
+
+    var notFoundError = new Error();
+    notFoundError.status = 404;
+
     return {
         mockImplicitGrantFlow: mockImplicitGrantFlow,
-        mockAuthCodeFlow: mockAuthCodeFlow
+        mockAuthCodeFlow: mockAuthCodeFlow,
+        unauthorisedError: unauthorisedError,
+        timeoutError: timeoutError,
+        notFoundError: notFoundError
     };
 
     function mockImplicitGrantFlow() {
@@ -25,7 +37,7 @@ define(function() {
             authenticate: function() { return false; },
             refreshToken: function() {
                 fakeToken = 'auth-refreshed';
-                return $.Deferred().resolve();
+                return Promise.resolve();
             }
         };
     }

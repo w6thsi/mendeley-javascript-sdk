@@ -2,6 +2,8 @@ define(function(require) {
 
     'use strict';
 
+    var Promise = require('bluebird');
+    var axios = require('axios');
     require('es5-shim');
 
     // Helper for getting a file blob in phantom vs. others
@@ -23,61 +25,68 @@ define(function(require) {
         var mockAuth = require('mocks/auth');
         api.setAuthFlow(mockAuth.mockImplicitGrantFlow());
 
-        // Mock methods for getting headers
-        var getResponseHeaderLocation = function(header) {
-            return header === 'Location' ? baseUrl + '/documents/123' : null;
-        };
-        var getAllResponseHeaders = function() {
-            return '';
-        };
-
         // Mock ajax response promises
-        var mockPromiseCreate = $.Deferred().resolve('', 1, {
+        var mockPromiseCreate = Promise.resolve({
+            data: '',
             status: 201,
-            getResponseHeader: getResponseHeaderLocation
-        }).promise();
+            headers: {
+                'location': baseUrl + '/documents/123'
+            }
+        });
 
-        var mockPromiseRetrieve = $.Deferred().resolve({ id: '15', title: 'foo' }, 1, {
+        var mockPromiseRetrieve = Promise.resolve({
+            data: { id: '15', title: 'foo' },
             status: 200,
-            getResponseHeader: getResponseHeaderLocation,
-            getAllResponseHeaders: getAllResponseHeaders
-        }).promise();
+            headers: {
+                'location': baseUrl + '/documents/123'
+            }
+        });
 
-        var mockPromiseCreateFromFile = $.Deferred().resolve({ id: '15', title: 'foo' }, 1, {
+        var mockPromiseCreateFromFile = Promise.resolve({
+            data: { id: '15', title: 'foo' },
             status: 201,
-            getResponseHeader: getResponseHeaderLocation,
-            getAllResponseHeaders: getAllResponseHeaders
-        }).promise();
+            headers: {
+                'location': baseUrl + '/documents/123'
+            }
+        });
 
-        var mockPromiseUpdate = $.Deferred().resolve({ id: '15', title: 'foo' }, 1, {
+        var mockPromiseUpdate = Promise.resolve({
+            data: { id: '15', title: 'foo' },
             status: 200,
-            getResponseHeader: getResponseHeaderLocation,
-            getAllResponseHeaders: getAllResponseHeaders
-        }).promise();
+            headers: {
+                'location': baseUrl + '/documents/123'
+            }
+        });
 
-        var mockPromiseClone = $.Deferred().resolve({ id: '16', title: 'foo', 'group_id': 'bar' }, 1, {
+        var mockPromiseClone = Promise.resolve({
+            data: {  id: '16', title: 'foo', 'group_id': 'bar' },
             status: 200,
-            getResponseHeader: getResponseHeaderLocation,
-            getAllResponseHeaders: getAllResponseHeaders
-        }).promise();
+            headers: {
+                'location': baseUrl + '/documents/123'
+            }
+        });
 
-        var mockPromiseList = $.Deferred().resolve([{ id: '15', title: 'foo' }], 1, {
+        var mockPromiseList = Promise.resolve({
+            data: [{ id: '15', title: 'foo' }],
             status: 200,
-            getResponseHeader: getResponseHeaderLocation,
-            getAllResponseHeaders: getAllResponseHeaders
-        }).promise();
+            headers: {
+                'location': baseUrl + '/documents/123'
+            }
+        });
 
-        var mockPromiseTrash = $.Deferred().resolve(null, 1, {
+        var mockPromiseTrash = Promise.resolve({
+            data: null,
             status: 204,
-            getResponseHeader: getResponseHeaderLocation,
-            getAllResponseHeaders: getAllResponseHeaders
-        }).promise();
+            headers: {
+                'location': baseUrl + '/documents/123'
+            }
+        });
 
-        var mockPromiseNotFound = $.Deferred().reject({ status: 404 }).promise();
+        var mockPromiseNotFound = Promise.reject({ status: 404 });
 
-        var mockPromiseInternalError = $.Deferred().reject({ status: 500 }).promise();
+        var mockPromiseInternalError = Promise.reject({ status: 500 });
 
-        var mockPromiseGatewayTimeout = $.Deferred().reject({ status: 504 }).promise();
+        var mockPromiseGatewayTimeout = Promise.reject({ status: 504 });
 
         // Get a function to return promises in order
         function getMockPromises() {
@@ -94,44 +103,61 @@ define(function(require) {
             var apiRequest;
             var ajaxRequest;
 
+            beforeEach(function() {
+                ajaxSpy = spyOn(axios, 'request').and.callFake(getMockPromises(mockPromiseCreate, mockPromiseRetrieve));
+            });
+
             it('should be defined', function() {
                 expect(typeof documentsApi.create).toBe('function');
-                ajaxSpy = spyOn($, 'ajax').and.callFake(getMockPromises(mockPromiseCreate, mockPromiseRetrieve));
                 apiRequest = documentsApi.create({ title: 'foo' });
                 expect(ajaxSpy).toHaveBeenCalled();
-                ajaxRequest = ajaxSpy.calls.first().args[0];
             });
 
             it('should use POST', function() {
-                expect(ajaxRequest.type).toBe('POST');
+                documentsApi.create({ title: 'foo' });
+                ajaxRequest = ajaxSpy.calls.first().args[0];
+                expect(ajaxRequest.method).toBe('post');
             });
 
             it('should use endpoint /documents', function() {
+                documentsApi.create({ title: 'foo' });
+                ajaxRequest = ajaxSpy.calls.first().args[0];
                 expect(ajaxRequest.url).toBe(baseUrl + '/documents');
             });
 
             it('should have a Content-Type header', function() {
+                documentsApi.create({ title: 'foo' });
+                ajaxRequest = ajaxSpy.calls.first().args[0];
                 expect(ajaxRequest.headers['Content-Type']).toBeDefined();
             });
 
             it('should have an Authorization header', function() {
+                documentsApi.create({ title: 'foo' });
+                ajaxRequest = ajaxSpy.calls.first().args[0];
                 expect(ajaxRequest.headers.Authorization).toBeDefined();
                 expect(ajaxRequest.headers.Authorization).toBe('Bearer auth');
             });
 
             it('should have a body of JSON string', function() {
+                documentsApi.create({ title: 'foo' });
+                ajaxRequest = ajaxSpy.calls.first().args[0];
                 expect(ajaxRequest.data).toBe('{"title":"foo"}');
             });
 
-            it('should follow Location header', function() {
-                var ajaxRedirect = ajaxSpy.calls.mostRecent().args[0];
-                expect(ajaxRedirect.type).toBe('GET');
-                expect(ajaxRedirect.url).toBe(baseUrl + '/documents/123');
+            it('should follow Location header', function(done) {
+                documentsApi.create({ title: 'foo' }).finally(function() {
+                    ajaxRequest = ajaxSpy.calls.first().args[0];
+                    var ajaxRedirect = ajaxSpy.calls.mostRecent().args[0];
+                    expect(ajaxRedirect.method).toBe('get');
+                    expect(ajaxRedirect.url).toBe(baseUrl + '/documents/123');
+                    done();
+                });
             });
 
-            it('should resolve with the response', function() {
-                apiRequest.done(function(data) {
+            it('should resolve with the response', function(done) {
+                documentsApi.create({ title: 'foo' }).then(function(data) {
                     expect(data).toEqual({ id: '15', title: 'foo' });
+                    done();
                 });
             });
         });
@@ -139,17 +165,17 @@ define(function(require) {
         describe('create method failures', function() {
 
             it('should reject create errors with the request and response', function() {
-                spyOn($, 'ajax').and.callFake(getMockPromises(mockPromiseInternalError));
-                documentsApi.create({ title: 'foo' }).fail(function(request, response) {
-                    expect(request.type).toEqual('POST');
+                spyOn(axios, 'request').and.callFake(getMockPromises(mockPromiseInternalError));
+                documentsApi.create({ title: 'foo' }).catch(function(request, response) {
+                    expect(request.method).toEqual('post');
                     expect(response).toEqual({ status: 500 });
                 });
             });
 
             it('should fail redirect errors with the request and the response', function() {
-                spyOn($, 'ajax').and.callFake(getMockPromises(mockPromiseCreate, mockPromiseNotFound));
-                documentsApi.create({ title: 'foo' }).fail(function(request, response) {
-                    expect(request.type).toEqual('POST');
+                spyOn(axios, 'request').and.callFake(getMockPromises(mockPromiseCreate, mockPromiseNotFound));
+                documentsApi.create({ title: 'foo' }).catch(function(request, response) {
+                    expect(request.method).toEqual('post');
                     expect(response).toEqual({ status: 404 });
                 });
             });
@@ -165,14 +191,14 @@ define(function(require) {
 
             it('should be defined', function() {
                 expect(typeof documentsApi.createFromFile).toBe('function');
-                ajaxSpy = spyOn($, 'ajax').and.callFake(getMockPromises(mockPromiseCreateFromFile));
+                ajaxSpy = spyOn(axios, 'request').and.callFake(getMockPromises(mockPromiseCreateFromFile));
                 apiRequest = documentsApi.createFromFile(file);
                 expect(ajaxSpy).toHaveBeenCalled();
                 ajaxRequest = ajaxSpy.calls.first().args[0];
             });
 
             it('should use POST', function() {
-                expect(ajaxRequest.type).toBe('POST');
+                expect(ajaxRequest.method).toBe('post');
             });
 
             it('should use endpoint /documents', function() {
@@ -213,14 +239,14 @@ define(function(require) {
 
             it('should be defined', function() {
                 expect(typeof documentsApi.createFromFile).toBe('function');
-                ajaxSpy = spyOn($, 'ajax').and.callFake(getMockPromises(mockPromiseCreateFromFile));
+                ajaxSpy = spyOn(axios, 'request').and.callFake(getMockPromises(mockPromiseCreateFromFile));
                 apiRequest = documentsApi.createFromFileInGroup(file, 123);
                 expect(ajaxSpy).toHaveBeenCalled();
                 ajaxRequest = ajaxSpy.calls.first().args[0];
             });
 
-            it('should have an Link header', function() {
-                expect(ajaxRequest.headers.Link).toBe('<' + baseUrl + '/groups/123>; rel="group"');
+            it('should have a Link header', function() {
+                expect(ajaxRequest.headers.link).toBe('<' + baseUrl + '/groups/123>; rel="group"');
             });
         });
         describe('retrieve method', function() {
@@ -229,14 +255,14 @@ define(function(require) {
 
             it('should be defined', function() {
                 expect(typeof documentsApi.retrieve).toBe('function');
-                var ajaxSpy = spyOn($, 'ajax').and.callFake(getMockPromises(mockPromiseRetrieve));
+                var ajaxSpy = spyOn(axios, 'request').and.callFake(getMockPromises(mockPromiseRetrieve));
                 documentsApi.retrieve(15);
                 expect(ajaxSpy).toHaveBeenCalled();
                 ajaxRequest = ajaxSpy.calls.mostRecent().args[0];
             });
 
             it('should use GET', function() {
-                expect(ajaxRequest.type).toBe('GET');
+                expect(ajaxRequest.method).toBe('get');
             });
 
             it('should use endpoint /documents/{id}/', function() {
@@ -261,9 +287,9 @@ define(function(require) {
         describe('retrieve method failures', function() {
 
             it('should reject retrieve errors with the request and response', function() {
-                spyOn($, 'ajax').and.callFake(getMockPromises(mockPromiseNotFound));
-                documentsApi.list().fail(function(request, response) {
-                    expect(request.type).toEqual('GET');
+                spyOn(axios, 'request').and.callFake(getMockPromises(mockPromiseNotFound));
+                documentsApi.list().catch(function(request, response) {
+                    expect(request.method).toEqual('get');
                     expect(response).toEqual({ status: 404 });
                 });
             });
@@ -276,14 +302,14 @@ define(function(require) {
 
             it('should be defined', function() {
                 expect(typeof documentsApi.update).toBe('function');
-                var ajaxSpy = spyOn($, 'ajax').and.callFake(getMockPromises(mockPromiseUpdate));
+                var ajaxSpy = spyOn(axios, 'request').and.callFake(getMockPromises(mockPromiseUpdate));
                 documentsApi.update(15, { title: 'bar' });
                 expect(ajaxSpy).toHaveBeenCalled();
                 ajaxRequest = ajaxSpy.calls.mostRecent().args[0];
             });
 
             it('should use PATCH', function() {
-                expect(ajaxRequest.type).toBe('PATCH');
+                expect(ajaxRequest.method).toBe('patch');
             });
 
             it('should use endpoint /documents/{id}/', function() {
@@ -312,14 +338,14 @@ define(function(require) {
 
             it('should be defined', function() {
                 expect(typeof documentsApi.clone).toBe('function');
-                var ajaxSpy = spyOn($, 'ajax').and.callFake(getMockPromises(mockPromiseClone));
+                var ajaxSpy = spyOn(axios, 'request').and.callFake(getMockPromises(mockPromiseClone));
                 apiRequest = documentsApi.clone(15, { 'group_id': 'bar' });
                 expect(ajaxSpy).toHaveBeenCalled();
                 ajaxRequest = ajaxSpy.calls.mostRecent().args[0];
             });
 
             it('should use POST', function() {
-                expect(ajaxRequest.type).toBe('POST');
+                expect(ajaxRequest.method).toBe('post');
             });
 
             it('should use endpoint /documents/{id}/actions/cloneTo', function() {
@@ -357,7 +383,7 @@ define(function(require) {
 
             it('should be defined', function() {
                 expect(typeof documentsApi.list).toBe('function');
-                var ajaxSpy = spyOn($, 'ajax').and.callFake(getMockPromises(mockPromiseList));
+                var ajaxSpy = spyOn(axios, 'request').and.callFake(getMockPromises(mockPromiseList));
 
                 documentsApi.list(params);
                 expect(ajaxSpy).toHaveBeenCalled();
@@ -365,7 +391,7 @@ define(function(require) {
             });
 
             it('should use GET', function() {
-                expect(ajaxRequest.type).toBe('GET');
+                expect(ajaxRequest.method).toBe('get');
             });
 
             it('should use endpoint /documents/', function() {
@@ -398,14 +424,14 @@ define(function(require) {
             };
 
             it('should use the folders API', function() {
-                var ajaxSpy = spyOn($, 'ajax').and.callFake(getMockPromises(mockPromiseList));
+                var ajaxSpy = spyOn(axios, 'request').and.callFake(getMockPromises(mockPromiseList));
                 documentsApi.list(params);
                 expect(ajaxSpy).toHaveBeenCalled();
                 ajaxRequest = ajaxSpy.calls.mostRecent().args[0];
             });
 
             it('should use GET', function() {
-                expect(ajaxRequest.type).toBe('GET');
+                expect(ajaxRequest.method).toBe('get');
             });
 
             it('should use endpoint /folders/{id}/documents', function() {
@@ -424,14 +450,14 @@ define(function(require) {
 
             it('should be defined', function() {
                 expect(typeof documentsApi.trash).toBe('function');
-                var ajaxSpy = spyOn($, 'ajax').and.callFake(getMockPromises(mockPromiseTrash));
+                var ajaxSpy = spyOn(axios, 'request').and.callFake(getMockPromises(mockPromiseTrash));
                 documentsApi.trash(15);
                 expect(ajaxSpy).toHaveBeenCalled();
                 ajaxRequest = ajaxSpy.calls.mostRecent().args[0];
             });
 
             it('should use POST', function() {
-                expect(ajaxRequest.type).toBe('POST');
+                expect(ajaxRequest.method).toBe('post');
             });
 
             it('should use endpoint /documents/{id}/trash', function() {
@@ -458,28 +484,28 @@ define(function(require) {
             var ajaxSpy;
 
             it('should retry on 504', function() {
-                ajaxSpy = spyOn($, 'ajax').and.callFake(getMockPromises(mockPromiseGatewayTimeout, mockPromiseList));
+                ajaxSpy = spyOn(axios, 'request').and.callFake(getMockPromises(mockPromiseGatewayTimeout, mockPromiseList));
                 documentsApi.list();
                 expect(ajaxSpy).toHaveBeenCalled();
                 expect(ajaxSpy.calls.count()).toBe(2);
             });
 
             it('should only retry once', function() {
-                ajaxSpy = spyOn($, 'ajax').and.callFake(getMockPromises(mockPromiseGatewayTimeout, mockPromiseGatewayTimeout, mockPromiseList));
+                ajaxSpy = spyOn(axios, 'request').and.callFake(getMockPromises(mockPromiseGatewayTimeout, mockPromiseGatewayTimeout, mockPromiseList));
                 documentsApi.list();
                 expect(ajaxSpy).toHaveBeenCalled();
                 expect(ajaxSpy.calls.count()).toBe(2);
             });
 
             it('should NOT retry on response != 504', function() {
-                ajaxSpy = spyOn($, 'ajax').and.callFake(getMockPromises(mockPromiseNotFound, mockPromiseList));
+                ajaxSpy = spyOn(axios, 'request').and.callFake(getMockPromises(mockPromiseNotFound, mockPromiseList));
                 documentsApi.list();
                 expect(ajaxSpy).toHaveBeenCalled();
                 expect(ajaxSpy.calls.count()).toBe(1);
             });
 
             it('should NOT retry on failed create', function() {
-                ajaxSpy = spyOn($, 'ajax').and.callFake(getMockPromises(mockPromiseInternalError, mockPromiseList));
+                ajaxSpy = spyOn(axios, 'request').and.callFake(getMockPromises(mockPromiseInternalError, mockPromiseList));
                 documentsApi.create({ title: 'foo' });
                 expect(ajaxSpy).toHaveBeenCalled();
                 expect(ajaxSpy.calls.count()).toBe(1);
@@ -496,26 +522,10 @@ define(function(require) {
             linkLast = baseUrl + '/documents/?limit=5&reverse=true&sort=created&order=desc';
 
             function ajaxSpy() {
-                return spyOn($, 'ajax').and.returnValue($.Deferred().resolve([], 'success', {
-                    getResponseHeader: function(headerName) {
-                        if (headerName === 'Link' && sendLinks) {
-                            return ['<' + linkNext + '>; rel="next"', '<' + linkPrev + '>; rel="previous"', '<' + linkLast + '>; rel="last"'].join(', ');
-                        } else if (headerName === 'Mendeley-Count' && sendMendeleyCountHeader) {
-                            return documentCount.toString();
-                        }
-
-                        return null;
-                    },
-                    getAllResponseHeaders: function() {
-                        if (sendLinks) {
-                            return [
-                                'Link: <' + linkNext + '>; rel="next"',
-                                'Link: <' + linkPrev + '>; rel="previous"',
-                                'Link: <' + linkLast + '>; rel="last"'
-                                ].join('\n');
-                        }
-
-                        return '';
+                return spyOn(axios, 'request').and.returnValue(Promise.resolve({
+                    headers: {
+                        link: ['<' + linkNext + '>; rel="next"', '<' + linkPrev + '>; rel="previous"', '<' + linkLast + '>; rel="last"'].join(', '),
+                        'mendeley-count': documentCount.toString()
                     }
                 }));
             }

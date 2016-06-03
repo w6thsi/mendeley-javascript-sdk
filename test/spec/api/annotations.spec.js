@@ -3,6 +3,8 @@ define(function(require) {
 
     'use strict';
 
+    var Promise = require('bluebird');
+    var axios = require('axios');
     require('es5-shim');
 
     describe('annotations api', function() {
@@ -24,7 +26,7 @@ define(function(require) {
 
             it('be defined', function() {
                 expect(typeof annotationsApi.list).toBe('function');
-                ajaxSpy = spyOn($, 'ajax').and.returnValue($.Deferred().resolve());
+                ajaxSpy = spyOn(axios, 'request').and.returnValue(Promise.resolve({headers: {}}));
 
                 annotationsApi.list(params);
                 expect(ajaxSpy).toHaveBeenCalled();
@@ -32,7 +34,7 @@ define(function(require) {
             });
 
             it('should use GET', function() {
-                expect(ajaxRequest.type).toBe('GET');
+                expect(ajaxRequest.method).toBe('get');
             });
 
             it('should use endpoint /annotations/', function() {
@@ -49,7 +51,7 @@ define(function(require) {
             });
 
             it('should apply request params', function() {
-                expect(ajaxRequest.data).toEqual(params);
+                expect(ajaxRequest.params).toEqual(params);
             });
         });
 
@@ -60,14 +62,14 @@ define(function(require) {
 
             it('should be defined', function() {
                 expect(typeof annotationsApi.retrieve).toBe('function');
-                ajaxSpy = spyOn($, 'ajax').and.returnValue($.Deferred().resolve());
+                ajaxSpy = spyOn(axios, 'request').and.returnValue(Promise.resolve({headers: {}}));
                 annotationsApi.retrieve(123);
                 expect(ajaxSpy).toHaveBeenCalled();
                 ajaxRequest = ajaxSpy.calls.mostRecent().args[0];
             });
 
             it('should use GET', function() {
-                expect(ajaxRequest.type).toBe('GET');
+                expect(ajaxRequest.method).toBe('get');
             });
 
             it('should use endpoint /annotations/{id}', function() {
@@ -93,14 +95,14 @@ define(function(require) {
 
         	it('should be defined', function() {
         		expect(typeof annotationsApi.create).toBe('function');
-        		ajaxSpy = spyOn($, 'ajax').and.returnValue($.Deferred().resolve());
+        		ajaxSpy = spyOn(axios, 'request').and.returnValue(Promise.resolve({headers: {}}));
         		annotationsApi.create({document_id: 123, text: 'new annotation'});
         		expect(ajaxSpy).toHaveBeenCalled();
         		ajaxRequest = ajaxSpy.calls.mostRecent().args[0];
         	});
 
         	it('should use POST', function() {
-        		expect(ajaxRequest.type).toBe('POST');
+        		expect(ajaxRequest.method).toBe('post');
         	});
 
         	it('should use endpoint https://api.mendeley.com/annotations/', function() {
@@ -127,14 +129,14 @@ define(function(require) {
 
         	it('should be defined', function() {
         		expect(typeof annotationsApi.delete).toBe('function');
-        		ajaxSpy = spyOn($, 'ajax').and.returnValue($.Deferred().resolve());
+        		ajaxSpy = spyOn(axios, 'request').and.returnValue(Promise.resolve({headers: {}}));
         		annotationsApi.delete(123);
                 expect(ajaxSpy).toHaveBeenCalled();
         		ajaxRequest = ajaxSpy.calls.mostRecent().args[0];
         	});
 
         	it('should use DELETE', function() {
-        		expect(ajaxRequest.type).toBe('DELETE');
+        		expect(ajaxRequest.method).toBe('delete');
         	});
 
         	it('should use endpoint https://api.mendeley.com/annotations/{annotation_id}', function() {
@@ -157,14 +159,14 @@ define(function(require) {
 
         	it('should be defined', function() {
         		expect(typeof annotationsApi.patch).toBe('function');
-        		ajaxSpy = spyOn($, 'ajax').and.returnValue($.Deferred().resolve());
+        		ajaxSpy = spyOn(axios, 'request').and.returnValue(Promise.resolve({headers: {}}));
         		annotationsApi.patch(123, {text: 'updated annotation'});
                 expect(ajaxSpy).toHaveBeenCalled();
         		ajaxRequest = ajaxSpy.calls.mostRecent().args[0];
         	});
 
         	it('should use PATCH', function() {
-        		expect(ajaxRequest.type).toBe('PATCH');
+        		expect(ajaxRequest.method).toBe('patch');
         	});
 
         	it('should use endpoint https://api.mendeley.com/annotations/{annotation_id}', function() {
@@ -188,40 +190,31 @@ define(function(require) {
 
         describe('pagination', function() {
 
-            var sendMendeleyCountHeader = true,
-            groupCount = 56,
-            sendLinks = true,
-            linkNext = baseUrl + '/annotations/?limit=5&reverse=false&marker=03726a18-140d-3e79-9c2f-b63473668359',
-            linkLast = baseUrl + '/annotations/?limit=5&reverse=true';
+            var linkNext = baseUrl + '/annotations/?limit=5&reverse=false&marker=03726a18-140d-3e79-9c2f-b63473668359';
+            var linkLast = baseUrl + '/annotations/?limit=5&reverse=true';
 
             function ajaxSpy() {
-                return spyOn($, 'ajax').and.returnValue($.Deferred().resolve([], 'success', {
-                    getResponseHeader: function(headerName) {
-                        if (headerName === 'Link' && sendLinks) {
-                            return ['<' + linkNext + '>; rel="next"', '<' + linkLast + '>; rel="last"'].join(', ');
-                        } else if (headerName === 'Mendeley-Count' && sendMendeleyCountHeader) {
-                            return groupCount.toString();
-                        }
-
-                        return null;
-                    },
-                    getAllResponseHeaders: function() {
-                        return ['Link: <' + linkNext + '>; rel="next"', 'Link: <' + linkLast + '>; rel="last"'].join('\n');
+                return spyOn(axios, 'request').and.returnValue(Promise.resolve({
+                    headers: {
+                        link: '<' + linkNext + '>; rel="next",<' + linkLast + '>; rel="last"',
+                        'mendeley-count': 56
                     }
                 }));
             }
 
-            it('should parse link headers', function() {
+            it('should parse link headers', function(done) {
                 ajaxSpy();
                 annotationsApi.paginationLinks.next = 'nonsense';
                 annotationsApi.paginationLinks.prev = 'nonsense';
                 annotationsApi.paginationLinks.last = 'nonsense';
 
-                annotationsApi.list();
+                annotationsApi.list().then(function() {
+                    expect(annotationsApi.paginationLinks.next).toEqual(linkNext);
+                    expect(annotationsApi.paginationLinks.last).toEqual(linkLast);
+                    expect(annotationsApi.paginationLinks.prev).toEqual(false);
+                    done();
+                });
 
-                expect(annotationsApi.paginationLinks.next).toEqual(linkNext);
-                expect(annotationsApi.paginationLinks.last).toEqual(linkLast);
-                expect(annotationsApi.paginationLinks.prev).toEqual(false);
             });
 
             it('should get correct link on nextPage()', function() {
@@ -236,27 +229,18 @@ define(function(require) {
                 expect(spy.calls.mostRecent().args[0].url).toEqual(linkLast);
             });
 
-            it('should fail if no link for rel', function() {
+            it('should fail if no link for rel', function(done) {
                 var spy = ajaxSpy();
-                var result = annotationsApi.previousPage();
-                expect(result.state()).toEqual('rejected');
-                expect(spy).not.toHaveBeenCalled();
+                annotationsApi.previousPage().catch(function() {
+                    expect(spy).not.toHaveBeenCalled();
+                    done();
+                });
             });
 
             it('should store the total document count', function() {
                 ajaxSpy();
                 annotationsApi.list();
                 expect(annotationsApi.count).toEqual(56);
-
-                sendMendeleyCountHeader = false;
-                groupCount = 999;
-                annotationsApi.list();
-                expect(annotationsApi.count).toEqual(56);
-
-                sendMendeleyCountHeader = true;
-                groupCount = 0;
-                annotationsApi.list();
-                expect(annotationsApi.count).toEqual(0);
             });
 
             it('should not break when you GET something else that does not have pagination links', function() {
@@ -269,13 +253,13 @@ define(function(require) {
                 expect(annotationsApi.paginationLinks.last).toEqual(linkLast);
                 expect(annotationsApi.paginationLinks.prev).toEqual(false);
 
-                sendLinks = false;
                 annotationsApi.retrieve(56);
                 expect(annotationsApi.paginationLinks.next).toEqual(linkNext);
                 expect(annotationsApi.paginationLinks.last).toEqual(linkLast);
                 expect(annotationsApi.paginationLinks.prev).toEqual(false);
 
             });
+
         });
     });
 });

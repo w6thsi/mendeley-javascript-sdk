@@ -2,6 +2,8 @@ define(function(require) {
 
     'use strict';
 
+    var Promise = require('bluebird');
+    var axios = require('axios');
     require('es5-shim');
 
     describe('folders api', function() {
@@ -21,35 +23,32 @@ define(function(require) {
             var ajaxRequest;
             var ajaxCalls = 0;
             var ajaxResponse = function() {
-                var dfd = $.Deferred();
-                if (ajaxCalls%2 === 0) {
-                    dfd.resolve('', 1, {
+                if (ajaxCalls++ % 2 === 0) {
+                    return Promise.resolve({
                         status: 201,
-                        getResponseHeader: function(header) {
-                            return header === 'Location' ? baseUrl + '/folders/123' : null;
+                        headers: {
+                            location: baseUrl + '/folders/123'
                         }
                     });
                 }
                 else {
-                    dfd.resolve({ id: '123', name: 'foo' }, 1, {
-                        getResponseHeader: function () { return null; }
+                    return Promise.resolve({
+                        data: { id: '123', name: 'foo' },
+                        headers: {}
                     });
                 }
-                ajaxCalls++;
-
-                return dfd.promise();
             };
 
             it('should be defined', function() {
                 expect(typeof foldersApi.create).toBe('function');
-                ajaxSpy = spyOn($, 'ajax').and.callFake(ajaxResponse);
+                ajaxSpy = spyOn(axios, 'request').and.callFake(ajaxResponse);
                 apiRequest = foldersApi.create({ name: 'foo' });
                 expect(ajaxSpy).toHaveBeenCalled();
                 ajaxRequest = ajaxSpy.calls.first().args[0];
             });
 
             it('should use POST', function() {
-                expect(ajaxRequest.type).toBe('POST');
+                expect(ajaxRequest.method).toBe('get');
             });
 
             it('should use endpoint /folders', function() {
@@ -71,12 +70,12 @@ define(function(require) {
 
             it('should follow Location header', function() {
                 var ajaxRedirect = ajaxSpy.calls.mostRecent().args[0];
-                expect(ajaxRedirect.type).toBe('GET');
+                expect(ajaxRedirect.method).toBe('get');
                 expect(ajaxRedirect.url).toBe(baseUrl + '/folders/123');
             });
 
             it('should resolve with the data', function() {
-                apiRequest.done(function(data) {
+                apiRequest.then(function(data) {
                     expect(data).toEqual({ id: '123', name: 'foo' });
                 });
             });
@@ -86,13 +85,11 @@ define(function(require) {
 
             it('should reject create errors with the request and response', function() {
                 var ajaxFailureResponse = function() {
-                    var dfd = $.Deferred();
-                    dfd.reject({ status: 500 });
-                    return dfd.promise();
+                    return Promise.reject({ status: 500 });
                 };
-                spyOn($, 'ajax').and.callFake(ajaxFailureResponse);
+                spyOn(axios, 'request').and.callFake(ajaxFailureResponse);
                 foldersApi.create({ name: 'foo' }).fail(function(request, response) {
-                    expect(request.type).toEqual('POST');
+                    expect(request.method).toEqual('get');
                     expect(response).toEqual({ status: 500 });
                 });
             });
@@ -100,26 +97,22 @@ define(function(require) {
             it('should reject redirect errors with the request and the response', function() {
                 var ajaxMixedCalls = 0;
                 var ajaxMixedResponse = function() {
-                    var dfd = $.Deferred();
                     // First call apparently works and returns location
-                    if (ajaxMixedCalls === 0) {
-                        dfd.resolve('', 1, {
-                            getResponseHeader: function(header) {
-                                return header === 'Location' ? baseUrl + '/folders/123' : null;
+                    if (ajaxMixedCalls++ === 0) {
+                        return Promise.resolve({
+                            headers: {
+                                location: baseUrl + '/folders/123'
                             }
                         });
                     }
                     // But following the location fails
                     else {
-                        dfd.reject({ status: 404 });
+                        return Promise.reject({ status: 404 });
                     }
-                    ajaxMixedCalls++;
-
-                    return dfd.promise();
                 };
-                spyOn($, 'ajax').and.callFake(ajaxMixedResponse);
+                spyOn(axios, 'request').and.callFake(ajaxMixedResponse);
                 foldersApi.create({ name: 'foo' }).fail(function(request, response) {
-                    expect(request.type).toEqual('GET');
+                    expect(request.method).toEqual('get');
                     expect(response).toEqual({ status: 404 });
                 });
             });
@@ -132,14 +125,14 @@ define(function(require) {
 
             it('should be defined', function() {
                 expect(typeof foldersApi.retrieve).toBe('function');
-                ajaxSpy = spyOn($, 'ajax').and.returnValue($.Deferred().resolve());
+                ajaxSpy = spyOn(axios, 'request').and.returnValue(Promise.resolve());
                 foldersApi.retrieve(123);
                 expect(ajaxSpy).toHaveBeenCalled();
                 ajaxRequest = ajaxSpy.calls.mostRecent().args[0];
             });
 
             it('should use GET', function() {
-                expect(ajaxRequest.type).toBe('GET');
+                expect(ajaxRequest.method).toBe('get');
             });
 
             it('should use endpoint /folders/{id}', function() {
@@ -167,23 +160,21 @@ define(function(require) {
             var ajaxSpy;
             var ajaxRequest;
             var ajaxResponse = function() {
-                var dfd = $.Deferred();
-                dfd.resolve({ id: '123', name: 'bar' }, 1, {
-                    getResponseHeader: function () { return null; }
+                return Promise.resolve({
+                    data: { id: '123', name: 'bar' },
+                    headers: {}
                 });
-
-                return dfd.promise();
             };
             it('should be defined', function() {
                 expect(typeof foldersApi.update).toBe('function');
-                ajaxSpy = spyOn($, 'ajax').and.callFake(ajaxResponse);
+                ajaxSpy = spyOn(axios, 'request').and.callFake(ajaxResponse);
                 foldersApi.update(123, { name: 'bar' });
                 expect(ajaxSpy).toHaveBeenCalled();
                 ajaxRequest = ajaxSpy.calls.mostRecent().args[0];
             });
 
             it('should use PATCH', function() {
-                expect(ajaxRequest.type).toBe('PATCH');
+                expect(ajaxRequest.method).toBe('patch');
             });
 
             it('should use endpoint /folders/{id}/', function() {
@@ -215,7 +206,7 @@ define(function(require) {
 
             it('be defined', function() {
                 expect(typeof foldersApi.list).toBe('function');
-                ajaxSpy = spyOn($, 'ajax').and.returnValue($.Deferred().resolve());
+                ajaxSpy = spyOn(axios, 'request').and.returnValue(Promise.resolve());
 
                 foldersApi.list(params);
                 expect(ajaxSpy).toHaveBeenCalled();
@@ -223,7 +214,7 @@ define(function(require) {
             });
 
             it('should use GET', function() {
-                expect(ajaxRequest.type).toBe('GET');
+                expect(ajaxRequest.method).toBe('get');
             });
 
             it('should use endpoint /folders/', function() {
@@ -254,18 +245,11 @@ define(function(require) {
             linkLast = baseUrl + '/folders/?limit=5&reverse=true';
 
             function ajaxSpy() {
-                return spyOn($, 'ajax').and.returnValue($.Deferred().resolve([], 'success', {
-                    getResponseHeader: function(headerName) {
-                        if (headerName === 'Link' && sendLinks) {
-                            return ['<' + linkNext + '>; rel="next"', '<' + linkLast + '>; rel="last"'].join(', ');
-                        } else if (headerName === 'Mendeley-Count' && sendMendeleyCountHeader) {
-                            return folderCount.toString();
-                        }
-
-                        return null;
-                    },
-                    getAllResponseHeaders: function() {
-                        return ['Link: <' + linkNext + '>; rel="next"', 'Link: <' + linkLast + '>; rel="last"'].join('\n');
+                return spyOn(axios, 'request').and.returnValue(Promise.resolve({
+                    data: [],
+                    headers: {
+                        link: ['<' + linkNext + '>; rel="next"', '<' + linkLast + '>; rel="last"'].join(', '),
+                        'mendeley-count': folderCount.toString()
                     }
                 }));
             }
