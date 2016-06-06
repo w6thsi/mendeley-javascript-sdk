@@ -16,20 +16,13 @@ define(function(require) {
         var mockAuth = require('mocks/auth');
         api.setAuthFlow(mockAuth.mockImplicitGrantFlow());
 
-        // Mock methods for getting headers
-        var getResponseHeaderLocation = function(header) {
-            return header === 'Location' ? baseUrl + '/profiles/me' : null;
-        };
-
-        var getAllResponseHeaders = function() {
-            return '';
-        };
-
-        var mockPromiseUpdate = Promise.resolve([], 1, {
+        var mockPromiseUpdate = Promise.resolve({
+            data: [],
             status: 200,
-            getResponseHeader: getResponseHeaderLocation,
-            getAllResponseHeaders: getAllResponseHeaders
-        }).promise();
+            headers: {
+                location: baseUrl + '/profiles/me'
+            }
+        });
 
         // Get a function to return promises in order
         function getMockPromises() {
@@ -54,7 +47,7 @@ define(function(require) {
             });
 
             it('should use GET', function() {
-                expect(ajaxRequest.type).toBe('GET');
+                expect(ajaxRequest.method).toBe('get');
             });
 
             it('should use endpoint /profiles/me', function() {
@@ -90,7 +83,7 @@ define(function(require) {
             });
 
             it('should use GET', function() {
-                expect(ajaxRequest.type).toBe('GET');
+                expect(ajaxRequest.method).toBe('get');
             });
 
             it('should use endpoint /profiles/{id}', function() {
@@ -125,7 +118,7 @@ define(function(require) {
             });
 
             it('should use PATCH', function() {
-                expect(ajaxRequest.type).toBe('PATCH');
+                expect(ajaxRequest.method).toBe('patch');
             });
 
             it('should use endpoint /profiles/me', function() {
@@ -164,7 +157,7 @@ define(function(require) {
             });
 
             it('should use GET', function() {
-                expect(ajaxRequest.type).toBe('GET');
+                expect(ajaxRequest.method).toBe('get');
             });
 
             it('should use endpoint /profiles?email=test@test.com', function() {

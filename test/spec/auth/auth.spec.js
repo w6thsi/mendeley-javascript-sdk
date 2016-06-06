@@ -130,7 +130,7 @@ define(function(require) {
 
             it('should support refresh token URL', function() {
                 var ajaxRequest;
-                var ajaxSpy = spyOn(axios, 'request').and.returnValue(Promise.resolve());
+                var ajaxSpy = spyOn(axios, 'get').and.returnValue(Promise.resolve());
                 var win = require('mocks/window')();
                 var options = {win: win, clientId: 9999, refreshAccessTokenUrl: '/refresh'};
 
@@ -139,7 +139,7 @@ define(function(require) {
                 expect(ajaxSpy).toHaveBeenCalled();
 
                 ajaxRequest = ajaxSpy.calls.mostRecent().args[0];
-                expect(ajaxRequest.url).toBe('/refresh');
+                expect(ajaxRequest).toBe('/refresh');
             });
 
         });

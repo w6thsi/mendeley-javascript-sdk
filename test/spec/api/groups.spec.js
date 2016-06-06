@@ -33,7 +33,7 @@ define(function(require) {
             });
 
             it('should use GET', function() {
-                expect(ajaxRequest.type).toBe('GET');
+                expect(ajaxRequest.method).toBe('get');
             });
 
             it('should use endpoint /groups/', function() {
@@ -50,7 +50,7 @@ define(function(require) {
             });
 
             it('should apply request params', function() {
-                expect(ajaxRequest.data).toEqual(params);
+                expect(ajaxRequest.params).toEqual(params);
             });
         });
 
@@ -68,7 +68,7 @@ define(function(require) {
             });
 
             it('should use GET', function() {
-                expect(ajaxRequest.type).toBe('GET');
+                expect(ajaxRequest.method).toBe('get');
             });
 
             it('should use endpoint /groups/{id}', function() {
@@ -91,40 +91,32 @@ define(function(require) {
 
         describe('pagination', function() {
 
-            var sendMendeleyCountHeader = true,
-            groupCount = 56,
-            sendLinks = true,
-            linkNext = baseUrl + '/groups/?limit=5&reverse=false&marker=03726a18-140d-3e79-9c2f-b63473668359',
+            var linkNext = baseUrl + '/groups/?limit=5&reverse=false&marker=03726a18-140d-3e79-9c2f-b63473668359',
             linkLast = baseUrl + '/groups/?limit=5&reverse=true';
 
             function ajaxSpy() {
-                return spyOn(axios, 'request').and.returnValue(Promise.resolve([], 'success', {
-                    getResponseHeader: function(headerName) {
-                        if (headerName === 'Link' && sendLinks) {
-                            return ['<' + linkNext + '>; rel="next"', '<' + linkLast + '>; rel="last"'].join(', ');
-                        } else if (headerName === 'Mendeley-Count' && sendMendeleyCountHeader) {
-                            return groupCount.toString();
-                        }
-
-                        return null;
-                    },
-                    getAllResponseHeaders: function() {
-                        return ['Link: <' + linkNext + '>; rel="next"', 'Link: <' + linkLast + '>; rel="last"'].join('\n');
+                return spyOn(axios, 'request').and.returnValue(Promise.resolve({
+                    data: [],
+                    headers: {
+                        link: ['<' + linkNext + '>; rel="next"', '<' + linkLast + '>; rel="last"'].join(', '),
+                        'mendeley-count': 56
                     }
                 }));
             }
 
-            it('should parse link headers', function() {
+            it('should parse link headers', function(done) {
                 ajaxSpy();
                 groupApi.paginationLinks.next = 'nonsense';
                 groupApi.paginationLinks.prev = 'nonsense';
                 groupApi.paginationLinks.last = 'nonsense';
 
-                groupApi.list();
+                groupApi.list().finally(function() {
+                    expect(groupApi.paginationLinks.next).toEqual(linkNext);
+                    expect(groupApi.paginationLinks.last).toEqual(linkLast);
+                    expect(groupApi.paginationLinks.prev).toEqual(false);
+                    done();
+                });
 
-                expect(groupApi.paginationLinks.next).toEqual(linkNext);
-                expect(groupApi.paginationLinks.last).toEqual(linkLast);
-                expect(groupApi.paginationLinks.prev).toEqual(false);
             });
 
             it('should get correct link on nextPage()', function() {
@@ -142,7 +134,7 @@ define(function(require) {
             it('should fail if no link for rel', function() {
                 var spy = ajaxSpy();
                 var result = groupApi.previousPage();
-                expect(result.state()).toEqual('rejected');
+                expect(result.isRejected()).toEqual(true);
                 expect(spy).not.toHaveBeenCalled();
             });
 
@@ -150,20 +142,9 @@ define(function(require) {
                 ajaxSpy();
                 groupApi.list();
                 expect(groupApi.count).toEqual(56);
-
-                sendMendeleyCountHeader = false;
-                groupCount = 999;
-                groupApi.list();
-                expect(groupApi.count).toEqual(56);
-
-                sendMendeleyCountHeader = true;
-                groupCount = 0;
-                groupApi.list();
-                expect(groupApi.count).toEqual(0);
             });
 
             it('should not break when you GET something else that does not have pagination links', function() {
-
                 ajaxSpy();
 
                 groupApi.list();
@@ -171,13 +152,6 @@ define(function(require) {
                 expect(groupApi.paginationLinks.next).toEqual(linkNext);
                 expect(groupApi.paginationLinks.last).toEqual(linkLast);
                 expect(groupApi.paginationLinks.prev).toEqual(false);
-
-                sendLinks = false;
-                groupApi.retrieve(56);
-                expect(groupApi.paginationLinks.next).toEqual(linkNext);
-                expect(groupApi.paginationLinks.last).toEqual(linkLast);
-                expect(groupApi.paginationLinks.prev).toEqual(false);
-
             });
         });
     });

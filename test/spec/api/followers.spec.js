@@ -31,7 +31,7 @@ define(function(require) {
             });
 
             it('should use POST', function() {
-                expect(ajaxRequest.type).toBe('POST');
+                expect(ajaxRequest.method).toBe('post');
             });
 
             it('should use endpoint /followers', function() {
@@ -71,7 +71,7 @@ define(function(require) {
             });
 
             it('should use GET', function() {
-                expect(ajaxRequest.type).toBe('GET');
+                expect(ajaxRequest.method).toBe('get');
             });
 
             it('should use endpoint /followers', function() {
@@ -88,7 +88,7 @@ define(function(require) {
             });
 
             it('should apply request params', function() {
-                expect(ajaxRequest.data).toEqual(params);
+                expect(ajaxRequest.params).toEqual(params);
             });
 
         });
@@ -108,7 +108,7 @@ define(function(require) {
             });
 
             it('should use DELETE', function() {
-                expect(ajaxRequest.type).toBe('DELETE');
+                expect(ajaxRequest.method).toBe('delete');
             });
 
             it('should use endpoint /followers/{id}', function() {
@@ -141,7 +141,7 @@ define(function(require) {
             });
 
             it('should use PATCH', function() {
-                expect(ajaxRequest.type).toBe('PATCH');
+                expect(ajaxRequest.method).toBe('patch');
             });
 
             it('should use endpoint /followers/{id}', function() {

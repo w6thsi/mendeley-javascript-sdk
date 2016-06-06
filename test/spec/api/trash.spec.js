@@ -22,7 +22,7 @@ define(function(require) {
 
             it('should be defined', function() {
                 expect(typeof trashApi.retrieve).toBe('function');
-                ajaxSpy = spyOn(axios, 'request').and.returnValue(Promise.resolve());
+                ajaxSpy = spyOn(axios, 'request').and.returnValue(Promise.resolve({headers: {}}));
                 trashApi.retrieve(15);
                 expect(ajaxSpy).toHaveBeenCalled();
                 ajaxRequest = ajaxSpy.calls.mostRecent().args[0];
@@ -63,7 +63,7 @@ define(function(require) {
 
             it('be defined', function() {
                 expect(typeof trashApi.list).toBe('function');
-                ajaxSpy = spyOn(axios, 'request').and.returnValue(Promise.resolve());
+                ajaxSpy = spyOn(axios, 'request').and.returnValue(Promise.resolve({headers: {}}));
 
                 trashApi.list(sampleData);
                 expect(ajaxSpy).toHaveBeenCalled();
@@ -100,7 +100,7 @@ define(function(require) {
 
             it('should be defined', function() {
                 expect(typeof trashApi.restore).toBe('function');
-                ajaxSpy = spyOn(axios, 'request').and.returnValue(Promise.resolve());
+                ajaxSpy = spyOn(axios, 'request').and.returnValue(Promise.resolve({headers: {}}));
                 trashApi.restore(15);
                 expect(ajaxSpy).toHaveBeenCalled();
                 ajaxRequest = ajaxSpy.calls.mostRecent().args[0];
@@ -131,16 +131,14 @@ define(function(require) {
 
         describe('restore method failures', function() {
 
-            it('should reject restore errors with the request and response', function() {
+            it('should reject restore errors with the response', function(done) {
                 var ajaxFailureResponse = function() {
-                    var dfd = Promise;
-                    dfd.reject({ status: 404 });
-                    return dfd.promise();
+                    return Promise.reject({ status: 404 });
                 };
                 spyOn(axios, 'request').and.callFake(ajaxFailureResponse);
-                trashApi.restore().fail(function(request, response) {
-                    expect(request.method).toEqual('post');
-                    expect(response).toEqual({ status: 404 });
+                trashApi.restore().catch(function(response) {
+                    expect(response.status).toEqual(404);
+                    done();
                 });
             });
 
@@ -153,7 +151,7 @@ define(function(require) {
 
             it('should be defined', function() {
                 expect(typeof trashApi.destroy).toBe('function');
-                ajaxSpy = spyOn(axios, 'request').and.returnValue(Promise.resolve());
+                ajaxSpy = spyOn(axios, 'request').and.returnValue(Promise.resolve({headers: {}}));
                 trashApi.destroy(15);
                 expect(ajaxSpy).toHaveBeenCalled();
                 ajaxRequest = ajaxSpy.calls.mostRecent().args[0];
@@ -186,90 +184,91 @@ define(function(require) {
 
             var sendMendeleyCountHeader = true,
                 documentCount = 155,
-                sendLinks = true;
+                sendLinks = true,
+                linkNext = baseUrl + '/trash/?limit=5&reverse=false&sort=created&order=desc&marker=03726a18-140d-3e79-9c2f-b63473668359',
+                linkLast = baseUrl + '/trash/?limit=5&reverse=true&sort=created&order=desc';
 
             function ajaxSpy() {
-                return spyOn(axios, 'request').and.returnValue(Promise.resolve([], 'success', {
-                    getResponseHeader: function(headerName) {
-                        if (headerName === 'Link' && sendLinks) {
-                            return '<' + baseUrl + '/trash/' +
-                            '?limit=5&reverse=false&sort=created&order=desc&marker=03726a18-140d-3e79-9c2f-b63473668359>; ' +
-                            'rel="next",<' + baseUrl + '/trash/?limit=5&reverse=true&sort=created&order=desc>; rel="last"';
-                        } else if (headerName === 'Mendeley-Count' && sendMendeleyCountHeader) {
-                            return documentCount.toString();
-                        }
+                var headers = {
+                    data: [],
+                    status: 200
+                };
+                var spy = jasmine.createSpy('axios');
 
-                        return null;
-                    },
-                    getAllResponseHeaders: function() {
-                        return 'Link: <' + baseUrl + '/trash/?limit=5&reverse=false&sort=created&order=desc&marker=03726a18-140d-3e79-9c2f-b63473668359>; rel="next"' +
-                            '\n' +
-                            'Link: <' + baseUrl + '/trash/?limit=5&reverse=true&sort=created&order=desc>; rel="last"';
-                    }
+                if (sendMendeleyCountHeader) {
+                    headers['mendeley-count'] = documentCount.toString();
+                }
+
+                if (sendLinks) {
+                    headers.link = ['<' + linkNext + '>; rel="next"', '<' + linkLast + '>; rel="last"'].join(', ');
+                }
+
+                spy.and.returnValue(Promise.resolve({
+                    headers: headers
                 }));
+                axios.request = spy;
+
+                return spy;
             }
 
-            it('should parse link headers', function() {
+            it('should parse link headers', function(done) {
                 ajaxSpy();
                 trashApi.paginationLinks.next = 'nonsense';
                 trashApi.paginationLinks.prev = 'nonsense';
                 trashApi.paginationLinks.last = 'nonsense';
 
-                trashApi.list();
+                trashApi.list().finally(function() {
+                    expect(trashApi.paginationLinks.next).toEqual(linkNext);
+                    expect(trashApi.paginationLinks.last).toEqual(linkLast);
+                    expect(trashApi.paginationLinks.prev).toEqual(false);
+                    done();
+                });
 
-                expect(trashApi.paginationLinks.next).toEqual(baseUrl + '/trash/?limit=5&reverse=false&sort=created&order=desc&marker=03726a18-140d-3e79-9c2f-b63473668359');
-                expect(trashApi.paginationLinks.last).toEqual(baseUrl + '/trash/?limit=5&reverse=true&sort=created&order=desc');
-                expect(trashApi.paginationLinks.prev).toEqual(false);
             });
 
             it('should get correct link on nextPage()', function() {
                 var spy = ajaxSpy();
                 trashApi.nextPage();
-                expect(spy.calls.mostRecent().args[0].url).toEqual(baseUrl + '/trash/?limit=5&reverse=false&sort=created&order=desc&marker=03726a18-140d-3e79-9c2f-b63473668359');
+                expect(spy.calls.mostRecent().args[0].url).toEqual(linkNext);
             });
 
             it('should get correct link on lastPage()', function() {
                 var spy = ajaxSpy();
                 trashApi.lastPage();
-                expect(spy.calls.mostRecent().args[0].url).toEqual(baseUrl + '/trash/?limit=5&reverse=true&sort=created&order=desc');
+                expect(spy.calls.mostRecent().args[0].url).toEqual(linkLast);
             });
 
             it('should fail if no link for rel', function() {
                 var spy = ajaxSpy();
                 var result = trashApi.previousPage();
-                expect(result.state()).toEqual('rejected');
+                expect(result.isRejected()).toEqual(true);
                 expect(spy).not.toHaveBeenCalled();
             });
 
-            it('should store the total trashed documents count', function() {
+            it('should store the total trashed documents count', function(done) {
                 ajaxSpy();
-                trashApi.list();
-                expect(trashApi.count).toEqual(155);
-
-                sendMendeleyCountHeader = false;
-                documentCount = 999;
-                trashApi.list();
-                expect(trashApi.count).toEqual(155);
-
-                sendMendeleyCountHeader = true;
-                documentCount = 0;
-                trashApi.list();
-                expect(trashApi.count).toEqual(0);
+                trashApi.list().finally(function() {
+                    expect(trashApi.count).toEqual(155);
+                    done();
+                });
             });
 
-            it('should not break when you GET something else that does not have pagination links', function() {
-                trashApi.list();
+            it('should not break when you GET something else that does not have pagination links', function(done) {
+                ajaxSpy();
+                trashApi.list().then(function() {
+                    expect(trashApi.paginationLinks.next).toEqual(linkNext);
+                    expect(trashApi.paginationLinks.last).toEqual(linkLast);
+                    expect(trashApi.paginationLinks.prev).toEqual(false);
 
-                expect(trashApi.paginationLinks.next).toEqual(baseUrl + '/trash/?limit=5&reverse=false&sort=created&order=desc&marker=03726a18-140d-3e79-9c2f-b63473668359');
-                expect(trashApi.paginationLinks.last).toEqual(baseUrl + '/trash/?limit=5&reverse=true&sort=created&order=desc');
-                expect(trashApi.paginationLinks.prev).toEqual(false);
+                    sendLinks = false;
 
-                sendLinks = false;
-                trashApi.retrieve(155);
-                expect(trashApi.paginationLinks.next).toEqual(baseUrl + '/trash/?limit=5&reverse=false&sort=created&order=desc&marker=03726a18-140d-3e79-9c2f-b63473668359');
-                expect(trashApi.paginationLinks.last).toEqual(baseUrl + '/trash/?limit=5&reverse=true&sort=created&order=desc');
-                expect(trashApi.paginationLinks.prev).toEqual(false);
-
+                    return trashApi.retrieve(155);
+                }).then(function() {
+                    expect(trashApi.paginationLinks.next).toEqual(linkNext);
+                    expect(trashApi.paginationLinks.last).toEqual(linkLast);
+                    expect(trashApi.paginationLinks.prev).toEqual(false);
+                    done();
+                });
             });
         });
     });

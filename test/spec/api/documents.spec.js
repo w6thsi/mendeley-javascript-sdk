@@ -100,7 +100,6 @@ define(function(require) {
         describe('create method', function() {
 
             var ajaxSpy;
-            var apiRequest;
             var ajaxRequest;
 
             beforeEach(function() {
@@ -109,7 +108,7 @@ define(function(require) {
 
             it('should be defined', function() {
                 expect(typeof documentsApi.create).toBe('function');
-                apiRequest = documentsApi.create({ title: 'foo' });
+                documentsApi.create({ title: 'foo' });
                 expect(ajaxSpy).toHaveBeenCalled();
             });
 
@@ -164,19 +163,19 @@ define(function(require) {
 
         describe('create method failures', function() {
 
-            it('should reject create errors with the request and response', function() {
+            it('should reject create errors with the request and response', function(done) {
                 spyOn(axios, 'request').and.callFake(getMockPromises(mockPromiseInternalError));
-                documentsApi.create({ title: 'foo' }).catch(function(request, response) {
-                    expect(request.method).toEqual('post');
-                    expect(response).toEqual({ status: 500 });
+                documentsApi.create({ title: 'foo' }).catch(function(response) {
+                    expect(response.status).toEqual(500);
+                    done();
                 });
             });
 
-            it('should fail redirect errors with the request and the response', function() {
+            it('should fail redirect errors with the request and the response', function(done) {
                 spyOn(axios, 'request').and.callFake(getMockPromises(mockPromiseCreate, mockPromiseNotFound));
-                documentsApi.create({ title: 'foo' }).catch(function(request, response) {
-                    expect(request.method).toEqual('post');
-                    expect(response).toEqual({ status: 404 });
+                documentsApi.create({ title: 'foo' }).catch(function(response) {
+                    expect(response.status).toEqual(404);
+                    done();
                 });
             });
         });
@@ -223,12 +222,14 @@ define(function(require) {
                 expect(ajaxRequest.data).toEqual(file);
             });
 
-            it('should resolve with the response', function() {
-                apiRequest.done(function(data) {
+            it('should resolve with the response', function(done) {
+                apiRequest.then(function(data) {
                     expect(data).toEqual({ id: '15', title: 'foo' });
+                    done();
                 });
             });
         });
+
         describe('createFromFileInGroup method', function() {
 
             var ajaxSpy;
@@ -246,9 +247,10 @@ define(function(require) {
             });
 
             it('should have a Link header', function() {
-                expect(ajaxRequest.headers.link).toBe('<' + baseUrl + '/groups/123>; rel="group"');
+                expect(ajaxRequest.headers.Link).toBe('<' + baseUrl + '/groups/123>; rel="group"');
             });
         });
+
         describe('retrieve method', function() {
 
             var ajaxRequest;
@@ -286,11 +288,11 @@ define(function(require) {
 
         describe('retrieve method failures', function() {
 
-            it('should reject retrieve errors with the request and response', function() {
+            it('should reject retrieve errors with the request and response', function(done) {
                 spyOn(axios, 'request').and.callFake(getMockPromises(mockPromiseNotFound));
-                documentsApi.list().catch(function(request, response) {
-                    expect(request.method).toEqual('get');
-                    expect(response).toEqual({ status: 404 });
+                documentsApi.list().catch(function(response) {
+                    expect(response.status).toEqual(404);
+                    done();
                 });
             });
 
@@ -365,9 +367,10 @@ define(function(require) {
                 expect(ajaxRequest.data).toBe('{"group_id":"bar"}');
             });
 
-            it('should resolve with the response', function() {
-                apiRequest.done(function(data) {
+            it('should resolve with the response', function(done) {
+                apiRequest.then(function(data) {
                     expect(data).toEqual({ id : '16', title : 'foo', 'group_id' : 'bar' });
+                    done();
                 });
             });
         });
@@ -408,7 +411,7 @@ define(function(require) {
             });
 
             it('should apply request params', function() {
-                expect(ajaxRequest.data).toEqual(params);
+                expect(ajaxRequest.params).toEqual(params);
             });
 
         });
@@ -439,7 +442,7 @@ define(function(require) {
             });
 
             it('should remove the all paramaters except limit', function() {
-                expect(ajaxRequest.data).toEqual({limit: 50});
+                expect(ajaxRequest.params).toEqual({limit: 50});
             });
 
         });
@@ -483,32 +486,40 @@ define(function(require) {
 
             var ajaxSpy;
 
-            it('should retry on 504', function() {
+            it('should retry on 504', function(done) {
                 ajaxSpy = spyOn(axios, 'request').and.callFake(getMockPromises(mockPromiseGatewayTimeout, mockPromiseList));
-                documentsApi.list();
-                expect(ajaxSpy).toHaveBeenCalled();
-                expect(ajaxSpy.calls.count()).toBe(2);
+                documentsApi.list().finally(function() {
+                    expect(ajaxSpy).toHaveBeenCalled();
+                    expect(ajaxSpy.calls.count()).toBe(2);
+                    done();
+                });
             });
 
-            it('should only retry once', function() {
+            it('should only retry once', function(done) {
                 ajaxSpy = spyOn(axios, 'request').and.callFake(getMockPromises(mockPromiseGatewayTimeout, mockPromiseGatewayTimeout, mockPromiseList));
-                documentsApi.list();
-                expect(ajaxSpy).toHaveBeenCalled();
-                expect(ajaxSpy.calls.count()).toBe(2);
+                documentsApi.list().finally(function() {
+                    expect(ajaxSpy).toHaveBeenCalled();
+                    expect(ajaxSpy.calls.count()).toBe(2);
+                    done();
+                });
             });
 
-            it('should NOT retry on response != 504', function() {
+            it('should NOT retry on response != 504', function(done) {
                 ajaxSpy = spyOn(axios, 'request').and.callFake(getMockPromises(mockPromiseNotFound, mockPromiseList));
-                documentsApi.list();
-                expect(ajaxSpy).toHaveBeenCalled();
-                expect(ajaxSpy.calls.count()).toBe(1);
+                documentsApi.list().finally(function() {
+                    expect(ajaxSpy).toHaveBeenCalled();
+                    expect(ajaxSpy.calls.count()).toBe(1);
+                    done();
+                });
             });
 
-            it('should NOT retry on failed create', function() {
+            it('should NOT retry on failed create', function(done) {
                 ajaxSpy = spyOn(axios, 'request').and.callFake(getMockPromises(mockPromiseInternalError, mockPromiseList));
-                documentsApi.create({ title: 'foo' });
-                expect(ajaxSpy).toHaveBeenCalled();
-                expect(ajaxSpy.calls.count()).toBe(1);
+                documentsApi.create({ title: 'foo' }).finally(function() {
+                    expect(ajaxSpy).toHaveBeenCalled();
+                    expect(ajaxSpy.calls.count()).toBe(1);
+                    done();
+                });
             });
         });
 
@@ -522,25 +533,37 @@ define(function(require) {
             linkLast = baseUrl + '/documents/?limit=5&reverse=true&sort=created&order=desc';
 
             function ajaxSpy() {
-                return spyOn(axios, 'request').and.returnValue(Promise.resolve({
-                    headers: {
-                        link: ['<' + linkNext + '>; rel="next"', '<' + linkPrev + '>; rel="previous"', '<' + linkLast + '>; rel="last"'].join(', '),
-                        'mendeley-count': documentCount.toString()
-                    }
+                var headers = {};
+                var spy = jasmine.createSpy('axios');
+
+                if (sendMendeleyCountHeader) {
+                    headers['mendeley-count'] = documentCount.toString();
+                }
+
+                if (sendLinks) {
+                    headers.link = ['<' + linkNext + '>; rel="next"', '<' + linkPrev + '>; rel="previous"', '<' + linkLast + '>; rel="last"'].join(', ');
+                }
+
+                spy.and.returnValue(Promise.resolve({
+                    headers: headers
                 }));
+                axios.request = spy;
+
+                return spy;
             }
 
-            it('should parse link headers', function() {
+            it('should parse link headers', function(done) {
                 ajaxSpy();
                 documentsApi.paginationLinks.next = 'nonsense';
                 documentsApi.paginationLinks.previous = 'nonsense';
                 documentsApi.paginationLinks.last = 'nonsense';
 
-                documentsApi.list();
-
-                expect(documentsApi.paginationLinks.next).toEqual(linkNext);
-                expect(documentsApi.paginationLinks.last).toEqual(linkLast);
-                expect(documentsApi.paginationLinks.previous).toEqual(linkPrev);
+                documentsApi.list().finally(function() {
+                    expect(documentsApi.paginationLinks.next).toEqual(linkNext);
+                    expect(documentsApi.paginationLinks.last).toEqual(linkLast);
+                    expect(documentsApi.paginationLinks.previous).toEqual(linkPrev);
+                    done();
+                });
             });
 
             it('should get correct link on nextPage()', function() {
@@ -565,73 +588,84 @@ define(function(require) {
                 documentsApi.resetPagination();
                 var spy = ajaxSpy();
                 var result = documentsApi.previousPage();
-                expect(result.state()).toEqual('rejected');
+                expect(result.isRejected()).toEqual(true);
                 expect(spy).not.toHaveBeenCalled();
             });
 
-            it('should store the total document count', function() {
+            it('should store the total document count', function(done) {
                 ajaxSpy();
-                documentsApi.list();
-                expect(documentsApi.count).toEqual(155);
+                documentsApi.list().finally(function() {
+                    expect(documentsApi.count).toEqual(155);
+                    
+                    sendMendeleyCountHeader = false;
+                    documentCount = 999;
+                    ajaxSpy();
+                    return documentsApi.list();
+                }).finally(function() {
+                    expect(documentsApi.count).toEqual(155);
 
-                sendMendeleyCountHeader = false;
-                documentCount = 999;
-                documentsApi.list();
-                expect(documentsApi.count).toEqual(155);
-
-                sendMendeleyCountHeader = true;
-                documentCount = 0;
-                documentsApi.list();
-                expect(documentsApi.count).toEqual(0);
+                    sendMendeleyCountHeader = true;
+                    documentCount = 0;
+                    ajaxSpy();
+                    return documentsApi.list();
+                }).finally(function() {
+                    expect(documentsApi.count).toEqual(0);
+                    done();
+                });
             });
 
-            it('should not break when you GET something else that does not have pagination links', function() {
-
+            it('should not break when you GET something else that does not have pagination links', function(done) {
                 ajaxSpy();
 
-                documentsApi.list();
-
-                expect(documentsApi.paginationLinks.next).toEqual(linkNext);
-                expect(documentsApi.paginationLinks.last).toEqual(linkLast);
-                expect(documentsApi.paginationLinks.previous).toEqual(linkPrev);
-
-                sendLinks = false;
-                documentsApi.retrieve(155);
-                expect(documentsApi.paginationLinks.next).toEqual(linkNext);
-                expect(documentsApi.paginationLinks.last).toEqual(linkLast);
-                expect(documentsApi.paginationLinks.previous).toEqual(linkPrev);
-
+                documentsApi.list().finally(function() {
+                    expect(documentsApi.paginationLinks.next).toEqual(linkNext);
+                    expect(documentsApi.paginationLinks.last).toEqual(linkLast);
+                    expect(documentsApi.paginationLinks.previous).toEqual(linkPrev);
+                    
+                    sendLinks = false;
+                    ajaxSpy();
+                    return documentsApi.retrieve(155);
+                }).finally(function() {
+                    expect(documentsApi.paginationLinks.next).toEqual(linkNext);
+                    expect(documentsApi.paginationLinks.last).toEqual(linkLast);
+                    expect(documentsApi.paginationLinks.previous).toEqual(linkPrev);
+                    done();
+                });
             });
 
-            it('should be possible to reset the pagination links manually', function() {
+            it('should be possible to reset the pagination links manually', function(done) {
                 ajaxSpy();
 
-                documentsApi.list();
+                documentsApi.list().finally(function() {
+                    expect(documentsApi.paginationLinks.next).toEqual(linkNext);
+                    expect(documentsApi.paginationLinks.last).toEqual(linkLast);
+                    expect(documentsApi.paginationLinks.previous).toEqual(linkPrev);
+                    
+                    documentsApi.resetPagination();
 
-                expect(documentsApi.paginationLinks.next).toEqual(linkNext);
-                expect(documentsApi.paginationLinks.last).toEqual(linkLast);
-                expect(documentsApi.paginationLinks.previous).toEqual(linkPrev);
+                    expect(documentsApi.paginationLinks.next).toEqual(false);
+                    expect(documentsApi.paginationLinks.last).toEqual(false);
+                    expect(documentsApi.paginationLinks.previous).toEqual(false);
 
-                documentsApi.resetPagination();
-
-                expect(documentsApi.paginationLinks.next).toEqual(false);
-                expect(documentsApi.paginationLinks.last).toEqual(false);
-                expect(documentsApi.paginationLinks.previous).toEqual(false);
+                    done();
+                });
             });
 
-            it('should not set pagination links if there is a count but no links', function() {
+            it('should not set pagination links if there is a count but no links', function(done) {
                 sendMendeleyCountHeader = true;
                 documentCount = 10;
                 sendLinks = false;
 
                 ajaxSpy();
 
-                documentsApi.list();
+                documentsApi.list().finally(function() {
+                    expect(documentsApi.count).toEqual(10);
+                    expect(documentsApi.paginationLinks.next).toEqual(false);
+                    expect(documentsApi.paginationLinks.last).toEqual(false);
+                    expect(documentsApi.paginationLinks.previous).toEqual(false);
+                    done();
+                });
 
-                expect(documentsApi.count).toEqual(10);
-                expect(documentsApi.paginationLinks.next).toEqual(false);
-                expect(documentsApi.paginationLinks.last).toEqual(false);
-                expect(documentsApi.paginationLinks.previous).toEqual(false);
             });
         });
     });

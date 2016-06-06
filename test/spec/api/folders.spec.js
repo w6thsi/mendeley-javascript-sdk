@@ -18,7 +18,6 @@ define(function(require) {
         describe('create method', function() {
 
             // Set up fake XHR to return Location header for first call and a folder for second call
-            var apiRequest;
             var ajaxSpy;
             var ajaxRequest;
             var ajaxCalls = 0;
@@ -30,71 +29,87 @@ define(function(require) {
                             location: baseUrl + '/folders/123'
                         }
                     });
-                }
-                else {
+                } else {
                     return Promise.resolve({
+                        status: 200,
                         data: { id: '123', name: 'foo' },
                         headers: {}
                     });
                 }
             };
 
+            beforeEach(function() {
+                ajaxSpy = spyOn(axios, 'request').and.callFake(ajaxResponse);
+            });
+
             it('should be defined', function() {
                 expect(typeof foldersApi.create).toBe('function');
-                ajaxSpy = spyOn(axios, 'request').and.callFake(ajaxResponse);
-                apiRequest = foldersApi.create({ name: 'foo' });
+                foldersApi.create({ name: 'foo' });
                 expect(ajaxSpy).toHaveBeenCalled();
-                ajaxRequest = ajaxSpy.calls.first().args[0];
             });
 
             it('should use POST', function() {
-                expect(ajaxRequest.method).toBe('get');
+                foldersApi.create({ name: 'foo' });
+                ajaxRequest = ajaxSpy.calls.first().args[0];
+                expect(ajaxRequest.method).toBe('post');
             });
 
             it('should use endpoint /folders', function() {
+                foldersApi.create({ name: 'foo' });
+                ajaxRequest = ajaxSpy.calls.first().args[0];
                 expect(ajaxRequest.url).toBe(baseUrl + '/folders');
             });
 
             it('should have a Content-Type header', function() {
+                foldersApi.create({ name: 'foo' });
+                ajaxRequest = ajaxSpy.calls.first().args[0];
                 expect(ajaxRequest.headers['Content-Type']).toBeDefined();
             });
 
             it('should have an Authorization header', function() {
+                foldersApi.create({ name: 'foo' });
+                ajaxRequest = ajaxSpy.calls.first().args[0];
                 expect(ajaxRequest.headers.Authorization).toBeDefined();
                 expect(ajaxRequest.headers.Authorization).toBe('Bearer auth');
             });
 
             it('should have a body of JSON string', function() {
+                foldersApi.create({ name: 'foo' });
+                ajaxRequest = ajaxSpy.calls.first().args[0];
                 expect(ajaxRequest.data).toBe('{"name":"foo"}');
             });
 
-            it('should follow Location header', function() {
-                var ajaxRedirect = ajaxSpy.calls.mostRecent().args[0];
-                expect(ajaxRedirect.method).toBe('get');
-                expect(ajaxRedirect.url).toBe(baseUrl + '/folders/123');
+            it('should follow Location header', function(done) {
+                foldersApi.create({ name: 'foo' }).finally(function() {
+                    var ajaxRedirect = ajaxSpy.calls.mostRecent().args[0];
+                    expect(ajaxRedirect.method).toBe('get');
+                    expect(ajaxRedirect.url).toBe(baseUrl + '/folders/123');
+                    done();
+                });
             });
 
-            it('should resolve with the data', function() {
-                apiRequest.then(function(data) {
+            it('should resolve with the data', function(done) {
+                foldersApi.create({ name: 'foo' }).then(function(data) {
                     expect(data).toEqual({ id: '123', name: 'foo' });
+                    done();
                 });
             });
         });
 
         describe('create method failures', function() {
 
-            it('should reject create errors with the request and response', function() {
+            it('should reject create errors with the response', function(done) {
                 var ajaxFailureResponse = function() {
                     return Promise.reject({ status: 500 });
                 };
                 spyOn(axios, 'request').and.callFake(ajaxFailureResponse);
-                foldersApi.create({ name: 'foo' }).fail(function(request, response) {
-                    expect(request.method).toEqual('get');
-                    expect(response).toEqual({ status: 500 });
+                foldersApi.create({ name: 'foo' }).catch(function(response) {
+                    expect(response.status).toEqual(500);
+                    done();
                 });
             });
 
-            it('should reject redirect errors with the request and the response', function() {
+            it('should reject redirect errors with the response', function(done) {
                 var ajaxMixedCalls = 0;
                 var ajaxMixedResponse = function() {
                     // First call apparently works and returns location
@@ -102,7 +117,8 @@ define(function(require) {
                         return Promise.resolve({
                             headers: {
                                 location: baseUrl + '/folders/123'
-                            }
+                            },
+                            status: 201
                         });
                     }
                     // But following the location fails
@@ -111,9 +127,9 @@ define(function(require) {
                     }
                 };
                 spyOn(axios, 'request').and.callFake(ajaxMixedResponse);
-                foldersApi.create({ name: 'foo' }).fail(function(request, response) {
-                    expect(request.method).toEqual('get');
-                    expect(response).toEqual({ status: 404 });
+                foldersApi.create({ name: 'foo' }).catch(function(response) {
+                    expect(response.status).toEqual(404);
+                    done();
                 });
             });
         });
@@ -125,7 +141,7 @@ define(function(require) {
 
             it('should be defined', function() {
                 expect(typeof foldersApi.retrieve).toBe('function');
-                ajaxSpy = spyOn(axios, 'request').and.returnValue(Promise.resolve());
+                ajaxSpy = spyOn(axios, 'request').and.returnValue(Promise.resolve({headers: {}}));
                 foldersApi.retrieve(123);
                 expect(ajaxSpy).toHaveBeenCalled();
                 ajaxRequest = ajaxSpy.calls.mostRecent().args[0];
@@ -206,7 +222,7 @@ define(function(require) {
 
             it('be defined', function() {
                 expect(typeof foldersApi.list).toBe('function');
-                ajaxSpy = spyOn(axios, 'request').and.returnValue(Promise.resolve());
+                ajaxSpy = spyOn(axios, 'request').and.returnValue(Promise.resolve({headers: {}}));
 
                 foldersApi.list(params);
                 expect(ajaxSpy).toHaveBeenCalled();
@@ -231,7 +247,7 @@ define(function(require) {
             });
 
             it('should apply request params', function() {
-                expect(ajaxRequest.data).toEqual(params);
+                expect(ajaxRequest.params).toEqual(params);
             });
 
         });
@@ -245,26 +261,39 @@ define(function(require) {
             linkLast = baseUrl + '/folders/?limit=5&reverse=true';
 
             function ajaxSpy() {
-                return spyOn(axios, 'request').and.returnValue(Promise.resolve({
+                var headers = {};
+                var spy = jasmine.createSpy('axios');
+
+                if (sendMendeleyCountHeader) {
+                    headers['mendeley-count'] = folderCount.toString();
+                }
+
+                if (sendLinks) {
+                    headers.link = ['<' + linkNext + '>; rel="next"', '<' + linkLast + '>; rel="last"'].join(', ');
+                }
+
+                spy.and.returnValue(Promise.resolve({
                     data: [],
-                    headers: {
-                        link: ['<' + linkNext + '>; rel="next"', '<' + linkLast + '>; rel="last"'].join(', '),
-                        'mendeley-count': folderCount.toString()
-                    }
+                    headers: headers
                 }));
+                axios.request = spy;
+
+                return spy;
             }
 
-            it('should parse link headers', function() {
+            it('should parse link headers', function(done) {
                 ajaxSpy();
                 foldersApi.paginationLinks.next = 'nonsense';
                 foldersApi.paginationLinks.prev = 'nonsense';
                 foldersApi.paginationLinks.last = 'nonsense';
 
-                foldersApi.list();
+                foldersApi.list().finally(function() {
+                    expect(foldersApi.paginationLinks.next).toEqual(linkNext);
+                    expect(foldersApi.paginationLinks.last).toEqual(linkLast);
+                    expect(foldersApi.paginationLinks.prev).toEqual(false);
+                    done();
+                });
 
-                expect(foldersApi.paginationLinks.next).toEqual(linkNext);
-                expect(foldersApi.paginationLinks.last).toEqual(linkLast);
-                expect(foldersApi.paginationLinks.prev).toEqual(false);
             });
 
             it('should get correct link on nextPage()', function() {
@@ -282,24 +311,30 @@ define(function(require) {
             it('should fail if no link for rel', function() {
                 var spy = ajaxSpy();
                 var result = foldersApi.previousPage();
-                expect(result.state()).toEqual('rejected');
+                expect(result.isRejected()).toEqual(true);
                 expect(spy).not.toHaveBeenCalled();
             });
 
-            it('should store the total document count', function() {
+            it('should store the total document count', function(done) {
                 ajaxSpy();
-                foldersApi.list();
-                expect(foldersApi.count).toEqual(56);
-
-                sendMendeleyCountHeader = false;
-                folderCount = 999;
-                foldersApi.list();
-                expect(foldersApi.count).toEqual(56);
-
-                sendMendeleyCountHeader = true;
-                folderCount = 0;
-                foldersApi.list();
-                expect(foldersApi.count).toEqual(0);
+                foldersApi.list().finally(function() {
+                    expect(foldersApi.count).toEqual(56);
+                    
+                    sendMendeleyCountHeader = false;
+                    folderCount = 999;
+                    ajaxSpy();
+                    return foldersApi.list();
+                }).finally(function() {
+                    expect(foldersApi.count).toEqual(56);
+                    
+                    sendMendeleyCountHeader = true;
+                    folderCount = 0;
+                    ajaxSpy();
+                    return foldersApi.list();
+                }).finally(function() {
+                    expect(foldersApi.count).toEqual(0);
+                    done();
+                });
             });
 
             it('should not break when you GET something else that does not have pagination links', function() {
