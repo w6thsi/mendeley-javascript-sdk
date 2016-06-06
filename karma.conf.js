@@ -71,6 +71,10 @@ module.exports = function(config) {
         // Prevents webpack from logging stats on all the chunks
         webpackMiddleware: {
             noInfo: true
+        },
+
+        client: {
+            captureConsole: false
         }
     });
 };

@@ -7,8 +7,7 @@ define(function(require) {
         var utils = require('utilities');
         var mockAuth = require('mocks/auth');
         var axios = require('axios');
-        var Promise = require('bluebird');
-
+    
         utils.setAuthFlow(mockAuth.mockImplicitGrantFlow());
 
         describe('requestWithFileFun', function() {

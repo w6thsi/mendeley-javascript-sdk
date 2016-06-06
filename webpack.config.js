@@ -1,7 +1,13 @@
 var webpack = require('webpack'),
 
     minify = process.argv[2] === '--minify',
-    plugins = minify ? [new webpack.optimize.UglifyJsPlugin()] : [];
+    plugins = [new webpack.ProvidePlugin({
+        Promise: 'bluebird'
+    })];
+
+if (minify) {
+    plugins.push(new webpack.optimize.UglifyJsPlugin());
+}
 
 module.exports = {
     entry: {

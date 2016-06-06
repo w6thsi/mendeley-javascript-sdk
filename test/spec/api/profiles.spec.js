@@ -3,7 +3,6 @@ define(function(require) {
 
     'use strict';
 
-    var Promise = require('bluebird');
     var axios = require('axios');
     require('es5-shim');
 

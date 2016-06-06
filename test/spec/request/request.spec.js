@@ -2,8 +2,6 @@ define(function(require) {
 
     'use strict';
 
-    var Promise = require('bluebird');
-    Promise.config({warnings: false});
     var axios = require('axios');
     require('es5-shim');
 
