@@ -1,11 +1,8 @@
-var webpack = require('webpack'),
+var webpack = require('webpack');
+var plugins = [];
+var useMinifier = (process.argv.slice(1).indexOf('--minify') !== -1);
 
-    minify = process.argv[2] === '--minify',
-    plugins = [new webpack.ProvidePlugin({
-        Promise: 'bluebird'
-    })];
-
-if (minify) {
+if (useMinifier) {
     plugins.push(new webpack.optimize.UglifyJsPlugin());
 }
 
@@ -15,8 +12,7 @@ module.exports = {
     },
     output: {
         path: './dist',
-        filename: 'standalone' + (minify ? '.min' : '') + '.js',
-
+        filename: 'standalone' + (useMinifier ? '.min' : '') + '.js',
         library: 'MendeleySDK',
         libraryTarget: 'umd'
     },
@@ -28,6 +24,6 @@ module.exports = {
             'test'
         ]
     },
-    devtool: minify ? "source-map" : "",
+    devtool: useMinifier ? 'source-map' : '',
     plugins: plugins
 };
