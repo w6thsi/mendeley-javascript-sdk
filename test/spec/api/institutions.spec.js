@@ -1,87 +1,83 @@
-define(function(require) {
+'use strict';
 
-    'use strict';
+var axios = require('axios');
+require('es5-shim');
 
-    var axios = require('axios');
-    require('es5-shim');
+describe('institutions api', function() {
 
-    describe('institutions api', function() {
+    var api = require('api');
+    var institutionsApi = api.institutions;
+    var baseUrl = 'https://api.mendeley.com';
 
-        var api = require('api');
-        var institutionsApi = api.institutions;
-        var baseUrl = 'https://api.mendeley.com';
+    var mockAuth = require('mocks/auth');
+    api.setAuthFlow(mockAuth.mockImplicitGrantFlow());
 
-        var mockAuth = require('mocks/auth');
-        api.setAuthFlow(mockAuth.mockImplicitGrantFlow());
+    describe('search method', function() {
+        var ajaxSpy;
+        var ajaxRequest;
+        var params = {
+            hint: 'lon',
+            limit: 10
+        };
 
-        describe('search method', function() {
-            var ajaxSpy;
-            var ajaxRequest;
-            var params = {
-                hint: 'lon',
-                limit: 10
-            };
-
-            it('should be defined', function() {
-                expect(typeof institutionsApi.search).toBe('function');
-                ajaxSpy = spyOn(axios, 'request').and.returnValue(Promise.resolve());
-                institutionsApi.search(params);
-                expect(ajaxSpy).toHaveBeenCalled();
-                ajaxRequest = ajaxSpy.calls.mostRecent().args[0];
-            });
-
-            it('should use GET', function() {
-                expect(ajaxRequest.method).toBe('get');
-            });
-
-            it('should use endpoint /institutions', function() {
-                expect(ajaxRequest.url).toBe(baseUrl + '/institutions');
-            });
-
-            it('should NOT have a Content-Type header', function() {
-                expect(ajaxRequest.headers['Content-Type']).not.toBeDefined();
-            });
-
-            it('should have an Authorization header', function() {
-                expect(ajaxRequest.headers.Authorization).toBeDefined();
-                expect(ajaxRequest.headers.Authorization).toBe('Bearer auth');
-            });
-
-            it('should allow paramaters', function() {
-                expect(ajaxRequest.params).toEqual(params);
-            });
-
+        it('should be defined', function() {
+            expect(typeof institutionsApi.search).toBe('function');
+            ajaxSpy = spyOn(axios, 'request').and.returnValue(Promise.resolve());
+            institutionsApi.search(params);
+            expect(ajaxSpy).toHaveBeenCalled();
+            ajaxRequest = ajaxSpy.calls.mostRecent().args[0];
         });
 
-        describe('retrieve method', function() {
-            var ajaxSpy;
-            var ajaxRequest;
+        it('should use GET', function() {
+            expect(ajaxRequest.method).toBe('get');
+        });
 
-            it('should be defined', function() {
-                expect(typeof institutionsApi.retrieve).toBe('function');
-                ajaxSpy = spyOn(axios, 'request').and.returnValue(Promise.resolve());
-                institutionsApi.retrieve('some-id');
-                expect(ajaxSpy).toHaveBeenCalled();
-                ajaxRequest = ajaxSpy.calls.mostRecent().args[0];
-            });
+        it('should use endpoint /institutions', function() {
+            expect(ajaxRequest.url).toBe(baseUrl + '/institutions');
+        });
 
-            it('should use GET', function() {
-                expect(ajaxRequest.method).toBe('get');
-            });
+        it('should NOT have a Content-Type header', function() {
+            expect(ajaxRequest.headers['Content-Type']).not.toBeDefined();
+        });
 
-            it('should use endpoint /institutions/some-id', function() {
-                expect(ajaxRequest.url).toBe(baseUrl + '/institutions/some-id');
-            });
+        it('should have an Authorization header', function() {
+            expect(ajaxRequest.headers.Authorization).toBeDefined();
+            expect(ajaxRequest.headers.Authorization).toBe('Bearer auth');
+        });
 
-            it('should NOT have a Content-Type header', function() {
-                expect(ajaxRequest.headers['Content-Type']).not.toBeDefined();
-            });
+        it('should allow paramaters', function() {
+            expect(ajaxRequest.params).toEqual(params);
+        });
 
-            it('should have an Authorization header', function() {
-                expect(ajaxRequest.headers.Authorization).toBeDefined();
-                expect(ajaxRequest.headers.Authorization).toBe('Bearer auth');
-            });
+    });
+
+    describe('retrieve method', function() {
+        var ajaxSpy;
+        var ajaxRequest;
+
+        it('should be defined', function() {
+            expect(typeof institutionsApi.retrieve).toBe('function');
+            ajaxSpy = spyOn(axios, 'request').and.returnValue(Promise.resolve());
+            institutionsApi.retrieve('some-id');
+            expect(ajaxSpy).toHaveBeenCalled();
+            ajaxRequest = ajaxSpy.calls.mostRecent().args[0];
+        });
+
+        it('should use GET', function() {
+            expect(ajaxRequest.method).toBe('get');
+        });
+
+        it('should use endpoint /institutions/some-id', function() {
+            expect(ajaxRequest.url).toBe(baseUrl + '/institutions/some-id');
+        });
+
+        it('should NOT have a Content-Type header', function() {
+            expect(ajaxRequest.headers['Content-Type']).not.toBeDefined();
+        });
+
+        it('should have an Authorization header', function() {
+            expect(ajaxRequest.headers.Authorization).toBeDefined();
+            expect(ajaxRequest.headers.Authorization).toBe('Bearer auth');
         });
     });
 });
-

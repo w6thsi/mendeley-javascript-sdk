@@ -1,275 +1,271 @@
-define(function(require) {
+'use strict';
 
-    'use strict';
+var axios = require('axios');
+require('es5-shim');
 
-    var axios = require('axios');
-    require('es5-shim');
+describe('trash api', function() {
 
-    describe('trash api', function() {
+    var api = require('api');
+    var trashApi = api.trash;
+    var baseUrl = 'https://api.mendeley.com';
 
-        var api = require('api');
-        var trashApi = api.trash;
-        var baseUrl = 'https://api.mendeley.com';
+    var mockAuth = require('mocks/auth');
+    api.setAuthFlow(mockAuth.mockImplicitGrantFlow());
 
-        var mockAuth = require('mocks/auth');
-        api.setAuthFlow(mockAuth.mockImplicitGrantFlow());
+    describe('retrieve method', function() {
 
-        describe('retrieve method', function() {
+        var ajaxSpy;
+        var ajaxRequest;
 
-            var ajaxSpy;
-            var ajaxRequest;
-
-            it('should be defined', function() {
-                expect(typeof trashApi.retrieve).toBe('function');
-                ajaxSpy = spyOn(axios, 'request').and.returnValue(Promise.resolve({headers: {}}));
-                trashApi.retrieve(15);
-                expect(ajaxSpy).toHaveBeenCalled();
-                ajaxRequest = ajaxSpy.calls.mostRecent().args[0];
-            });
-
-            it('should use GET', function() {
-                expect(ajaxRequest.method).toBe('get');
-            });
-
-            it('should use endpoint /trash/{id}', function() {
-                expect(ajaxRequest.url).toBe(baseUrl + '/trash/15');
-            });
-
-            it('should NOT have a Content-Type header', function() {
-                expect(ajaxRequest.headers['Content-Type']).not.toBeDefined();
-            });
-
-            it('should have an Authorization header', function() {
-                expect(ajaxRequest.headers.Authorization).toBeDefined();
-                expect(ajaxRequest.headers.Authorization).toBe('Bearer auth');
-            });
-
-            it('should NOT have a body', function() {
-                expect(ajaxRequest.data).toBeUndefined();
-            });
-
+        it('should be defined', function() {
+            expect(typeof trashApi.retrieve).toBe('function');
+            ajaxSpy = spyOn(axios, 'request').and.returnValue(Promise.resolve({headers: {}}));
+            trashApi.retrieve(15);
+            expect(ajaxSpy).toHaveBeenCalled();
+            ajaxRequest = ajaxSpy.calls.mostRecent().args[0];
         });
 
-        describe('list method', function() {
+        it('should use GET', function() {
+            expect(ajaxRequest.method).toBe('get');
+        });
 
-            var ajaxSpy;
-            var ajaxRequest;
-            var sampleData = {
-                sort: 'created',
-                order: 'desc',
-                limit: 50
+        it('should use endpoint /trash/{id}', function() {
+            expect(ajaxRequest.url).toBe(baseUrl + '/trash/15');
+        });
+
+        it('should NOT have a Content-Type header', function() {
+            expect(ajaxRequest.headers['Content-Type']).not.toBeDefined();
+        });
+
+        it('should have an Authorization header', function() {
+            expect(ajaxRequest.headers.Authorization).toBeDefined();
+            expect(ajaxRequest.headers.Authorization).toBe('Bearer auth');
+        });
+
+        it('should NOT have a body', function() {
+            expect(ajaxRequest.data).toBeUndefined();
+        });
+
+    });
+
+    describe('list method', function() {
+
+        var ajaxSpy;
+        var ajaxRequest;
+        var sampleData = {
+            sort: 'created',
+            order: 'desc',
+            limit: 50
+        };
+
+        it('be defined', function() {
+            expect(typeof trashApi.list).toBe('function');
+            ajaxSpy = spyOn(axios, 'request').and.returnValue(Promise.resolve({headers: {}}));
+
+            trashApi.list(sampleData);
+            expect(ajaxSpy).toHaveBeenCalled();
+            ajaxRequest = ajaxSpy.calls.mostRecent().args[0];
+        });
+
+        it('should use GET', function() {
+            expect(ajaxRequest.method).toBe('get');
+        });
+
+        it('should use endpoint /trash/', function() {
+            expect(ajaxRequest.url).toBe(baseUrl + '/trash/');
+        });
+
+        it('should NOT have a Content-Type header', function() {
+            expect(ajaxRequest.headers['Content-Type']).not.toBeDefined();
+        });
+
+        it('should have an Authorization header', function() {
+            expect(ajaxRequest.headers.Authorization).toBeDefined();
+            expect(ajaxRequest.headers.Authorization).toBe('Bearer auth');
+        });
+
+        it('should apply request params', function() {
+            expect(ajaxRequest.params).toEqual(sampleData);
+        });
+
+    });
+
+    describe('restore method', function() {
+
+        var ajaxSpy;
+        var ajaxRequest;
+
+        it('should be defined', function() {
+            expect(typeof trashApi.restore).toBe('function');
+            ajaxSpy = spyOn(axios, 'request').and.returnValue(Promise.resolve({headers: {}}));
+            trashApi.restore(15);
+            expect(ajaxSpy).toHaveBeenCalled();
+            ajaxRequest = ajaxSpy.calls.mostRecent().args[0];
+        });
+
+        it('should use POST', function() {
+            expect(ajaxRequest.method).toBe('post');
+        });
+
+        it('should use endpoint /trash/{id}/restore', function() {
+            expect(ajaxRequest.url).toBe(baseUrl + '/trash/15/restore');
+        });
+
+        it('should NOT have a Content-Type header', function() {
+            expect(ajaxRequest.headers['Content-Type']).not.toBeDefined();
+        });
+
+        it('should have an Authorization header', function() {
+            expect(ajaxRequest.headers.Authorization).toBeDefined();
+            expect(ajaxRequest.headers.Authorization).toBe('Bearer auth');
+        });
+
+        it('should NOT have a body', function() {
+            expect(ajaxRequest.data).toBeUndefined();
+        });
+
+    });
+
+    describe('restore method failures', function() {
+
+        it('should reject restore errors with the response', function(done) {
+            var ajaxFailureResponse = function() {
+                return Promise.reject({ status: 404 });
             };
-
-            it('be defined', function() {
-                expect(typeof trashApi.list).toBe('function');
-                ajaxSpy = spyOn(axios, 'request').and.returnValue(Promise.resolve({headers: {}}));
-
-                trashApi.list(sampleData);
-                expect(ajaxSpy).toHaveBeenCalled();
-                ajaxRequest = ajaxSpy.calls.mostRecent().args[0];
+            spyOn(axios, 'request').and.callFake(ajaxFailureResponse);
+            trashApi.restore().catch(function(response) {
+                expect(response.status).toEqual(404);
+                done();
             });
-
-            it('should use GET', function() {
-                expect(ajaxRequest.method).toBe('get');
-            });
-
-            it('should use endpoint /trash/', function() {
-                expect(ajaxRequest.url).toBe(baseUrl + '/trash/');
-            });
-
-            it('should NOT have a Content-Type header', function() {
-                expect(ajaxRequest.headers['Content-Type']).not.toBeDefined();
-            });
-
-            it('should have an Authorization header', function() {
-                expect(ajaxRequest.headers.Authorization).toBeDefined();
-                expect(ajaxRequest.headers.Authorization).toBe('Bearer auth');
-            });
-
-            it('should apply request params', function() {
-                expect(ajaxRequest.params).toEqual(sampleData);
-            });
-
         });
 
-        describe('restore method', function() {
+    });
 
-            var ajaxSpy;
-            var ajaxRequest;
+    describe('destroy method', function() {
 
-            it('should be defined', function() {
-                expect(typeof trashApi.restore).toBe('function');
-                ajaxSpy = spyOn(axios, 'request').and.returnValue(Promise.resolve({headers: {}}));
-                trashApi.restore(15);
-                expect(ajaxSpy).toHaveBeenCalled();
-                ajaxRequest = ajaxSpy.calls.mostRecent().args[0];
-            });
+        var ajaxSpy;
+        var ajaxRequest;
 
-            it('should use POST', function() {
-                expect(ajaxRequest.method).toBe('post');
-            });
-
-            it('should use endpoint /trash/{id}/restore', function() {
-                expect(ajaxRequest.url).toBe(baseUrl + '/trash/15/restore');
-            });
-
-            it('should NOT have a Content-Type header', function() {
-                expect(ajaxRequest.headers['Content-Type']).not.toBeDefined();
-            });
-
-            it('should have an Authorization header', function() {
-                expect(ajaxRequest.headers.Authorization).toBeDefined();
-                expect(ajaxRequest.headers.Authorization).toBe('Bearer auth');
-            });
-
-            it('should NOT have a body', function() {
-                expect(ajaxRequest.data).toBeUndefined();
-            });
-
+        it('should be defined', function() {
+            expect(typeof trashApi.destroy).toBe('function');
+            ajaxSpy = spyOn(axios, 'request').and.returnValue(Promise.resolve({headers: {}}));
+            trashApi.destroy(15);
+            expect(ajaxSpy).toHaveBeenCalled();
+            ajaxRequest = ajaxSpy.calls.mostRecent().args[0];
         });
 
-        describe('restore method failures', function() {
-
-            it('should reject restore errors with the response', function(done) {
-                var ajaxFailureResponse = function() {
-                    return Promise.reject({ status: 404 });
-                };
-                spyOn(axios, 'request').and.callFake(ajaxFailureResponse);
-                trashApi.restore().catch(function(response) {
-                    expect(response.status).toEqual(404);
-                    done();
-                });
-            });
-
+        it('should use DELETE', function() {
+            expect(ajaxRequest.method).toBe('delete');
         });
 
-        describe('destroy method', function() {
-
-            var ajaxSpy;
-            var ajaxRequest;
-
-            it('should be defined', function() {
-                expect(typeof trashApi.destroy).toBe('function');
-                ajaxSpy = spyOn(axios, 'request').and.returnValue(Promise.resolve({headers: {}}));
-                trashApi.destroy(15);
-                expect(ajaxSpy).toHaveBeenCalled();
-                ajaxRequest = ajaxSpy.calls.mostRecent().args[0];
-            });
-
-            it('should use DELETE', function() {
-                expect(ajaxRequest.method).toBe('delete');
-            });
-
-            it('should use endpoint /trash/{id}', function() {
-                expect(ajaxRequest.url).toBe(baseUrl + '/trash/15');
-            });
-
-            it('should NOT have a Content-Type header', function() {
-                expect(ajaxRequest.headers['Content-Type']).not.toBeDefined();
-            });
-
-            it('should have an Authorization header', function() {
-                expect(ajaxRequest.headers.Authorization).toBeDefined();
-                expect(ajaxRequest.headers.Authorization).toBe('Bearer auth');
-            });
-
-            it('should NOT have a body', function() {
-                expect(ajaxRequest.data).toBeUndefined();
-            });
-
+        it('should use endpoint /trash/{id}', function() {
+            expect(ajaxRequest.url).toBe(baseUrl + '/trash/15');
         });
 
-        describe('pagination', function() {
+        it('should NOT have a Content-Type header', function() {
+            expect(ajaxRequest.headers['Content-Type']).not.toBeDefined();
+        });
 
-            var sendMendeleyCountHeader = true,
-                documentCount = 155,
-                sendLinks = true,
-                linkNext = baseUrl + '/trash/?limit=5&reverse=false&sort=created&order=desc&marker=03726a18-140d-3e79-9c2f-b63473668359',
-                linkLast = baseUrl + '/trash/?limit=5&reverse=true&sort=created&order=desc';
+        it('should have an Authorization header', function() {
+            expect(ajaxRequest.headers.Authorization).toBeDefined();
+            expect(ajaxRequest.headers.Authorization).toBe('Bearer auth');
+        });
 
-            function ajaxSpy() {
-                var headers = {
-                    data: [],
-                    status: 200
-                };
-                var spy = jasmine.createSpy('axios');
+        it('should NOT have a body', function() {
+            expect(ajaxRequest.data).toBeUndefined();
+        });
 
-                if (sendMendeleyCountHeader) {
-                    headers['mendeley-count'] = documentCount.toString();
-                }
+    });
 
-                if (sendLinks) {
-                    headers.link = ['<' + linkNext + '>; rel="next"', '<' + linkLast + '>; rel="last"'].join(', ');
-                }
+    describe('pagination', function() {
 
-                spy.and.returnValue(Promise.resolve({
-                    headers: headers
-                }));
-                axios.request = spy;
+        var sendMendeleyCountHeader = true,
+            documentCount = 155,
+            sendLinks = true,
+            linkNext = baseUrl + '/trash/?limit=5&reverse=false&sort=created&order=desc&marker=03726a18-140d-3e79-9c2f-b63473668359',
+            linkLast = baseUrl + '/trash/?limit=5&reverse=true&sort=created&order=desc';
 
-                return spy;
+        function ajaxSpy() {
+            var headers = {
+                data: [],
+                status: 200
+            };
+            var spy = jasmine.createSpy('axios');
+
+            if (sendMendeleyCountHeader) {
+                headers['mendeley-count'] = documentCount.toString();
             }
 
-            it('should parse link headers', function(done) {
-                ajaxSpy();
-                trashApi.paginationLinks.next = 'nonsense';
-                trashApi.paginationLinks.prev = 'nonsense';
-                trashApi.paginationLinks.last = 'nonsense';
+            if (sendLinks) {
+                headers.link = ['<' + linkNext + '>; rel="next"', '<' + linkLast + '>; rel="last"'].join(', ');
+            }
 
-                trashApi.list().finally(function() {
-                    expect(trashApi.paginationLinks.next).toEqual(linkNext);
-                    expect(trashApi.paginationLinks.last).toEqual(linkLast);
-                    expect(trashApi.paginationLinks.prev).toEqual(false);
-                    done();
-                });
+            spy.and.returnValue(Promise.resolve({
+                headers: headers
+            }));
+            axios.request = spy;
 
+            return spy;
+        }
+
+        it('should parse link headers', function(done) {
+            ajaxSpy();
+            trashApi.paginationLinks.next = 'nonsense';
+            trashApi.paginationLinks.prev = 'nonsense';
+            trashApi.paginationLinks.last = 'nonsense';
+
+            trashApi.list().finally(function() {
+                expect(trashApi.paginationLinks.next).toEqual(linkNext);
+                expect(trashApi.paginationLinks.last).toEqual(linkLast);
+                expect(trashApi.paginationLinks.prev).toEqual(false);
+                done();
             });
 
-            it('should get correct link on nextPage()', function() {
-                var spy = ajaxSpy();
-                trashApi.nextPage();
-                expect(spy.calls.mostRecent().args[0].url).toEqual(linkNext);
+        });
+
+        it('should get correct link on nextPage()', function() {
+            var spy = ajaxSpy();
+            trashApi.nextPage();
+            expect(spy.calls.mostRecent().args[0].url).toEqual(linkNext);
+        });
+
+        it('should get correct link on lastPage()', function() {
+            var spy = ajaxSpy();
+            trashApi.lastPage();
+            expect(spy.calls.mostRecent().args[0].url).toEqual(linkLast);
+        });
+
+        it('should fail if no link for rel', function() {
+            var spy = ajaxSpy();
+            var result = trashApi.previousPage();
+            expect(result.isRejected()).toEqual(true);
+            expect(spy).not.toHaveBeenCalled();
+        });
+
+        it('should store the total trashed documents count', function(done) {
+            ajaxSpy();
+            trashApi.list().finally(function() {
+                expect(trashApi.count).toEqual(155);
+                done();
             });
+        });
 
-            it('should get correct link on lastPage()', function() {
-                var spy = ajaxSpy();
-                trashApi.lastPage();
-                expect(spy.calls.mostRecent().args[0].url).toEqual(linkLast);
-            });
+        it('should not break when you GET something else that does not have pagination links', function(done) {
+            ajaxSpy();
+            trashApi.list().then(function() {
+                expect(trashApi.paginationLinks.next).toEqual(linkNext);
+                expect(trashApi.paginationLinks.last).toEqual(linkLast);
+                expect(trashApi.paginationLinks.prev).toEqual(false);
 
-            it('should fail if no link for rel', function() {
-                var spy = ajaxSpy();
-                var result = trashApi.previousPage();
-                expect(result.isRejected()).toEqual(true);
-                expect(spy).not.toHaveBeenCalled();
-            });
+                sendLinks = false;
 
-            it('should store the total trashed documents count', function(done) {
-                ajaxSpy();
-                trashApi.list().finally(function() {
-                    expect(trashApi.count).toEqual(155);
-                    done();
-                });
-            });
-
-            it('should not break when you GET something else that does not have pagination links', function(done) {
-                ajaxSpy();
-                trashApi.list().then(function() {
-                    expect(trashApi.paginationLinks.next).toEqual(linkNext);
-                    expect(trashApi.paginationLinks.last).toEqual(linkLast);
-                    expect(trashApi.paginationLinks.prev).toEqual(false);
-
-                    sendLinks = false;
-
-                    return trashApi.retrieve(155);
-                }).then(function() {
-                    expect(trashApi.paginationLinks.next).toEqual(linkNext);
-                    expect(trashApi.paginationLinks.last).toEqual(linkLast);
-                    expect(trashApi.paginationLinks.prev).toEqual(false);
-                    done();
-                });
+                return trashApi.retrieve(155);
+            }).then(function() {
+                expect(trashApi.paginationLinks.next).toEqual(linkNext);
+                expect(trashApi.paginationLinks.last).toEqual(linkLast);
+                expect(trashApi.paginationLinks.prev).toEqual(false);
+                done();
             });
         });
     });
-
 });

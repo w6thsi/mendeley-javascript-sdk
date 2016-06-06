@@ -1,44 +1,41 @@
-define(['bluebird'], function(Promise) {
+'use strict';
 
-    'use strict';
+var unauthorisedError = new Error();
+unauthorisedError.status = 401;
 
-    var unauthorisedError = new Error();
-    unauthorisedError.status = 401;
+var timeoutError = new Error();
+timeoutError.status = 504;
 
-    var timeoutError = new Error();
-    timeoutError.status = 504;
+var notFoundError = new Error();
+notFoundError.status = 404;
 
-    var notFoundError = new Error();
-    notFoundError.status = 404;
+module.exports = {
+    mockImplicitGrantFlow: mockImplicitGrantFlow,
+    mockAuthCodeFlow: mockAuthCodeFlow,
+    unauthorisedError: unauthorisedError,
+    timeoutError: timeoutError,
+    notFoundError: notFoundError
+};
+
+function mockImplicitGrantFlow() {
+    var fakeToken = 'auth';
 
     return {
-        mockImplicitGrantFlow: mockImplicitGrantFlow,
-        mockAuthCodeFlow: mockAuthCodeFlow,
-        unauthorisedError: unauthorisedError,
-        timeoutError: timeoutError,
-        notFoundError: notFoundError
+        getToken: function() { return fakeToken; },
+        authenticate: function() { return false; },
+        refreshToken: function () { return false; }
     };
+}
 
-    function mockImplicitGrantFlow() {
-        var fakeToken = 'auth';
+function mockAuthCodeFlow() {
+    var fakeToken = 'auth';
 
-        return {
-            getToken: function() { return fakeToken; },
-            authenticate: function() { return false; },
-            refreshToken: function () { return false; }
-        };
-    }
-
-    function mockAuthCodeFlow() {
-        var fakeToken = 'auth';
-
-        return {
-            getToken: function() { return fakeToken; },
-            authenticate: function() { return false; },
-            refreshToken: function() {
-                fakeToken = 'auth-refreshed';
-                return Promise.resolve();
-            }
-        };
-    }
-});
+    return {
+        getToken: function() { return fakeToken; },
+        authenticate: function() { return false; },
+        refreshToken: function() {
+            fakeToken = 'auth-refreshed';
+            return Promise.resolve();
+        }
+    };
+}

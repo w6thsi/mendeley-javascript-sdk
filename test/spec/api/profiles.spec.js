@@ -1,180 +1,176 @@
 /* jshint camelcase: false */
-define(function(require) {
+'use strict';
 
-    'use strict';
+var axios = require('axios');
+require('es5-shim');
 
-    var axios = require('axios');
-    require('es5-shim');
+describe('profiles api', function() {
 
-    describe('profiles api', function() {
+    var api = require('api');
+    var profilesApi = api.profiles;
+    var baseUrl = 'https://api.mendeley.com';
 
-        var api = require('api');
-        var profilesApi = api.profiles;
-        var baseUrl = 'https://api.mendeley.com';
+    var mockAuth = require('mocks/auth');
+    api.setAuthFlow(mockAuth.mockImplicitGrantFlow());
 
-        var mockAuth = require('mocks/auth');
-        api.setAuthFlow(mockAuth.mockImplicitGrantFlow());
-
-        var mockPromiseUpdate = Promise.resolve({
-            data: [],
-            status: 200,
-            headers: {
-                location: baseUrl + '/profiles/me'
-            }
-        });
-
-        // Get a function to return promises in order
-        function getMockPromises() {
-            var responses = Array.prototype.slice.call(arguments);
-            var calls = 0;
-            return function() {
-                return responses[calls++];
-            };
+    var mockPromiseUpdate = Promise.resolve({
+        data: [],
+        status: 200,
+        headers: {
+            location: baseUrl + '/profiles/me'
         }
+    });
 
-        describe('me method', function() {
+    // Get a function to return promises in order
+    function getMockPromises() {
+        var responses = Array.prototype.slice.call(arguments);
+        var calls = 0;
+        return function() {
+            return responses[calls++];
+        };
+    }
 
-            var ajaxSpy;
-            var ajaxRequest;
+    describe('me method', function() {
 
-            it('should be defined', function() {
-                expect(typeof profilesApi.me).toBe('function');
-                ajaxSpy = spyOn(axios, 'request').and.returnValue(Promise.resolve());
-                profilesApi.me();
-                expect(ajaxSpy).toHaveBeenCalled();
-                ajaxRequest = ajaxSpy.calls.mostRecent().args[0];
-            });
+        var ajaxSpy;
+        var ajaxRequest;
 
-            it('should use GET', function() {
-                expect(ajaxRequest.method).toBe('get');
-            });
-
-            it('should use endpoint /profiles/me', function() {
-                expect(ajaxRequest.url).toBe(baseUrl + '/profiles/me');
-            });
-
-            it('should NOT have a Content-Type header', function() {
-                expect(ajaxRequest.headers['Content-Type']).not.toBeDefined();
-            });
-
-            it('should have an Authorization header', function() {
-                expect(ajaxRequest.headers.Authorization).toBeDefined();
-                expect(ajaxRequest.headers.Authorization).toBe('Bearer auth');
-            });
-
-            it('should NOT have a body', function() {
-                expect(ajaxRequest.data).toBeUndefined();
-            });
-
+        it('should be defined', function() {
+            expect(typeof profilesApi.me).toBe('function');
+            ajaxSpy = spyOn(axios, 'request').and.returnValue(Promise.resolve());
+            profilesApi.me();
+            expect(ajaxSpy).toHaveBeenCalled();
+            ajaxRequest = ajaxSpy.calls.mostRecent().args[0];
         });
 
-        describe('retrieve method', function() {
-
-            var ajaxSpy;
-            var ajaxRequest;
-
-            it('should be defined', function() {
-                expect(typeof profilesApi.retrieve).toBe('function');
-                ajaxSpy = spyOn(axios, 'request').and.returnValue(Promise.resolve());
-                profilesApi.retrieve(123);
-                expect(ajaxSpy).toHaveBeenCalled();
-                ajaxRequest = ajaxSpy.calls.mostRecent().args[0];
-            });
-
-            it('should use GET', function() {
-                expect(ajaxRequest.method).toBe('get');
-            });
-
-            it('should use endpoint /profiles/{id}', function() {
-                expect(ajaxRequest.url).toBe(baseUrl + '/profiles/123');
-            });
-
-            it('should NOT have a Content-Type header', function() {
-                expect(ajaxRequest.headers['Content-Type']).not.toBeDefined();
-            });
-
-            it('should have an Authorization header', function() {
-                expect(ajaxRequest.headers.Authorization).toBeDefined();
-                expect(ajaxRequest.headers.Authorization).toBe('Bearer auth');
-            });
-
-            it('should NOT have a body', function() {
-                expect(ajaxRequest.data).toBeUndefined();
-            });
-
+        it('should use GET', function() {
+            expect(ajaxRequest.method).toBe('get');
         });
 
-        describe('update method', function() {
-
-            var ajaxRequest;
-
-            it('should be defined', function() {
-                expect(typeof profilesApi.update).toBe('function');
-                var ajaxSpy = spyOn(axios, 'request').and.callFake(getMockPromises(mockPromiseUpdate));
-                profilesApi.update({first_name: 'John', last_name: 'Doe'});
-                expect(ajaxSpy).toHaveBeenCalled();
-                ajaxRequest = ajaxSpy.calls.mostRecent().args[0];
-            });
-
-            it('should use PATCH', function() {
-                expect(ajaxRequest.method).toBe('patch');
-            });
-
-            it('should use endpoint /profiles/me', function() {
-                expect(ajaxRequest.url).toBe(baseUrl + '/profiles/me');
-            });
-
-            it('should have a Content-Type header', function() {
-                expect(ajaxRequest.headers['Content-Type']).toBeDefined();
-            });
-
-            it('should have an Authorization header', function() {
-                expect(ajaxRequest.headers.Authorization).toBeDefined();
-                expect(ajaxRequest.headers.Authorization).toBe('Bearer auth');
-            });
-
-            it('should have a body of JSON string', function() {
-                expect(ajaxRequest.data).toBe('{"first_name":"John","last_name":"Doe"}');
-            });
-
+        it('should use endpoint /profiles/me', function() {
+            expect(ajaxRequest.url).toBe(baseUrl + '/profiles/me');
         });
+
+        it('should NOT have a Content-Type header', function() {
+            expect(ajaxRequest.headers['Content-Type']).not.toBeDefined();
+        });
+
+        it('should have an Authorization header', function() {
+            expect(ajaxRequest.headers.Authorization).toBeDefined();
+            expect(ajaxRequest.headers.Authorization).toBe('Bearer auth');
+        });
+
+        it('should NOT have a body', function() {
+            expect(ajaxRequest.data).toBeUndefined();
+        });
+
+    });
+
+    describe('retrieve method', function() {
+
+        var ajaxSpy;
+        var ajaxRequest;
+
+        it('should be defined', function() {
+            expect(typeof profilesApi.retrieve).toBe('function');
+            ajaxSpy = spyOn(axios, 'request').and.returnValue(Promise.resolve());
+            profilesApi.retrieve(123);
+            expect(ajaxSpy).toHaveBeenCalled();
+            ajaxRequest = ajaxSpy.calls.mostRecent().args[0];
+        });
+
+        it('should use GET', function() {
+            expect(ajaxRequest.method).toBe('get');
+        });
+
+        it('should use endpoint /profiles/{id}', function() {
+            expect(ajaxRequest.url).toBe(baseUrl + '/profiles/123');
+        });
+
+        it('should NOT have a Content-Type header', function() {
+            expect(ajaxRequest.headers['Content-Type']).not.toBeDefined();
+        });
+
+        it('should have an Authorization header', function() {
+            expect(ajaxRequest.headers.Authorization).toBeDefined();
+            expect(ajaxRequest.headers.Authorization).toBe('Bearer auth');
+        });
+
+        it('should NOT have a body', function() {
+            expect(ajaxRequest.data).toBeUndefined();
+        });
+
+    });
+
+    describe('update method', function() {
+
+        var ajaxRequest;
+
+        it('should be defined', function() {
+            expect(typeof profilesApi.update).toBe('function');
+            var ajaxSpy = spyOn(axios, 'request').and.callFake(getMockPromises(mockPromiseUpdate));
+            profilesApi.update({first_name: 'John', last_name: 'Doe'});
+            expect(ajaxSpy).toHaveBeenCalled();
+            ajaxRequest = ajaxSpy.calls.mostRecent().args[0];
+        });
+
+        it('should use PATCH', function() {
+            expect(ajaxRequest.method).toBe('patch');
+        });
+
+        it('should use endpoint /profiles/me', function() {
+            expect(ajaxRequest.url).toBe(baseUrl + '/profiles/me');
+        });
+
+        it('should have a Content-Type header', function() {
+            expect(ajaxRequest.headers['Content-Type']).toBeDefined();
+        });
+
+        it('should have an Authorization header', function() {
+            expect(ajaxRequest.headers.Authorization).toBeDefined();
+            expect(ajaxRequest.headers.Authorization).toBe('Bearer auth');
+        });
+
+        it('should have a body of JSON string', function() {
+            expect(ajaxRequest.data).toBe('{"first_name":"John","last_name":"Doe"}');
+        });
+
+    });
+    
+    describe('retrieve by email method', function() {
+
+        var ajaxSpy;
+        var ajaxRequest;
         
-        describe('retrieve by email method', function() {
+        beforeEach(function() {
+            ajaxSpy = spyOn(axios, 'request').and.returnValue(Promise.resolve());
+            profilesApi.retrieveByEmail('test@test.com');
+            expect(ajaxSpy).toHaveBeenCalled();
+            ajaxRequest = ajaxSpy.calls.mostRecent().args[0];
+        });
 
-            var ajaxSpy;
-            var ajaxRequest;
-            
-            beforeEach(function() {
-                ajaxSpy = spyOn(axios, 'request').and.returnValue(Promise.resolve());
-                profilesApi.retrieveByEmail('test@test.com');
-                expect(ajaxSpy).toHaveBeenCalled();
-                ajaxRequest = ajaxSpy.calls.mostRecent().args[0];
-            });
+        it('should be defined', function() {
+            expect(typeof profilesApi.retrieveByEmail).toBe('function');
+        });
 
-            it('should be defined', function() {
-                expect(typeof profilesApi.retrieveByEmail).toBe('function');
-            });
+        it('should use GET', function() {
+            expect(ajaxRequest.method).toBe('get');
+        });
 
-            it('should use GET', function() {
-                expect(ajaxRequest.method).toBe('get');
-            });
+        it('should use endpoint /profiles?email=test@test.com', function() {
+            expect(ajaxRequest.url).toBe(baseUrl + '/profiles?email=test@test.com');
+        });
 
-            it('should use endpoint /profiles?email=test@test.com', function() {
-                expect(ajaxRequest.url).toBe(baseUrl + '/profiles?email=test@test.com');
-            });
+        it('should NOT have a Content-Type header', function() {
+            expect(ajaxRequest.headers['Content-Type']).not.toBeDefined();
+        });
 
-            it('should NOT have a Content-Type header', function() {
-                expect(ajaxRequest.headers['Content-Type']).not.toBeDefined();
-            });
+        it('should have an Authorization header', function() {
+            expect(ajaxRequest.headers.Authorization).toBe('Bearer auth');
+        });
 
-            it('should have an Authorization header', function() {
-                expect(ajaxRequest.headers.Authorization).toBe('Bearer auth');
-            });
-
-            it('should NOT have a body', function() {
-                expect(ajaxRequest.data).not.toBeDefined();
-            });
-
+        it('should NOT have a body', function() {
+            expect(ajaxRequest.data).not.toBeDefined();
         });
 
     });

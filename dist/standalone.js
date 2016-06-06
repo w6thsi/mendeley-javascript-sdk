@@ -54,6 +54,8 @@ return /******/ (function(modules) { // webpackBootstrap
 /* 0 */
 /***/ function(module, exports, __webpack_require__) {
 
+	'use strict';
+
 	// Exports Mendeley SDK
 	module.exports = {
 	    API: __webpack_require__(1),
@@ -67,391 +69,387 @@ return /******/ (function(modules) { // webpackBootstrap
 /* 1 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_DEFINE_RESULT__ = function(require) {
-	    'use strict';
+	'use strict';
 
-	    var utils = __webpack_require__(2);
+	var utils = __webpack_require__(2);
 
-	    /**
-	     * API
-	     *
-	     * @namespace
-	     * @name api
-	     */
-	    return {
-	        setAuthFlow: utils.setAuthFlow,
-	        setBaseUrl:  utils.setBaseUrl,
-	        setNotifier: utils.setNotifier,
+	/**
+	 * API
+	 *
+	 * @namespace
+	 * @name api
+	 */
+	module.exports = {
+	    setAuthFlow: utils.setAuthFlow,
+	    setBaseUrl:  utils.setBaseUrl,
+	    setNotifier: utils.setNotifier,
 
-	        annotations: __webpack_require__(27)(),
-	        catalog: __webpack_require__(28)(),
-	        documents: __webpack_require__(29)(),
-	        files: __webpack_require__(30)(),
-	        folders: __webpack_require__(31)(),
-	        followers: __webpack_require__(32)(),
-	        groups: __webpack_require__(33)(),
-	        institutions: __webpack_require__(34)(),
-	        institutionTrees: __webpack_require__(35)(),
-	        locations: __webpack_require__(36)(),
-	        metadata: __webpack_require__(37)(),
-	        profiles: __webpack_require__(38)(),
-	        trash: __webpack_require__(39)()
-	    };
-
-	}.call(exports, __webpack_require__, exports, module), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
+	    annotations: __webpack_require__(27)(),
+	    catalog: __webpack_require__(28)(),
+	    documents: __webpack_require__(29)(),
+	    files: __webpack_require__(30)(),
+	    folders: __webpack_require__(31)(),
+	    followers: __webpack_require__(32)(),
+	    groups: __webpack_require__(33)(),
+	    institutions: __webpack_require__(34)(),
+	    institutionTrees: __webpack_require__(35)(),
+	    locations: __webpack_require__(36)(),
+	    metadata: __webpack_require__(37)(),
+	    profiles: __webpack_require__(38)(),
+	    trash: __webpack_require__(39)()
+	};
 
 
 /***/ },
 /* 2 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;/* WEBPACK VAR INJECTION */(function(Promise) {!(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__(6), __webpack_require__(26)], __WEBPACK_AMD_DEFINE_RESULT__ = function(Request, assign) {
+	/* WEBPACK VAR INJECTION */(function(Promise) {'use strict';
 
-	    'use strict';
+	var Request = __webpack_require__(6);
+	var assign = __webpack_require__(26);
 
-	    var baseUrl = 'https://api.mendeley.com';
-	    var authFlow = false;
-	    var notifier = false;
+	var baseUrl = 'https://api.mendeley.com';
+	var authFlow = false;
+	var notifier = false;
 
-	    /**
-	     * Utilities
-	     *
-	     * @namespace
-	     * @name utilities
-	     */
-	    return {
-	        setAuthFlow: setAuthFlow,
-	        setBaseUrl: setBaseUrl,
-	        setNotifier: setNotifier,
+	/**
+	 * Utilities
+	 *
+	 * @namespace
+	 * @name utilities
+	 */
+	module.exports = {
+	    setAuthFlow: setAuthFlow,
+	    setBaseUrl: setBaseUrl,
+	    setNotifier: setNotifier,
 
-	        requestFun: requestFun,
-	        requestPageFun: requestPageFun,
-	        requestWithDataFun: requestWithDataFun,
-	        requestWithFileFun: requestWithFileFun,
+	    requestFun: requestFun,
+	    requestPageFun: requestPageFun,
+	    requestWithDataFun: requestWithDataFun,
+	    requestWithFileFun: requestWithFileFun,
 
-	        resetPaginationLinks: resetPaginationLinks
+	    resetPaginationLinks: resetPaginationLinks
+	};
+
+	function setAuthFlow(auth) {
+	    authFlow = auth;
+	}
+
+	function setBaseUrl(url) {
+	    baseUrl = url;
+	}
+
+	function setNotifier(newNotifier) {
+	    notifier = newNotifier;
+	}
+
+	/**
+	 * A general purpose request functions
+	 *
+	 * @private
+	 * @param {string} method
+	 * @param {string} uriTemplate
+	 * @param {array} uriVars
+	 * @param {array} headers
+	 * @returns {function}
+	 */
+	function requestFun(method, uriTemplate, uriVars, headers) {
+	    uriVars = uriVars || [];
+
+	    return function() {
+	        var args = Array.prototype.slice.call(arguments, 0);
+	        var url = getUrl(uriTemplate, uriVars, args);
+	        var params = args[uriVars.length];
+
+	        var request = {
+	            method: method,
+	            responseType: 'json',
+	            url: url,
+	            headers: getRequestHeaders(headers),
+	            params: params
+	        };
+
+	        var settings = {
+	            authFlow: authFlow
+	        };
+
+	        if (method === 'GET') {
+	            settings.maxRetries = 1;
+	        }
+
+	        var promise = Request.create(request, settings, notifier).send();
+	        
+	        return promise.then(function(response) {
+	            setPaginationLinks.call(this, response.headers);
+
+	            return response.data;
+	        }.bind(this));
 	    };
+	}
 
-	    function setAuthFlow(auth) {
-	        authFlow = auth;
-	    }
+	/**
+	 * Get a function for getting a pagination rel
+	 *
+	 * @private
+	 * @param {string} rel - One of "next", "prev" or "last"
+	 * @param {object} headers
+	 * @returns {function}
+	 */
+	function requestPageFun(rel, headers) {
 
-	    function setBaseUrl(url) {
-	        baseUrl = url;
-	    }
-
-	    function setNotifier(newNotifier) {
-	        notifier = newNotifier;
-	    }
-
-	    /**
-	     * A general purpose request functions
-	     *
-	     * @private
-	     * @param {string} method
-	     * @param {string} uriTemplate
-	     * @param {array} uriVars
-	     * @param {array} headers
-	     * @returns {function}
-	     */
-	    function requestFun(method, uriTemplate, uriVars, headers) {
-	        uriVars = uriVars || [];
-
-	        return function() {
-	            var args = Array.prototype.slice.call(arguments, 0);
-	            var url = getUrl(uriTemplate, uriVars, args);
-	            var params = args[uriVars.length];
-
-	            var request = {
-	                method: method,
-	                responseType: 'json',
-	                url: url,
-	                headers: getRequestHeaders(headers),
-	                params: params
-	            };
-
-	            var settings = {
-	                authFlow: authFlow
-	            };
-
-	            if (method === 'GET') {
-	                settings.maxRetries = 1;
-	            }
-
-	            var promise = Request.create(request, settings, notifier).send();
-	            
-	            return promise.then(function(response) {
-	                setPaginationLinks.call(this, response.headers);
-
-	                return response.data;
-	            }.bind(this));
-	        };
-	    }
-
-	    /**
-	     * Get a function for getting a pagination rel
-	     *
-	     * @private
-	     * @param {string} rel - One of "next", "prev" or "last"
-	     * @param {object} headers
-	     * @returns {function}
-	     */
-	    function requestPageFun(rel, headers) {
-
-	        return function() {
-	            if (!this.paginationLinks[rel]) {
-	                return Promise.reject(new Error('No pagination links'));
-	            }
-
-	            var request = {
-	                method: 'GET',
-	                responseType: 'json',
-	                url: this.paginationLinks[rel],
-	                headers: getRequestHeaders(headers || {})
-	            };
-
-	            var settings = {
-	                authFlow: authFlow,
-	                maxRetries: 1
-	            };
-
-	            var promise = Request.create(request, settings, notifier).send();
-	            
-	            return promise.then(function(response) {
-	                setPaginationLinks.call(this, response.headers);
-	                return response.data;
-	            }.bind(this));
-	        };
-	    }
-
-	    /**
-	     * Get a request function that sends data i.e. for POST, PUT, PATCH
-	     * The data will be taken from the calling argument after any uriVar arguments.
-	     *
-	     * @private
-	     * @param {string} method - The HTTP method
-	     * @param {string} uriTemplate - A URI template e.g. /documents/{id}
-	     * @param {array} uriVars - The variables for the URI template in the order
-	     * they will be passed to the function e.g. ['id']
-	     * @param {object} headers - Any additional headers to send
-	     *  e.g. { 'Content-Type': 'application/vnd.mendeley-documents+1.json'}
-	     * @param {bool} followLocation - follow the returned location header? Default is false
-	     * @returns {function}
-	     */
-	    function requestWithDataFun(method, uriTemplate, uriVars, headers, followLocation) {
-	        uriVars = uriVars || [];
-
-	        return function() {
-	            var args = Array.prototype.slice.call(arguments, 0);
-	            var url = getUrl(uriTemplate, uriVars, args);
-	            var data = args[uriVars.length];
-	            var request = {
-	                method: method,
-	                url: url,
-	                headers: getRequestHeaders(headers, data),
-	                data: JSON.stringify(data)
-	            };
-
-	            var settings = {
-	                authFlow: authFlow,
-	                followLocation: followLocation
-	            };
-
-	            var promise = Request.create(request, settings, notifier).send();
-
-	            return promise.then(function(response) {
-	                return response.data;
-	            });
-	        };
-	    }
-
-	    /**
-	     * Get a request function that sends a file
-	     *
-	     * @private
-	     * @param {string} method
-	     * @param {string} uriTemplate
-	     * @param {string} linkType - Type of the element to link this file to
-	     * @param {object} headers - Any additional headers to send
-	     * @returns {function}
-	     */
-	    function requestWithFileFun(method, uriTemplate, linkType, headers) {
-
-	        return function() {
-	            var args = Array.prototype.slice.call(arguments, 0);
-	            var url = getUrl(uriTemplate, [], args);
-	            var file = args[0];
-	            var linkId = args[1];
-	            var requestHeaders = assign({}, getRequestHeaders(uploadHeaders(file, linkId, linkType), method), headers);
-	            var progressHandler;
-
-	            if (typeof args[args.length - 1] === 'function') {
-	                progressHandler = args[args.length - 1];
-	            }
-
-	            var request = {
-	                method: method,
-	                url: url,
-	                headers: requestHeaders,
-	                data: file,
-	                progress: progressHandler
-	            };
-
-	            var settings = {
-	                authFlow: authFlow
-	            };
-
-	            var promise = Request.create(request, settings, notifier).send();
-
-	            return promise.then(function(response) {
-	                return response.data;
-	            });
-	        };
-	    }
-
-	    /**
-	     * Provide the correct encoding for UTF-8 Content-Disposition header value.
-	     * See https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/encodeURIComponent
-	     *
-	     * @private
-	     * @param {string} str
-	     * @returns {string}
-	     */
-	    function encodeRFC5987ValueChars(str) {
-	        return encodeURIComponent(str).
-	            replace(/'/g, '%27').
-	            replace(/\(/g, '%28').
-	            replace(/\)/g, '%29').
-	            replace(/\*/g, '%2A');
-	    }
-
-	    /**
-	     * Get headers for an upload
-	     *
-	     * @private
-	     * @param {object} file
-	     * @param {string} [file.type='application/octet-stream'] Value for the Content-Type header
-	     * @param {string} file.name File name e.g. 'foo.pdf'
-	     * @param {string} linkId
-	     * @param {string} linkType either 'group' or 'document'
-	     * @returns {object}
-	     */
-	    function uploadHeaders(file, linkId, linkType) {
-	        var headers = {
-	            'Content-Type': !!file.type ? file.type : 'application/octet-stream',
-	            'Content-Disposition': 'attachment; filename*=UTF-8\'\'' + encodeRFC5987ValueChars(file.name)
-	        };
-	        if (linkType && linkId) {
-	            switch(linkType) {
-	                case 'group':
-	                    headers.Link = '<' + baseUrl + '/groups/' + linkId +'>; rel="group"';
-	                    break;
-	                case 'document':
-	                    headers.Link = '<' + baseUrl + '/documents/' + linkId +'>; rel="document"';
-	                    break;
-	            }
+	    return function() {
+	        if (!this.paginationLinks[rel]) {
+	            return Promise.reject(new Error('No pagination links'));
 	        }
 
-	        return headers;
-	    }
+	        var request = {
+	            method: 'GET',
+	            responseType: 'json',
+	            url: this.paginationLinks[rel],
+	            headers: getRequestHeaders(headers || {})
+	        };
 
-	    /**
-	     * Generate a URL from a template with properties and values
-	     *
-	     * @private
-	     * @param {string} uriTemplate
-	     * @param {array} uriProps
-	     * @param {array} uriValues
-	     * @returns {string}
-	     */
-	    function getUrl(uriTemplate, uriProps, uriValues) {
-	        if (!uriProps.length) {
-	            return baseUrl + uriTemplate;
-	        }
-	        var uriParams = {};
-	        uriProps.forEach(function(prop, i) {
-	            uriParams[prop] = uriValues[i];
+	        var settings = {
+	            authFlow: authFlow,
+	            maxRetries: 1
+	        };
+
+	        var promise = Request.create(request, settings, notifier).send();
+	        
+	        return promise.then(function(response) {
+	            setPaginationLinks.call(this, response.headers);
+	            return response.data;
+	        }.bind(this));
+	    };
+	}
+
+	/**
+	 * Get a request function that sends data i.e. for POST, PUT, PATCH
+	 * The data will be taken from the calling argument after any uriVar arguments.
+	 *
+	 * @private
+	 * @param {string} method - The HTTP method
+	 * @param {string} uriTemplate - A URI template e.g. /documents/{id}
+	 * @param {array} uriVars - The variables for the URI template in the order
+	 * they will be passed to the function e.g. ['id']
+	 * @param {object} headers - Any additional headers to send
+	 *  e.g. { 'Content-Type': 'application/vnd.mendeley-documents+1.json'}
+	 * @param {bool} followLocation - follow the returned location header? Default is false
+	 * @returns {function}
+	 */
+	function requestWithDataFun(method, uriTemplate, uriVars, headers, followLocation) {
+	    uriVars = uriVars || [];
+
+	    return function() {
+	        var args = Array.prototype.slice.call(arguments, 0);
+	        var url = getUrl(uriTemplate, uriVars, args);
+	        var data = args[uriVars.length];
+	        var request = {
+	            method: method,
+	            url: url,
+	            headers: getRequestHeaders(headers, data),
+	            data: JSON.stringify(data)
+	        };
+
+	        var settings = {
+	            authFlow: authFlow,
+	            followLocation: followLocation
+	        };
+
+	        var promise = Request.create(request, settings, notifier).send();
+
+	        return promise.then(function(response) {
+	            return response.data;
 	        });
+	    };
+	}
 
-	        return baseUrl + expandUriTemplate(uriTemplate, uriParams);
-	    }
+	/**
+	 * Get a request function that sends a file
+	 *
+	 * @private
+	 * @param {string} method
+	 * @param {string} uriTemplate
+	 * @param {string} linkType - Type of the element to link this file to
+	 * @param {object} headers - Any additional headers to send
+	 * @returns {function}
+	 */
+	function requestWithFileFun(method, uriTemplate, linkType, headers) {
 
-	    /**
-	     * Get the headers for a request
-	     *
-	     * @private
-	     * @param {array} headers
-	     * @param {array} data
-	     * @returns {array}
-	     */
-	    function getRequestHeaders(headers, data) {
-	        for (var headerName in headers) {
-	            var val = headers[headerName];
-	            if (typeof val === 'function') {
-	                headers[headerName] = val(data);
-	            }
+	    return function() {
+	        var args = Array.prototype.slice.call(arguments, 0);
+	        var url = getUrl(uriTemplate, [], args);
+	        var file = args[0];
+	        var linkId = args[1];
+	        var requestHeaders = assign({}, getRequestHeaders(uploadHeaders(file, linkId, linkType), method), headers);
+	        var progressHandler;
+
+	        if (typeof args[args.length - 1] === 'function') {
+	            progressHandler = args[args.length - 1];
 	        }
 
-	        return headers;
-	    }
-
-	    /**
-	     * Populate a URI template with data
-	     *
-	     * @private
-	     * @param {string} template
-	     * @param {object} data
-	     * @returns {string}
-	     */
-	    function expandUriTemplate(template, data) {
-	        var matches = template.match(/\{[a-z]+\}/gi);
-	        matches.forEach(function(match) {
-	            var prop = match.replace(/[\{\}]/g, '');
-	            if (!data.hasOwnProperty(prop)) {
-	                throw new Error('Endpoint requires ' + prop);
-	            }
-	            template = template.replace(match, data[prop]);
-	        });
-
-	        return template;
-	    }
-
-	    /**
-	     * Set the current pagination links for a given API by extracting
-	     * looking at the headers retruend with the response.
-	     *
-	     * @private
-	     * @param {object} headers
-	     */
-	    function setPaginationLinks(headers) {
-	        if (headers.hasOwnProperty('mendeley-count')) {
-	            this.count = parseInt(headers['mendeley-count'], 10);
-	        }
-
-	        if (!headers.hasOwnProperty('link') || typeof headers.link !== 'object') {
-	            return;
-	        }
-
-	        for (var p in this.paginationLinks) {
-	            this.paginationLinks[p] = headers.link.hasOwnProperty(p) ? headers.link[p] : false;
-	        }
-	    }
-
-	    /**
-	     * Reset the pagination links
-	     *
-	     * @private
-	     */
-	    function resetPaginationLinks() {
-	        this.paginationLinks = {
-	            last: false,
-	            next: false,
-	            previous: false
+	        var request = {
+	            method: method,
+	            url: url,
+	            headers: requestHeaders,
+	            data: file,
+	            progress: progressHandler
 	        };
-	        this.count = 0;
+
+	        var settings = {
+	            authFlow: authFlow
+	        };
+
+	        var promise = Request.create(request, settings, notifier).send();
+
+	        return promise.then(function(response) {
+	            return response.data;
+	        });
+	    };
+	}
+
+	/**
+	 * Provide the correct encoding for UTF-8 Content-Disposition header value.
+	 * See https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/encodeURIComponent
+	 *
+	 * @private
+	 * @param {string} str
+	 * @returns {string}
+	 */
+	function encodeRFC5987ValueChars(str) {
+	    return encodeURIComponent(str).
+	        replace(/'/g, '%27').
+	        replace(/\(/g, '%28').
+	        replace(/\)/g, '%29').
+	        replace(/\*/g, '%2A');
+	}
+
+	/**
+	 * Get headers for an upload
+	 *
+	 * @private
+	 * @param {object} file
+	 * @param {string} [file.type='application/octet-stream'] Value for the Content-Type header
+	 * @param {string} file.name File name e.g. 'foo.pdf'
+	 * @param {string} linkId
+	 * @param {string} linkType either 'group' or 'document'
+	 * @returns {object}
+	 */
+	function uploadHeaders(file, linkId, linkType) {
+	    var headers = {
+	        'Content-Type': !!file.type ? file.type : 'application/octet-stream',
+	        'Content-Disposition': 'attachment; filename*=UTF-8\'\'' + encodeRFC5987ValueChars(file.name)
+	    };
+	    if (linkType && linkId) {
+	        switch(linkType) {
+	            case 'group':
+	                headers.Link = '<' + baseUrl + '/groups/' + linkId +'>; rel="group"';
+	                break;
+	            case 'document':
+	                headers.Link = '<' + baseUrl + '/documents/' + linkId +'>; rel="document"';
+	                break;
+	        }
 	    }
 
-	}.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
+	    return headers;
+	}
+
+	/**
+	 * Generate a URL from a template with properties and values
+	 *
+	 * @private
+	 * @param {string} uriTemplate
+	 * @param {array} uriProps
+	 * @param {array} uriValues
+	 * @returns {string}
+	 */
+	function getUrl(uriTemplate, uriProps, uriValues) {
+	    if (!uriProps.length) {
+	        return baseUrl + uriTemplate;
+	    }
+	    var uriParams = {};
+	    uriProps.forEach(function(prop, i) {
+	        uriParams[prop] = uriValues[i];
+	    });
+
+	    return baseUrl + expandUriTemplate(uriTemplate, uriParams);
+	}
+
+	/**
+	 * Get the headers for a request
+	 *
+	 * @private
+	 * @param {array} headers
+	 * @param {array} data
+	 * @returns {array}
+	 */
+	function getRequestHeaders(headers, data) {
+	    for (var headerName in headers) {
+	        var val = headers[headerName];
+	        if (typeof val === 'function') {
+	            headers[headerName] = val(data);
+	        }
+	    }
+
+	    return headers;
+	}
+
+	/**
+	 * Populate a URI template with data
+	 *
+	 * @private
+	 * @param {string} template
+	 * @param {object} data
+	 * @returns {string}
+	 */
+	function expandUriTemplate(template, data) {
+	    var matches = template.match(/\{[a-z]+\}/gi);
+	    matches.forEach(function(match) {
+	        var prop = match.replace(/[\{\}]/g, '');
+	        if (!data.hasOwnProperty(prop)) {
+	            throw new Error('Endpoint requires ' + prop);
+	        }
+	        template = template.replace(match, data[prop]);
+	    });
+
+	    return template;
+	}
+
+	/**
+	 * Set the current pagination links for a given API by extracting
+	 * looking at the headers retruend with the response.
+	 *
+	 * @private
+	 * @param {object} headers
+	 */
+	function setPaginationLinks(headers) {
+	    if (headers.hasOwnProperty('mendeley-count')) {
+	        this.count = parseInt(headers['mendeley-count'], 10);
+	    }
+
+	    if (!headers.hasOwnProperty('link') || typeof headers.link !== 'object') {
+	        return;
+	    }
+
+	    for (var p in this.paginationLinks) {
+	        this.paginationLinks[p] = headers.link.hasOwnProperty(p) ? headers.link[p] : false;
+	    }
+	}
+
+	/**
+	 * Reset the pagination links
+	 *
+	 * @private
+	 */
+	function resetPaginationLinks() {
+	    this.paginationLinks = {
+	        last: false,
+	        next: false,
+	        previous: false
+	    };
+	    this.count = 0;
+	}
 
 	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(3)))
 
@@ -6121,169 +6119,170 @@ return /******/ (function(modules) { // webpackBootstrap
 /* 6 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__(7), __webpack_require__(26)], __WEBPACK_AMD_DEFINE_RESULT__ = function(axios, assign) {
+	'use strict';
 
-	    'use strict';
+	var axios = __webpack_require__(7);
+	var assign = __webpack_require__(26);
 
-	    var defaults = {
-	        authFlow: false,
-	        maxRetries: 0,
-	        maxAuthRetries: 1,
-	        followLocation: false,
-	        fileUpload: false,
-	    };
-	    var noopNotifier = { notify: function() {}};
+	var defaults = {
+	    authFlow: false,
+	    maxRetries: 0,
+	    maxAuthRetries: 1,
+	    followLocation: false,
+	    fileUpload: false,
+	};
+	var noopNotifier = { notify: function() {}};
 
-	    function create(request, settings, notifier) {
-	        return new Request(request, assign({}, defaults, settings), notifier);
+	function create(request, settings, notifier) {
+	    return new Request(request, assign({}, defaults, settings), notifier);
+	}
+
+	function Request(request, settings, notifier) {
+	    if (!settings.authFlow) {
+	        throw new Error('Please provide an authentication interface');
+	    }
+	    this.request = request;
+	    this.settings = settings;
+	    this.retries = 0;
+	    this.authRetries = 0;
+	    this.notifier = notifier || noopNotifier;
+
+	    this.notifier.notify('startInfo', [this.request.method, this.request.url], this.request);
+	}
+
+	function send(request) {
+	    request = request || this.request;
+
+	    var token = this.settings.authFlow.getToken(),
+	        headers = assign({ Accept: '' }, request.headers);
+
+	    // If no token at all (cookie deleted or expired) refresh token if possible or authenticate
+	    // because if you send 'Bearer ' you get a 400 rather than a 401 - is that a bug in the api?
+	    if (!token) {
+	        this.authRetries++;
+	        this.notifier.notify('authWarning', ['n.a.', this.authRetries, this.settings.maxAuthRetries], this.request);
+	        return refreshToken.call(this);
 	    }
 
-	    function Request(request, settings, notifier) {
-	        if (!settings.authFlow) {
-	            throw new Error('Please provide an authentication interface');
-	        }
-	        this.request = request;
-	        this.settings = settings;
-	        this.retries = 0;
-	        this.authRetries = 0;
-	        this.notifier = notifier || noopNotifier;
+	    request.headers = headers;
+	    request.headers.Authorization = 'Bearer ' + token;
 
-	        this.notifier.notify('startInfo', [this.request.method, this.request.url], this.request);
-	    }
+	    request.method = request.method.toLowerCase();
 
-	    function send(request) {
-	        request = request || this.request;
+	    return axios.request(request)
+	        .then(onDone.bind(this))
+	        .catch(onFail.bind(this));
+	}
 
-	        var token = this.settings.authFlow.getToken(),
-	            headers = assign({ Accept: '' }, request.headers);
-
-	        // If no token at all (cookie deleted or expired) refresh token if possible or authenticate
-	        // because if you send 'Bearer ' you get a 400 rather than a 401 - is that a bug in the api?
-	        if (!token) {
-	            this.authRetries++;
-	            this.notifier.notify('authWarning', ['n.a.', this.authRetries, this.settings.maxAuthRetries], this.request);
-	            return refreshToken.call(this);
-	        }
-
-	        request.headers = headers;
-	        request.headers.Authorization = 'Bearer ' + token;
-
-	        request.method = request.method.toLowerCase();
-
-	        return axios.request(request)
-	            .then(onDone.bind(this))
-	            .catch(onFail.bind(this));
-	    }
-
-	    function onFail(response) {
-	        switch (response.status) {
-	            case 0:
-	            case 504:
-	                // 504 Gateway timeout or communication error
-	                if (this.retries < this.settings.maxRetries) {
-	                    this.retries++;
-	                    this.notifier.notify('commWarning', [response.status, this.retries, this.settings.maxRetries], this.request, response);
-	                    return this.send();
-	                } else {
-	                    this.notifier.notify('commError', [response.status, this.settings.maxRetries], this.request, response);
-	                    throw response;
-	                }
-	                break;
-
-	            case 401:
-	                // 401 Unauthorized
-	                if (this.authRetries < this.settings.maxAuthRetries) {
-	                    this.authRetries++;
-	                    this.notifier.notify('authWarning', [response.status, this.authRetries, this.settings.maxAuthRetries], this.request, response);
-	                    return refreshToken.call(this);
-	                } else {
-	                    this.notifier.notify('authError', [response.status, this.settings.maxAuthRetries], this.request, response);
-	                    this.settings.authFlow.authenticate(200);
-	                    throw response;
-	                }
-	                break;
-
-	            default:
-	                this.notifier.notify('reqError', [response.status], this.request, response);
-	                throw response;
-	        }
-	    }
-
-	    function onDone(response) {
-	        var locationHeader = response.headers.location;
-
-	        if (locationHeader && this.settings.followLocation && response.status === 201) {
-	            var redirect = {
-	                method: 'GET',
-	                url: locationHeader,
-	                responseType: 'json'
-	            };
-	            this.notifier.notify('redirectInfo', null, this.request, redirect);
-	            return this.send(redirect);
-	        } else {
-	            if (response.headers.link && typeof response.headers.link === 'string') {
-	                response.headers.link = extractLinkHeaders(response.headers.link);
-	            }
-
-	            // File uploads have type set to text, so if there is some JSON parse it manually
-	            if (this.settings.fileUpload) {
-	                if (response) {
-	                    try {
-	                        response = JSON.parse(response);
-	                    } catch (error) {
-	                        this.notifier.notify('parseError', null, this.request, response);
-	                        throw error;
-	                    }
-	                }
-	                this.notifier.notify('uploadSuccessInfo', null, this.request, response);
+	function onFail(response) {
+	    switch (response.status) {
+	        case 0:
+	        case 504:
+	            // 504 Gateway timeout or communication error
+	            if (this.retries < this.settings.maxRetries) {
+	                this.retries++;
+	                this.notifier.notify('commWarning', [response.status, this.retries, this.settings.maxRetries], this.request, response);
+	                return this.send();
 	            } else {
-	                this.notifier.notify('successInfo', null, this.request, response);
+	                this.notifier.notify('commError', [response.status, this.settings.maxRetries], this.request, response);
+	                throw response;
 	            }
-	            return response;
-	        }
-	    }
+	            break;
 
-	    function refreshToken() {
-	        var refresh = this.settings.authFlow.refreshToken();
-	        if (refresh) {
-	            return refresh
-	                // If fails then we need to re-authenticate
-	                .catch(function(response) {
-	                    this.notifier.notify('refreshError', [response.status], this.request, response.request);
-	                    this.settings.authFlow.authenticate(200);
-	                    throw response;
-	                }.bind(this))
-	                // If OK update the access token and re-send the request
-	                .then(function() {
-	                    return this.send();
-	                }.bind(this));
+	        case 401:
+	            // 401 Unauthorized
+	            if (this.authRetries < this.settings.maxAuthRetries) {
+	                this.authRetries++;
+	                this.notifier.notify('authWarning', [response.status, this.authRetries, this.settings.maxAuthRetries], this.request, response);
+	                return refreshToken.call(this);
+	            } else {
+	                this.notifier.notify('authError', [response.status, this.settings.maxAuthRetries], this.request, response);
+	                this.settings.authFlow.authenticate(200);
+	                throw response;
+	            }
+	            break;
+
+	        default:
+	            this.notifier.notify('reqError', [response.status], this.request, response);
+	            throw response;
+	    }
+	}
+
+	function onDone(response) {
+	    var locationHeader = response.headers.location;
+
+	    if (locationHeader && this.settings.followLocation && response.status === 201) {
+	        var redirect = {
+	            method: 'GET',
+	            url: locationHeader,
+	            responseType: 'json'
+	        };
+	        this.notifier.notify('redirectInfo', null, this.request, redirect);
+	        return this.send(redirect);
+	    } else {
+	        if (response.headers.link && typeof response.headers.link === 'string') {
+	            response.headers.link = extractLinkHeaders(response.headers.link);
+	        }
+
+	        // File uploads have type set to text, so if there is some JSON parse it manually
+	        if (this.settings.fileUpload) {
+	            if (response) {
+	                try {
+	                    response = JSON.parse(response);
+	                } catch (error) {
+	                    this.notifier.notify('parseError', null, this.request, response);
+	                    throw error;
+	                }
+	            }
+	            this.notifier.notify('uploadSuccessInfo', null, this.request, response);
 	        } else {
-	            this.notifier.notify('refreshNotConfigured', []);
-	            this.settings.authFlow.authenticate(200);
-	            throw new Error('No token');
+	            this.notifier.notify('successInfo', null, this.request, response);
 	        }
+	        return response;
+	    }
+	}
+
+	function refreshToken() {
+	    var refresh = this.settings.authFlow.refreshToken();
+	    if (refresh) {
+	        return refresh
+	            // If fails then we need to re-authenticate
+	            .catch(function(response) {
+	                this.notifier.notify('refreshError', [response.status], this.request, response.request);
+	                this.settings.authFlow.authenticate(200);
+	                throw response;
+	            }.bind(this))
+	            // If OK update the access token and re-send the request
+	            .then(function() {
+	                return this.send();
+	            }.bind(this));
+	    } else {
+	        this.notifier.notify('refreshNotConfigured', []);
+	        this.settings.authFlow.authenticate(200);
+	        throw new Error('No token');
+	    }
+	}
+
+	function extractLinkHeaders(links) {
+	    // Tidy into nice object like {next: 'http://example.com/?p=1'}
+	    var tokens, url, rel, linksArray = links.split(','), value = {};
+	    for (var i = 0, l = linksArray.length; i < l; i++) {
+	        tokens = linksArray[i].split(';');
+	        url = tokens[0].replace(/[<>]/g, '').trim();
+	        rel = tokens[1].trim().split('=')[1].replace(/"/g, '');
+	        value[rel] = url;
 	    }
 
-	    function extractLinkHeaders(links) {
-	        // Tidy into nice object like {next: 'http://example.com/?p=1'}
-	        var tokens, url, rel, linksArray = links.split(','), value = {};
-	        for (var i = 0, l = linksArray.length; i < l; i++) {
-	            tokens = linksArray[i].split(';');
-	            url = tokens[0].replace(/[<>]/g, '').trim();
-	            rel = tokens[1].trim().split('=')[1].replace(/"/g, '');
-	            value[rel] = url;
-	        }
+	    return value;
+	}
 
-	        return value;
-	    }
+	Request.prototype = {
+	    send: send
+	};
 
-	    Request.prototype = {
-	        send: send
-	    };
-
-	    return { create: create };
-
-	}.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
+	module.exports = {
+	    create: create
+	};
 
 
 /***/ },
@@ -7592,1411 +7591,1383 @@ return /******/ (function(modules) { // webpackBootstrap
 /* 27 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__(2)], __WEBPACK_AMD_DEFINE_RESULT__ = function(utils) {
+	'use strict';
 
-	    'use strict';
+	var utils = __webpack_require__(2);
 
-	    /**
-	     * Annotations API
-	     *
-	     * @namespace
-	     * @name api.annotations
-	     */
-	    return function annotations() {
+	/**
+	 * Annotations API
+	 *
+	 * @namespace
+	 * @name api.annotations
+	 */
+	module.exports = function annotations() {
 
-	    	var dataHeaders = {
-				annotation: { 'Content-Type': 'application/vnd.mendeley-annotation.1+json' }
-			};
+		var dataHeaders = {
+			annotation: { 'Content-Type': 'application/vnd.mendeley-annotation.1+json' }
+		};
 
-	        return {
+	    return {
 
-	            /**
-	             * Retrieve an annotation
-	             *
-	             * @method
-	             * @memberof api.annotations
-	             * @param {string} id - Annotation UUID
-	             * @returns {promise}
-	             */
-	            retrieve: utils.requestFun('GET', '/annotations/{id}', ['id']),
+	        /**
+	         * Retrieve an annotation
+	         *
+	         * @method
+	         * @memberof api.annotations
+	         * @param {string} id - Annotation UUID
+	         * @returns {promise}
+	         */
+	        retrieve: utils.requestFun('GET', '/annotations/{id}', ['id']),
 
-				/**
-	             * Patch a single annotation
-	             *
-	             * @method
-	             * @memberof api.annotations
-	             * @param {string} id - Annotation UUID
-	             * @param {object} text - The updated note text
-	             * @returns {Promise}
-	             */
-	            patch: utils.requestWithDataFun('PATCH', '/annotations/{id}', ['id'], dataHeaders.annotation, true),
+			/**
+	         * Patch a single annotation
+	         *
+	         * @method
+	         * @memberof api.annotations
+	         * @param {string} id - Annotation UUID
+	         * @param {object} text - The updated note text
+	         * @returns {Promise}
+	         */
+	        patch: utils.requestWithDataFun('PATCH', '/annotations/{id}', ['id'], dataHeaders.annotation, true),
 
-	            /**
-	             * Create a single annotation
-	             *
-	             * @method
-	             * @memberof api.annotations
-	             * @param {object} text - Note text
-	             * @returns {Promise}
-	             */
-	            create: utils.requestWithDataFun('POST', '/annotations/', [], dataHeaders.annotation, true),
+	        /**
+	         * Create a single annotation
+	         *
+	         * @method
+	         * @memberof api.annotations
+	         * @param {object} text - Note text
+	         * @returns {Promise}
+	         */
+	        create: utils.requestWithDataFun('POST', '/annotations/', [], dataHeaders.annotation, true),
 
-	             /**
-	             * Delete a single annotation
-	             *
-	             * @method
-	             * @memberof api.annotations
-	             * @param {string} id - Annotation UUID
-	             * @returns {Promise}
-	             */
-	            delete: utils.requestFun('DELETE', '/annotations/{id}', ['id']),
+	         /**
+	         * Delete a single annotation
+	         *
+	         * @method
+	         * @memberof api.annotations
+	         * @param {string} id - Annotation UUID
+	         * @returns {Promise}
+	         */
+	        delete: utils.requestFun('DELETE', '/annotations/{id}', ['id']),
 
-	            /**
-	             * Get a list of annotations
-	             *
-	             * @method
-	             * @memberof api.annotations
-	             * @returns {promise}
-	             */
-	            list: utils.requestFun('GET', '/annotations/'),
+	        /**
+	         * Get a list of annotations
+	         *
+	         * @method
+	         * @memberof api.annotations
+	         * @returns {promise}
+	         */
+	        list: utils.requestFun('GET', '/annotations/'),
 
-	            /**
-	             * The total number of annotations - set after the first call to annotations.list()
-	             *
-	             * @var
-	             * @memberof api.annotations
-	             * @type {integer}
-	             */
-	            count: 0,
+	        /**
+	         * The total number of annotations - set after the first call to annotations.list()
+	         *
+	         * @var
+	         * @memberof api.annotations
+	         * @type {integer}
+	         */
+	        count: 0,
 
-	            /**
-	             * Get the next page of annotations
-	             *
-	             * @method
-	             * @memberof api.annotations
-	             * @returns {promise}
-	             */
-	            nextPage: utils.requestPageFun('next'),
+	        /**
+	         * Get the next page of annotations
+	         *
+	         * @method
+	         * @memberof api.annotations
+	         * @returns {promise}
+	         */
+	        nextPage: utils.requestPageFun('next'),
 
-	            /**
-	             * Get the previous page of annotations
-	             *
-	             * @method
-	             * @memberof api.annotations
-	             * @returns {promise}
-	             */
-	            previousPage: utils.requestPageFun('previous'),
+	        /**
+	         * Get the previous page of annotations
+	         *
+	         * @method
+	         * @memberof api.annotations
+	         * @returns {promise}
+	         */
+	        previousPage: utils.requestPageFun('previous'),
 
-	            /**
-	             * Get the last page of annotations
-	             *
-	             * @method
-	             * @memberof api.annotations
-	             * @returns {promise}
-	             */
-	            lastPage: utils.requestPageFun('last'),
+	        /**
+	         * Get the last page of annotations
+	         *
+	         * @method
+	         * @memberof api.annotations
+	         * @returns {promise}
+	         */
+	        lastPage: utils.requestPageFun('last'),
 
-	            /**
-	             * Get pagination links
-	             *
-	             * @method
-	             * @memberof api.annotations
-	             * @returns {object}
-	             */
-	            paginationLinks: {
-	                last: false,
-	                next: false,
-	                previous: false
-	            },
+	        /**
+	         * Get pagination links
+	         *
+	         * @method
+	         * @memberof api.annotations
+	         * @returns {object}
+	         */
+	        paginationLinks: {
+	            last: false,
+	            next: false,
+	            previous: false
+	        },
 
-	            /**
-	             * Reset all pagination links
-	             *
-	             * @method
-	             * @memberof api.annotations
-	             */
-	            resetPagination: utils.resetPaginationLinks
+	        /**
+	         * Reset all pagination links
+	         *
+	         * @method
+	         * @memberof api.annotations
+	         */
+	        resetPagination: utils.resetPaginationLinks
 
-	        };
 	    };
-
-	}.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
+	};
 
 
 /***/ },
 /* 28 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__(2)], __WEBPACK_AMD_DEFINE_RESULT__ = function(utils) {
+	'use strict';
 
-	    'use strict';
+	var utils = __webpack_require__(2);
 
-	    /**
-	     * Catalog API
-	     *
-	     * @namespace
-	     * @name api.catalog
-	     */
-	    return function catalog() {
-	        return {
+	/**
+	 * Catalog API
+	 *
+	 * @namespace
+	 * @name api.catalog
+	 */
+	module.exports = function catalog() {
+	    return {
 
-	            /**
-	             * Search the catalog
-	             *
-	             * @method
-	             * @memberof api.catalog
-	             * @param {object} params - A catalog search filter
-	             * @returns {promise}
-	             */
-	            search: utils.requestFun('GET', '/catalog'),
+	        /**
+	         * Search the catalog
+	         *
+	         * @method
+	         * @memberof api.catalog
+	         * @param {object} params - A catalog search filter
+	         * @returns {promise}
+	         */
+	        search: utils.requestFun('GET', '/catalog'),
 
-	            /**
-	             * Retrieve a document data from catalog
-	             *
-	             * @method
-	             * @memberof api.catalog
-	             * @param {string} id - A catalog UUID
-	             * @param {object} params - A catalog search filter
-	             * @returns {promise}
-	             */
-	            retrieve: utils.requestFun('GET', '/catalog/{id}', ['id'])
+	        /**
+	         * Retrieve a document data from catalog
+	         *
+	         * @method
+	         * @memberof api.catalog
+	         * @param {string} id - A catalog UUID
+	         * @param {object} params - A catalog search filter
+	         * @returns {promise}
+	         */
+	        retrieve: utils.requestFun('GET', '/catalog/{id}', ['id'])
 
-	        };
 	    };
-
-	}.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
+	};
 
 
 /***/ },
 /* 29 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__(2)], __WEBPACK_AMD_DEFINE_RESULT__ = function(utils) {
+	'use strict';
 
-	    'use strict';
+	var utils = __webpack_require__(2);
 
-	    /**
-	     * Documents API
-	     *
-	     * @namespace
-	     * @name api.documents
-	     */
-	    return function documents() {
-	        var dataHeaders = {
-	                'Content-Type': 'application/vnd.mendeley-document.1+json'
-	            },
-	            cloneDataHeaders = {
-	                'Content-Type': 'application/vnd.mendeley-document-clone.1+json'
-	            },
+	/**
+	 * Documents API
+	 *
+	 * @namespace
+	 * @name api.documents
+	 */
+	module.exports = function documents() {
+	    var dataHeaders = {
+	            'Content-Type': 'application/vnd.mendeley-document.1+json'
+	        },
+	        cloneDataHeaders = {
+	            'Content-Type': 'application/vnd.mendeley-document-clone.1+json'
+	        },
 
-	            listDocuments = utils.requestFun('GET', '/documents/'),
-	            listFolder = utils.requestFun('GET', '/folders/{id}/documents', ['id']);
+	        listDocuments = utils.requestFun('GET', '/documents/'),
+	        listFolder = utils.requestFun('GET', '/folders/{id}/documents', ['id']);
 
-	        return {
+	    return {
 
-	            /**
-	             * Create a new document
-	             *
-	             * @method
-	             * @memberof api.documents
-	             * @param {object} data - The document data
-	             * @returns {promise}
-	             */
-	            create: utils.requestWithDataFun('POST', '/documents', false, dataHeaders, true),
+	        /**
+	         * Create a new document
+	         *
+	         * @method
+	         * @memberof api.documents
+	         * @param {object} data - The document data
+	         * @returns {promise}
+	         */
+	        create: utils.requestWithDataFun('POST', '/documents', false, dataHeaders, true),
 
-	            /**
-	             * Create a new document from a file
-	             *
-	             * @method
-	             * @memberof api.documents
-	             * @param {object} file - A file object
-	             * @returns {promise}
-	             */
-	            createFromFile: utils.requestWithFileFun('POST', '/documents'),
+	        /**
+	         * Create a new document from a file
+	         *
+	         * @method
+	         * @memberof api.documents
+	         * @param {object} file - A file object
+	         * @returns {promise}
+	         */
+	        createFromFile: utils.requestWithFileFun('POST', '/documents'),
 
-	            /**
-	             * Create a new group document from a file
-	             *
-	             * @method
-	             * @memberof api.documents
-	             * @param {object} file - A file object
-	             * @param {string} groupId - A group UUID
-	             * @returns {promise}
-	             */
-	            createFromFileInGroup: utils.requestWithFileFun('POST', '/documents', 'group'),
+	        /**
+	         * Create a new group document from a file
+	         *
+	         * @method
+	         * @memberof api.documents
+	         * @param {object} file - A file object
+	         * @param {string} groupId - A group UUID
+	         * @returns {promise}
+	         */
+	        createFromFileInGroup: utils.requestWithFileFun('POST', '/documents', 'group'),
 
-	            /**
-	             * Retrieve a document
-	             *
-	             * @method
-	             * @memberof api.documents
-	             * @param {string} id - A document UUID
-	             * @returns {promise}
-	             */
-	            retrieve: utils.requestFun('GET', '/documents/{id}', ['id']),
+	        /**
+	         * Retrieve a document
+	         *
+	         * @method
+	         * @memberof api.documents
+	         * @param {string} id - A document UUID
+	         * @returns {promise}
+	         */
+	        retrieve: utils.requestFun('GET', '/documents/{id}', ['id']),
 
-	            /**
-	             * Update document
-	             *
-	             * @method
-	             * @memberof api.documents
-	             * @param {string} id - A document UUID
-	             * @param {object} data - The new document data
-	             * @returns {promise}
-	             */
-	            update: utils.requestWithDataFun('PATCH', '/documents/{id}', ['id'], dataHeaders, true),
+	        /**
+	         * Update document
+	         *
+	         * @method
+	         * @memberof api.documents
+	         * @param {string} id - A document UUID
+	         * @param {object} data - The new document data
+	         * @returns {promise}
+	         */
+	        update: utils.requestWithDataFun('PATCH', '/documents/{id}', ['id'], dataHeaders, true),
 
-	            /**
-	             * Clone a document from user library to a group ( or vice versa )
-	             *
-	             * @method
-	             * @memberof api.documents
-	             * @param {string} id - A document UUID
-	             * @returns {promise}
-	             */
-	            clone: utils.requestWithDataFun('POST', '/documents/{id}/actions/cloneTo', ['id'], cloneDataHeaders, true),
+	        /**
+	         * Clone a document from user library to a group ( or vice versa )
+	         *
+	         * @method
+	         * @memberof api.documents
+	         * @param {string} id - A document UUID
+	         * @returns {promise}
+	         */
+	        clone: utils.requestWithDataFun('POST', '/documents/{id}/actions/cloneTo', ['id'], cloneDataHeaders, true),
 
-	            /**
-	             * List documents
-	             *
-	             * @method
-	             * @memberof api.documents
-	             * @param {object} params - Query paramaters
-	             * @returns {promise}
-	             */
-	            list: function(params) {
-	                if (!params || typeof params.folderId === 'undefined') {
-	                    return listDocuments.call(this, params);
-	                } else {
-	                    var folderId = params.folderId,
-	                        callParams = {
-	                            limit: params.limit
-	                        };
-	                    delete params.folderId;
-	                    return listFolder.call(this, folderId, callParams);
-	                }
-	            },
+	        /**
+	         * List documents
+	         *
+	         * @method
+	         * @memberof api.documents
+	         * @param {object} params - Query paramaters
+	         * @returns {promise}
+	         */
+	        list: function(params) {
+	            if (!params || typeof params.folderId === 'undefined') {
+	                return listDocuments.call(this, params);
+	            } else {
+	                var folderId = params.folderId,
+	                    callParams = {
+	                        limit: params.limit
+	                    };
+	                delete params.folderId;
+	                return listFolder.call(this, folderId, callParams);
+	            }
+	        },
 
-	            /**
-	             * Search documents
-	             *
-	             * @method
-	             * @memberof api.documents
-	             * @param {object} params - Search paramaters
-	             * @returns {promise}
-	             */
-	            search: utils.requestFun('GET', '/search/documents'),
+	        /**
+	         * Search documents
+	         *
+	         * @method
+	         * @memberof api.documents
+	         * @param {object} params - Search paramaters
+	         * @returns {promise}
+	         */
+	        search: utils.requestFun('GET', '/search/documents'),
 
-	            /**
-	             * Move a document to the trash
-	             *
-	             * @method
-	             * @memberof api.documents
-	             * @param {string} id - A document UUID
-	             * @returns {promise}
-	             */
-	            trash: utils.requestFun('POST', '/documents/{id}/trash', ['id'], dataHeaders),
+	        /**
+	         * Move a document to the trash
+	         *
+	         * @method
+	         * @memberof api.documents
+	         * @param {string} id - A document UUID
+	         * @returns {promise}
+	         */
+	        trash: utils.requestFun('POST', '/documents/{id}/trash', ['id'], dataHeaders),
 
-	            /**
-	             * The total number of documents - set after the first call to documents.list()
-	             *
-	             * @var
-	             * @memberof api.documents
-	             * @type {integer}
-	             */
-	            count: 0,
+	        /**
+	         * The total number of documents - set after the first call to documents.list()
+	         *
+	         * @var
+	         * @memberof api.documents
+	         * @type {integer}
+	         */
+	        count: 0,
 
-	            /**
-	             * Get the next page of documents
-	             *
-	             * @method
-	             * @memberof api.documents
-	             * @returns {promise}
-	             */
-	            nextPage: utils.requestPageFun('next'),
+	        /**
+	         * Get the next page of documents
+	         *
+	         * @method
+	         * @memberof api.documents
+	         * @returns {promise}
+	         */
+	        nextPage: utils.requestPageFun('next'),
 
-	            /**
-	             * Get the previous page of documents
-	             *
-	             * @method
-	             * @memberof api.documents
-	             * @returns {promise}
-	             */
-	            previousPage: utils.requestPageFun('previous'),
+	        /**
+	         * Get the previous page of documents
+	         *
+	         * @method
+	         * @memberof api.documents
+	         * @returns {promise}
+	         */
+	        previousPage: utils.requestPageFun('previous'),
 
-	            /**
-	             * Get the last page of documents
-	             *
-	             * @method
-	             * @memberof api.documents
-	             * @returns {promise}
-	             */
-	            lastPage: utils.requestPageFun('last'),
+	        /**
+	         * Get the last page of documents
+	         *
+	         * @method
+	         * @memberof api.documents
+	         * @returns {promise}
+	         */
+	        lastPage: utils.requestPageFun('last'),
 
-	            /**
-	             * Get pagination links
-	             *
-	             * @method
-	             * @memberof api.documents
-	             * @returns {object}
-	             */
-	            paginationLinks: {
-	                last: false,
-	                next: false,
-	                previous: false
-	            },
+	        /**
+	         * Get pagination links
+	         *
+	         * @method
+	         * @memberof api.documents
+	         * @returns {object}
+	         */
+	        paginationLinks: {
+	            last: false,
+	            next: false,
+	            previous: false
+	        },
 
-	            /**
-	             * Reset all pagination
-	             *
-	             * @method
-	             * @memberof api.documents
-	             */
-	            resetPagination: utils.resetPaginationLinks
+	        /**
+	         * Reset all pagination
+	         *
+	         * @method
+	         * @memberof api.documents
+	         */
+	        resetPagination: utils.resetPaginationLinks
 
-	        };
 	    };
-
-	}.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
+	};
 
 
 /***/ },
 /* 30 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__(2)], __WEBPACK_AMD_DEFINE_RESULT__ = function(utils) {
+	'use strict';
 
-	    'use strict';
+	var utils = __webpack_require__(2);
 
-	    /**
-	     * Files API
-	     *
-	     * @namespace
-	     * @name api.files
-	     */
-	    return function files() {
-	        var headers   = { 'Accept': 'application/vnd.mendeley-file.1+json' };
+	/**
+	 * Files API
+	 *
+	 * @namespace
+	 * @name api.files
+	 */
+	module.exports = function files() {
+	    var headers   = { 'Accept': 'application/vnd.mendeley-file.1+json' };
 
-	        return {
+	    return {
 
-	            /**
-	             * Create a new file
-	             *
-	             * @method
-	             * @memberof api.files
-	             * @param {object} file - A file object
-	             * @param {string} documentId - A document UUID
-	             * @param {function} progressHandler - Function called every time a progress event occurs
-	             * @returns {promise}
-	             */
-	            create: utils.requestWithFileFun('POST', '/files', 'document', headers),
+	        /**
+	         * Create a new file
+	         *
+	         * @method
+	         * @memberof api.files
+	         * @param {object} file - A file object
+	         * @param {string} documentId - A document UUID
+	         * @param {function} progressHandler - Function called every time a progress event occurs
+	         * @returns {promise}
+	         */
+	        create: utils.requestWithFileFun('POST', '/files', 'document', headers),
 
-	            /**
-	             * Get a list of files for a document
-	             *
-	             * @method
-	             * @memberof api.files
-	             * @param {string} id - A document UUID
-	             * @returns {promise}
-	             */
-	            list: utils.requestFun('GET', '/files?document_id={id}', ['id'], headers),
+	        /**
+	         * Get a list of files for a document
+	         *
+	         * @method
+	         * @memberof api.files
+	         * @param {string} id - A document UUID
+	         * @returns {promise}
+	         */
+	        list: utils.requestFun('GET', '/files?document_id={id}', ['id'], headers),
 
-	            /**
-	             * Delete a file
-	             *
-	             * @method
-	             * @memberof api.files
-	             * @param {string} id - A file UUID
-	             * @returns {promise}
-	             */
-	            remove: utils.requestFun('DELETE', '/files/{id}', ['id'])
+	        /**
+	         * Delete a file
+	         *
+	         * @method
+	         * @memberof api.files
+	         * @param {string} id - A file UUID
+	         * @returns {promise}
+	         */
+	        remove: utils.requestFun('DELETE', '/files/{id}', ['id'])
 
-	        };
 	    };
-
-	}.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
+	};
 
 
 /***/ },
 /* 31 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__(2)], __WEBPACK_AMD_DEFINE_RESULT__ = function(utils) {
+	'use strict';
 
-	    'use strict';
-
-	    /**
-	     * Folders API
-	     *
-	     * @namespace
-	     * @name api.folders
-	     */
-	    return function folders() {
-	        var dataHeaders = {
-	                folder: { 'Content-Type': 'application/vnd.mendeley-folder.1+json' },
-	                'document': { 'Content-Type': 'application/vnd.mendeley-document.1+json' }
-	            };
-
-	        return {
-
-	            /**
-	             * Create a new folder
-	             *
-	             * @method
-	             * @memberof api.folders
-	             * @param {object} data - The folder data
-	             * @returns {promise}
-	             */
-	            create: utils.requestWithDataFun('POST', '/folders', [], dataHeaders.folder, true),
-
-	            /**
-	             * Retrieve a folder
-	             *
-	             * @method
-	             * @memberof api.folders
-	             * @param {string} id - A folder UUID
-	             * @returns {promise}
-	             */
-	            retrieve: utils.requestFun('GET', '/folders/{id}', ['id']),
-
-	            /**
-	             * Update a folder
-	             *
-	             * @method
-	             * @memberof api.folders
-	             * @param {string} id - A folder UUID
-	             * @param {object} data - The folder data
-	             * @returns {promise}
-	             */
-	            update: utils.requestWithDataFun('PATCH', '/folders/{id}', ['id'], dataHeaders.folder, true),
-
-	            /**
-	             * Delete a folder
-	             *
-	             * @method
-	             * @memberof api.folders
-	             * @param {string} id - A folder UUID
-	             * @returns {promise}
-	             */
-	            delete: utils.requestFun('DELETE', '/folders/{id}', ['id']),
-
-	            /**
-	             * Remove a document from a folder
-	             *
-	             * @method
-	             * @memberof api.folders
-	             * @param {string} id - A folder UUID
-	             * @param {string} documentId - A document UUID
-	             * @returns {promise}
-	             */
-	            removeDocument: utils.requestFun('DELETE', '/folders/{id}/documents/{docId}', ['id', 'docId'], dataHeaders.folder),
-
-	            /**
-	             * Add a document to a folder
-	             *
-	             * @method
-	             * @memberof api.folders
-	             * @param {string} id - A folder UUID
-	             * @returns {promise}
-	             */
-	            addDocument: utils.requestWithDataFun('POST', '/folders/{id}/documents', ['id'], dataHeaders.document, false),
-
-	            /**
-	             * Get a list of folders
-	             *
-	             * @method
-	             * @memberof api.folders
-	             * @returns {promise}
-	             */
-	            list: utils.requestFun('GET', '/folders/'),
-
-	            /**
-	             * The total number of folders - set after the first call to folders.list()
-	             *
-	             * @var
-	             * @memberof api.folders
-	             * @type {integer}
-	             */
-	            count: 0,
-
-	            /**
-	             * Get the next page of folders
-	             *
-	             * @method
-	             * @memberof api.folders
-	             * @returns {promise}
-	             */
-	            nextPage: utils.requestPageFun('next'),
-
-	            /**
-	             * Get the previous page of folders
-	             *
-	             * @method
-	             * @memberof api.folders
-	             * @returns {promise}
-	             */
-	            previousPage: utils.requestPageFun('previous'),
-
-	            /**
-	             * Get the last page of folders
-	             *
-	             * @method
-	             * @memberof api.folders
-	             * @returns {promise}
-	             */
-	            lastPage: utils.requestPageFun('last'),
-
-	            /**
-	             * Get pagination links
-	             *
-	             * @method
-	             * @memberof api.folders
-	             * @returns {object}
-	             */
-	            paginationLinks: {
-	                last: false,
-	                next: false,
-	                previous: false
-	            },
-
-	            /**
-	             * Reset all pagination links
-	             *
-	             * @method
-	             * @memberof api.folders
-	             */
-	            resetPagination: utils.resetPaginationLinks
-
+	var utils = __webpack_require__(2);
+	/**
+	 * Folders API
+	 *
+	 * @namespace
+	 * @name api.folders
+	 */
+	module.exports = function folders() {
+	    var dataHeaders = {
+	            folder: { 'Content-Type': 'application/vnd.mendeley-folder.1+json' },
+	            'document': { 'Content-Type': 'application/vnd.mendeley-document.1+json' }
 	        };
-	    };
 
-	}.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
+	    return {
+
+	        /**
+	         * Create a new folder
+	         *
+	         * @method
+	         * @memberof api.folders
+	         * @param {object} data - The folder data
+	         * @returns {promise}
+	         */
+	        create: utils.requestWithDataFun('POST', '/folders', [], dataHeaders.folder, true),
+
+	        /**
+	         * Retrieve a folder
+	         *
+	         * @method
+	         * @memberof api.folders
+	         * @param {string} id - A folder UUID
+	         * @returns {promise}
+	         */
+	        retrieve: utils.requestFun('GET', '/folders/{id}', ['id']),
+
+	        /**
+	         * Update a folder
+	         *
+	         * @method
+	         * @memberof api.folders
+	         * @param {string} id - A folder UUID
+	         * @param {object} data - The folder data
+	         * @returns {promise}
+	         */
+	        update: utils.requestWithDataFun('PATCH', '/folders/{id}', ['id'], dataHeaders.folder, true),
+
+	        /**
+	         * Delete a folder
+	         *
+	         * @method
+	         * @memberof api.folders
+	         * @param {string} id - A folder UUID
+	         * @returns {promise}
+	         */
+	        delete: utils.requestFun('DELETE', '/folders/{id}', ['id']),
+
+	        /**
+	         * Remove a document from a folder
+	         *
+	         * @method
+	         * @memberof api.folders
+	         * @param {string} id - A folder UUID
+	         * @param {string} documentId - A document UUID
+	         * @returns {promise}
+	         */
+	        removeDocument: utils.requestFun('DELETE', '/folders/{id}/documents/{docId}', ['id', 'docId'], dataHeaders.folder),
+
+	        /**
+	         * Add a document to a folder
+	         *
+	         * @method
+	         * @memberof api.folders
+	         * @param {string} id - A folder UUID
+	         * @returns {promise}
+	         */
+	        addDocument: utils.requestWithDataFun('POST', '/folders/{id}/documents', ['id'], dataHeaders.document, false),
+
+	        /**
+	         * Get a list of folders
+	         *
+	         * @method
+	         * @memberof api.folders
+	         * @returns {promise}
+	         */
+	        list: utils.requestFun('GET', '/folders/'),
+
+	        /**
+	         * The total number of folders - set after the first call to folders.list()
+	         *
+	         * @var
+	         * @memberof api.folders
+	         * @type {integer}
+	         */
+	        count: 0,
+
+	        /**
+	         * Get the next page of folders
+	         *
+	         * @method
+	         * @memberof api.folders
+	         * @returns {promise}
+	         */
+	        nextPage: utils.requestPageFun('next'),
+
+	        /**
+	         * Get the previous page of folders
+	         *
+	         * @method
+	         * @memberof api.folders
+	         * @returns {promise}
+	         */
+	        previousPage: utils.requestPageFun('previous'),
+
+	        /**
+	         * Get the last page of folders
+	         *
+	         * @method
+	         * @memberof api.folders
+	         * @returns {promise}
+	         */
+	        lastPage: utils.requestPageFun('last'),
+
+	        /**
+	         * Get pagination links
+	         *
+	         * @method
+	         * @memberof api.folders
+	         * @returns {object}
+	         */
+	        paginationLinks: {
+	            last: false,
+	            next: false,
+	            previous: false
+	        },
+
+	        /**
+	         * Reset all pagination links
+	         *
+	         * @method
+	         * @memberof api.folders
+	         */
+	        resetPagination: utils.resetPaginationLinks
+
+	    };
+	};
 
 
 /***/ },
 /* 32 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__(2)], __WEBPACK_AMD_DEFINE_RESULT__ = function(utils) {
+	'use strict';
 
-	    'use strict';
+	var utils = __webpack_require__(2);
 
-	    /**
-	     * Followers API
-	     *
-	     * @namespace
-	     * @name api.followers
-	     */
-	    return function followers() {
-	        var dataHeaders = {
-	            create: {
-	                'Content-Type': 'application/vnd.mendeley-follow-request.1+json'
-	            },
-	            accept: {
-	                'Content-Type': 'application/vnd.mendeley-follow-acceptance.1+json'
-	            }
-	        };
-
-	        return {
-
-	            /**
-	             * Get a list of followers.
-	             *
-	             * @method
-	             * @memberof api.followers
-	             * @param {object} params - {
-	             *  follower: <profile_id>,
-	             *  followed: <profile_id>,
-	             *  status: <"following" or "pending">,
-	             *  limit: <int>
-	             * }
-	             * @returns {promise}
-	             */
-	            list: utils.requestFun('GET', '/followers'),
-
-	            /**
-	             * Create a follower relationship.
-	             *
-	             * The follower id is inferred from whoever is logged in. The response
-	             * is a relationship that includes the status which might be "following" or
-	             * "pending" depending on the privacy settings of the profile being
-	             * followed.
-	             *
-	             * @method
-	             * @memberof api.followers
-	             * @param {object} data - { followed: <profile id> }
-	             * @returns {promise}
-	             */
-	            create: utils.requestWithDataFun('POST', '/followers', false, dataHeaders.create, false),
-
-	            /**
-	             * Delete a follower relationship.
-	             *
-	             * This requires a relationship id which can be retrieved via the list() method.
-	             *
-	             * @param {string} id - The relationship id
-	             * @memberof api.followers
-	             * @returns {promise}
-	             */
-	            remove: utils.requestFun('DELETE', '/followers/{id}', ['id']),
-
-	            /**
-	             * Accept a follower request by updating the relationship.
-	             *
-	             * This requires a relationship id which can be retrieved via the list() method.
-	             *
-	             * @method
-	             * @memberof api.followers
-	             * @param {string} id - The relationship id
-	             * @param {object} data - { status: "following" } (note "following" is currently the only supported status)
-	             * @returns {promise}
-	             */
-	            accept: utils.requestWithDataFun('PATCH', '/followers/{id}', ['id'], dataHeaders.accept, false)
-
-	        };
+	/**
+	 * Followers API
+	 *
+	 * @namespace
+	 * @name api.followers
+	 */
+	module.exports = function followers() {
+	    var dataHeaders = {
+	        create: {
+	            'Content-Type': 'application/vnd.mendeley-follow-request.1+json'
+	        },
+	        accept: {
+	            'Content-Type': 'application/vnd.mendeley-follow-acceptance.1+json'
+	        }
 	    };
 
-	}.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
+	    return {
+
+	        /**
+	         * Get a list of followers.
+	         *
+	         * @method
+	         * @memberof api.followers
+	         * @param {object} params - {
+	         *  follower: <profile_id>,
+	         *  followed: <profile_id>,
+	         *  status: <"following" or "pending">,
+	         *  limit: <int>
+	         * }
+	         * @returns {promise}
+	         */
+	        list: utils.requestFun('GET', '/followers'),
+
+	        /**
+	         * Create a follower relationship.
+	         *
+	         * The follower id is inferred from whoever is logged in. The response
+	         * is a relationship that includes the status which might be "following" or
+	         * "pending" depending on the privacy settings of the profile being
+	         * followed.
+	         *
+	         * @method
+	         * @memberof api.followers
+	         * @param {object} data - { followed: <profile id> }
+	         * @returns {promise}
+	         */
+	        create: utils.requestWithDataFun('POST', '/followers', false, dataHeaders.create, false),
+
+	        /**
+	         * Delete a follower relationship.
+	         *
+	         * This requires a relationship id which can be retrieved via the list() method.
+	         *
+	         * @param {string} id - The relationship id
+	         * @memberof api.followers
+	         * @returns {promise}
+	         */
+	        remove: utils.requestFun('DELETE', '/followers/{id}', ['id']),
+
+	        /**
+	         * Accept a follower request by updating the relationship.
+	         *
+	         * This requires a relationship id which can be retrieved via the list() method.
+	         *
+	         * @method
+	         * @memberof api.followers
+	         * @param {string} id - The relationship id
+	         * @param {object} data - { status: "following" } (note "following" is currently the only supported status)
+	         * @returns {promise}
+	         */
+	        accept: utils.requestWithDataFun('PATCH', '/followers/{id}', ['id'], dataHeaders.accept, false)
+
+	    };
+	};
 
 
 /***/ },
 /* 33 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__(2)], __WEBPACK_AMD_DEFINE_RESULT__ = function(utils) {
+	'use strict';
 
-	    'use strict';
+	var utils = __webpack_require__(2);
 
-	    /**
-	     * Groups API
-	     *
-	     * @namespace
-	     * @name api.groups
-	     */
-	    return function groups() {
-	        return {
+	/**
+	 * Groups API
+	 *
+	 * @namespace
+	 * @name api.groups
+	 */
+	module.exports = function groups() {
+	    return {
 
-	            /**
-	             * Retrieve a group
-	             *
-	             * @method
-	             * @memberof api.groups
-	             * @param {string} id - A group UUID
-	             * @returns {promise}
-	             */
-	            retrieve: utils.requestFun('GET', '/groups/{id}', ['id']),
+	        /**
+	         * Retrieve a group
+	         *
+	         * @method
+	         * @memberof api.groups
+	         * @param {string} id - A group UUID
+	         * @returns {promise}
+	         */
+	        retrieve: utils.requestFun('GET', '/groups/{id}', ['id']),
 
-	            /**
-	             * Get a list of groups
-	             *
-	             * @method
-	             * @memberof api.groups
-	             * @returns {promise}
-	             */
-	            list: utils.requestFun('GET', '/groups/'),
+	        /**
+	         * Get a list of groups
+	         *
+	         * @method
+	         * @memberof api.groups
+	         * @returns {promise}
+	         */
+	        list: utils.requestFun('GET', '/groups/'),
 
-	            /**
-	             * The total number of groups - set after the first call to groups.list()
-	             *
-	             * @var
-	             * @memberof api.groups
-	             * @type {integer}
-	             */
-	            count: 0,
+	        /**
+	         * The total number of groups - set after the first call to groups.list()
+	         *
+	         * @var
+	         * @memberof api.groups
+	         * @type {integer}
+	         */
+	        count: 0,
 
-	            /**
-	             * Get the next page of groups
-	             *
-	             * @method
-	             * @memberof api.groups
-	             * @returns {promise}
-	             */
-	            nextPage: utils.requestPageFun('next'),
+	        /**
+	         * Get the next page of groups
+	         *
+	         * @method
+	         * @memberof api.groups
+	         * @returns {promise}
+	         */
+	        nextPage: utils.requestPageFun('next'),
 
-	            /**
-	             * Get the previous page of groups
-	             *
-	             * @method
-	             * @memberof api.groups
-	             * @returns {promise}
-	             */
-	            previousPage: utils.requestPageFun('previous'),
+	        /**
+	         * Get the previous page of groups
+	         *
+	         * @method
+	         * @memberof api.groups
+	         * @returns {promise}
+	         */
+	        previousPage: utils.requestPageFun('previous'),
 
-	            /**
-	             * Get the last page of groups
-	             *
-	             * @method
-	             * @memberof api.groups
-	             * @returns {promise}
-	             */
-	            lastPage: utils.requestPageFun('last'),
+	        /**
+	         * Get the last page of groups
+	         *
+	         * @method
+	         * @memberof api.groups
+	         * @returns {promise}
+	         */
+	        lastPage: utils.requestPageFun('last'),
 
-	            /**
-	             * Get pagination links
-	             *
-	             * @method
-	             * @memberof api.groups
-	             * @returns {object}
-	             */
-	            paginationLinks: {
-	                last: false,
-	                next: false,
-	                previous: false
-	            },
+	        /**
+	         * Get pagination links
+	         *
+	         * @method
+	         * @memberof api.groups
+	         * @returns {object}
+	         */
+	        paginationLinks: {
+	            last: false,
+	            next: false,
+	            previous: false
+	        },
 
-	            /**
-	             * Reset all pagination links
-	             *
-	             * @method
-	             * @memberof api.groups
-	             */
-	            resetPagination: utils.resetPaginationLinks
+	        /**
+	         * Reset all pagination links
+	         *
+	         * @method
+	         * @memberof api.groups
+	         */
+	        resetPagination: utils.resetPaginationLinks
 
-	        };
 	    };
-
-	}.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
+	};
 
 
 /***/ },
 /* 34 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__(2)], __WEBPACK_AMD_DEFINE_RESULT__ = function(utils) {
+	'use strict';
 
-	    'use strict';
+	var utils = __webpack_require__(2);
 
-	    /**
-	     * Institutions API
-	     *
-	     * @namespace
-	     * @name api.institutions
-	     */
-	    return function institutions() {
-	        return {
+	/**
+	 * Institutions API
+	 *
+	 * @namespace
+	 * @name api.institutions
+	 */
+	module.exports = function institutions() {
+	    return {
 
-	            /**
-	             * Search for the institutions
-	             *
-	             * @method
-	             * @memberof api.institutions
-	             * @param {object} params - An institutions search filter
-	             * @returns {promise}
-	             */
-	            search: utils.requestFun('GET', '/institutions'),
+	        /**
+	         * Search for the institutions
+	         *
+	         * @method
+	         * @memberof api.institutions
+	         * @param {object} params - An institutions search filter
+	         * @returns {promise}
+	         */
+	        search: utils.requestFun('GET', '/institutions'),
 
-	            /**
-	             * Retrieve an institution object
-	             *
-	             * @method
-	             * @memberof api.institutions
-	             * @param {string} id - An institution ID
-	             * @returns {promise}
-	             */
-	            retrieve: utils.requestFun('GET', '/institutions/{id}', ['id'])
+	        /**
+	         * Retrieve an institution object
+	         *
+	         * @method
+	         * @memberof api.institutions
+	         * @param {string} id - An institution ID
+	         * @returns {promise}
+	         */
+	        retrieve: utils.requestFun('GET', '/institutions/{id}', ['id'])
 
-	        };
 	    };
-
-	}.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
+	};
 
 
 /***/ },
 /* 35 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__(2)], __WEBPACK_AMD_DEFINE_RESULT__ = function(utils) {
+	'use strict';
 
-	    'use strict';
+	var utils = __webpack_require__(2);
 
-	    /**
-	     * Institution trees API
-	     *
-	     * @namespace
-	     * @name api.institutionTrees
-	     */
-	    return function institutionTrees() {
-	        return {
+	/**
+	 * Institution trees API
+	 *
+	 * @namespace
+	 * @name api.institutionTrees
+	 */
+	module.exports = function institutionTrees() {
+	    return {
 
-	            /**
-	             * Return all institution trees that the given institution is a member of
-	             *
-	             * @method
-	             * @memberof api.institution_trees
-	             * @param {object} params - An institution ID
-	             * @returns {promise}
-	             */
-	            list: utils.requestFun('GET', '/institution_trees'),
+	        /**
+	         * Return all institution trees that the given institution is a member of
+	         *
+	         * @method
+	         * @memberof api.institution_trees
+	         * @param {object} params - An institution ID
+	         * @returns {promise}
+	         */
+	        list: utils.requestFun('GET', '/institution_trees'),
 
-	            /**
-	             * Return only the child nodes of a given institution
-	             *
-	             * @method
-	             * @memberof api.institution_trees
-	             * @param {string} id - An institution ID
-	             * @returns {promise}
-	             */
-	            retrieve: utils.requestFun('GET', '/institution_trees/{id}', ['id'])
+	        /**
+	         * Return only the child nodes of a given institution
+	         *
+	         * @method
+	         * @memberof api.institution_trees
+	         * @param {string} id - An institution ID
+	         * @returns {promise}
+	         */
+	        retrieve: utils.requestFun('GET', '/institution_trees/{id}', ['id'])
 
-	        };
 	    };
-
-	}.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
+	};
 
 
 /***/ },
 /* 36 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__(2)], __WEBPACK_AMD_DEFINE_RESULT__ = function(utils) {
+	'use strict';
 
-	    'use strict';
+	var utils = __webpack_require__(2);
 
-	    /**
-	     * Locations API
-	     *
-	     * @namespace
-	     * @name api.locations
-	     */
-	    return function locations() {
-	        return {
+	/**
+	 * Locations API
+	 *
+	 * @namespace
+	 * @name api.locations
+	 */
+	module.exports = function locations() {
+	    return {
 
-	            /**
-	             * Search for the locations
-	             *
-	             * @method
-	             * @memberof api.locations
-	             * @param {object} params - A locations search filter
-	             * @returns {promise}
-	             */
-	            search: utils.requestFun('GET', '/locations'),
+	        /**
+	         * Search for the locations
+	         *
+	         * @method
+	         * @memberof api.locations
+	         * @param {object} params - A locations search filter
+	         * @returns {promise}
+	         */
+	        search: utils.requestFun('GET', '/locations'),
 
-	            /**
-	             * Retrieve a location object
-	             *
-	             * @method
-	             * @memberof api.locations
-	             * @param {string} id - A location ID
-	             * @returns {promise}
-	             */
-	            retrieve: utils.requestFun('GET', '/locations/{id}', ['id'])
+	        /**
+	         * Retrieve a location object
+	         *
+	         * @method
+	         * @memberof api.locations
+	         * @param {string} id - A location ID
+	         * @returns {promise}
+	         */
+	        retrieve: utils.requestFun('GET', '/locations/{id}', ['id'])
 
-	        };
 	    };
-
-	}.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
+	};
 
 
 /***/ },
 /* 37 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__(2)], __WEBPACK_AMD_DEFINE_RESULT__ = function(utils) {
+	'use strict';
 
-	    'use strict';
+	var utils = __webpack_require__(2);
 
-	    /**
-	     * Metadata API
-	     *
-	     * @namespace
-	     * @name api.metadata
-	     */
-	    return function metadata() {
-	        var dataHeaders = {
-	                'Accept': 'application/vnd.mendeley-document-lookup.1+json'
-	            };
-
-	        return {
-
-	            /**
-	             * Retrieve a document metadata
-	             *
-	             * @method
-	             * @memberof api.metadata
-	             * @param {object} params - A metadata search filter
-	             * @returns {promise}
-	             */
-	            retrieve: utils.requestFun('GET', '/metadata', false, dataHeaders, false)
-
+	/**
+	 * Metadata API
+	 *
+	 * @namespace
+	 * @name api.metadata
+	 */
+	module.exports = function metadata() {
+	    var dataHeaders = {
+	            'Accept': 'application/vnd.mendeley-document-lookup.1+json'
 	        };
-	    };
 
-	}.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
+	    return {
+
+	        /**
+	         * Retrieve a document metadata
+	         *
+	         * @method
+	         * @memberof api.metadata
+	         * @param {object} params - A metadata search filter
+	         * @returns {promise}
+	         */
+	        retrieve: utils.requestFun('GET', '/metadata', false, dataHeaders, false)
+
+	    };
+	};
 
 
 /***/ },
 /* 38 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__(2)], __WEBPACK_AMD_DEFINE_RESULT__ = function(utils) {
+	'use strict';
 
-	    'use strict';
+	var utils = __webpack_require__(2);
 
-	    /**
-	     * Profiles API
-	     *
-	     * @namespace
-	     * @name api.profiles
-	     */
-	    return function profiles() {
-	        var dataHeaders = {
-	            'Content-Type': 'application/vnd.mendeley-profile-amendment.1+json'
-	        };
-
-	        return {
-
-	            /**
-	             * Retrieve the profile of the currently logged user
-	             *
-	             * @method
-	             * @memberof api.profiles
-	             * @returns {promise}
-	             */
-	            me: utils.requestFun('GET', '/profiles/me'),
-
-	            /**
-	             * Retrieve a profile by id
-	             *
-	             * @method
-	             * @memberof api.profiles
-	             * @param {string} id - User id
-	             * @returns {promise}
-	             */
-	            retrieve: utils.requestFun('GET', '/profiles/{id}', ['id']),
-
-	            /**
-	             * Update profiles
-	             *
-	             * @method
-	             * @memberof api.profiles
-	             * @param {object} data - The new profiles data
-	             * @returns {promise}
-	             */
-	            update: utils.requestWithDataFun('PATCH', '/profiles/me', [], dataHeaders, true),
-	            
-	            /**
-	             * Retrieve a profile by email address
-	             *
-	             * @method
-	             * @memberof api.profiles
-	             * @param {string} email - Email address
-	             * @returns {promise}
-	             */
-	             retrieveByEmail: utils.requestFun('GET', '/profiles?email={email}', ['email'])
-
-	        };
+	/**
+	 * Profiles API
+	 *
+	 * @namespace
+	 * @name api.profiles
+	 */
+	module.exports = function profiles() {
+	    var dataHeaders = {
+	        'Content-Type': 'application/vnd.mendeley-profile-amendment.1+json'
 	    };
 
-	}.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
+	    return {
+
+	        /**
+	         * Retrieve the profile of the currently logged user
+	         *
+	         * @method
+	         * @memberof api.profiles
+	         * @returns {promise}
+	         */
+	        me: utils.requestFun('GET', '/profiles/me'),
+
+	        /**
+	         * Retrieve a profile by id
+	         *
+	         * @method
+	         * @memberof api.profiles
+	         * @param {string} id - User id
+	         * @returns {promise}
+	         */
+	        retrieve: utils.requestFun('GET', '/profiles/{id}', ['id']),
+
+	        /**
+	         * Update profiles
+	         *
+	         * @method
+	         * @memberof api.profiles
+	         * @param {object} data - The new profiles data
+	         * @returns {promise}
+	         */
+	        update: utils.requestWithDataFun('PATCH', '/profiles/me', [], dataHeaders, true),
+	        
+	        /**
+	         * Retrieve a profile by email address
+	         *
+	         * @method
+	         * @memberof api.profiles
+	         * @param {string} email - Email address
+	         * @returns {promise}
+	         */
+	         retrieveByEmail: utils.requestFun('GET', '/profiles?email={email}', ['email'])
+
+	    };
+	};
 
 
 /***/ },
 /* 39 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__(2)], __WEBPACK_AMD_DEFINE_RESULT__ = function(utils) {
+	'use strict';
 
-	    'use strict';
+	var utils = __webpack_require__(2);
 
-	    /**
-	     * Trash API
-	     *
-	     * @namespace
-	     * @name api.trash
-	     */
-	    return function trash() {
-	        return {
+	/**
+	 * Trash API
+	 *
+	 * @namespace
+	 * @name api.trash
+	 */
+	module.exports = function trash() {
+	    return {
 
-	            /**
-	             * Retrieve a document from the trash
-	             *
-	             * @method
-	             * @memberof api.trash
-	             * @param {string} id - A document UUID
-	             * @returns {promise}
-	             */
-	            retrieve: utils.requestFun('GET', '/trash/{id}', ['id']),
+	        /**
+	         * Retrieve a document from the trash
+	         *
+	         * @method
+	         * @memberof api.trash
+	         * @param {string} id - A document UUID
+	         * @returns {promise}
+	         */
+	        retrieve: utils.requestFun('GET', '/trash/{id}', ['id']),
 
-	            /**
-	             * List all documents in the trash
-	             *
-	             * @method
-	             * @memberof api.trash
-	             * @returns {promise}
-	             */
-	            list: utils.requestFun('GET', '/trash/'),
+	        /**
+	         * List all documents in the trash
+	         *
+	         * @method
+	         * @memberof api.trash
+	         * @returns {promise}
+	         */
+	        list: utils.requestFun('GET', '/trash/'),
 
-	            /**
-	             * Restore a trashed document
-	             *
-	             * @method
-	             * @memberof api.trash
-	             * @param {string} id - A document UUID
-	             * @returns {promise}
-	             */
-	            restore: utils.requestFun('POST', '/trash/{id}/restore', ['id']),
+	        /**
+	         * Restore a trashed document
+	         *
+	         * @method
+	         * @memberof api.trash
+	         * @param {string} id - A document UUID
+	         * @returns {promise}
+	         */
+	        restore: utils.requestFun('POST', '/trash/{id}/restore', ['id']),
 
-	            /**
-	             * Permanently delete a trashed document
-	             *
-	             * @method
-	             * @memberof api.trash
-	             * @param {string} id - A document UUID
-	             * @returns {promise}
-	             */
-	            destroy: utils.requestFun('DELETE', '/trash/{id}', ['id']),
+	        /**
+	         * Permanently delete a trashed document
+	         *
+	         * @method
+	         * @memberof api.trash
+	         * @param {string} id - A document UUID
+	         * @returns {promise}
+	         */
+	        destroy: utils.requestFun('DELETE', '/trash/{id}', ['id']),
 
-	            /**
-	             * The total number of trashed documents - set after the first call to trash.list()
-	             *
-	             * @var
-	             * @memberof api.trash
-	             * @type {integer}
-	             */
-	            count: 0,
+	        /**
+	         * The total number of trashed documents - set after the first call to trash.list()
+	         *
+	         * @var
+	         * @memberof api.trash
+	         * @type {integer}
+	         */
+	        count: 0,
 
-	            /**
-	             * Get the next page of trash
-	             *
-	             * @method
-	             * @memberof api.trash
-	             * @returns {promise}
-	             */
-	            nextPage: utils.requestPageFun('next'),
+	        /**
+	         * Get the next page of trash
+	         *
+	         * @method
+	         * @memberof api.trash
+	         * @returns {promise}
+	         */
+	        nextPage: utils.requestPageFun('next'),
 
-	            /**
-	             * Get the previous page of trash
-	             *
-	             * @method
-	             * @memberof api.trash
-	             * @returns {promise}
-	             */
-	            previousPage: utils.requestPageFun('previous'),
+	        /**
+	         * Get the previous page of trash
+	         *
+	         * @method
+	         * @memberof api.trash
+	         * @returns {promise}
+	         */
+	        previousPage: utils.requestPageFun('previous'),
 
-	            /**
-	             * Get the last page of trash
-	             *
-	             * @method
-	             * @memberof api.trash
-	             * @returns {promise}
-	             */
-	            lastPage: utils.requestPageFun('last'),
+	        /**
+	         * Get the last page of trash
+	         *
+	         * @method
+	         * @memberof api.trash
+	         * @returns {promise}
+	         */
+	        lastPage: utils.requestPageFun('last'),
 
 
-	            /**
-	             * Get pagination links
-	             *
-	             * @method
-	             * @memberof api.trash
-	             * @returns {object}
-	             */
-	            paginationLinks: {
-	                last: false,
-	                next: false,
-	                previous: false
-	            },
+	        /**
+	         * Get pagination links
+	         *
+	         * @method
+	         * @memberof api.trash
+	         * @returns {object}
+	         */
+	        paginationLinks: {
+	            last: false,
+	            next: false,
+	            previous: false
+	        },
 
-	            /**
-	             * Reset all pagination links
-	             *
-	             * @method
-	             * @memberof api.trash
-	             */
-	            resetPagination: utils.resetPaginationLinks
+	        /**
+	         * Reset all pagination links
+	         *
+	         * @method
+	         * @memberof api.trash
+	         */
+	        resetPagination: utils.resetPaginationLinks
 
-	        };
 	    };
-
-	}.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
+	};
 
 
 /***/ },
 /* 40 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__(26), __webpack_require__(7)], __WEBPACK_AMD_DEFINE_RESULT__ = function(assign, axios) {
+	'use strict';
 
-	    'use strict';
+	var assign = __webpack_require__(26);
+	var axios = __webpack_require__(7);
 
-	    var defaults = {
-	        win: window,
-	        authenticateOnStart: true,
-	        apiAuthenticateUrl: 'https://api.mendeley.com/oauth/authorize',
-	        accessTokenCookieName: 'accessToken',
-	        scope: 'all'
-	    };
+	var defaults = {
+	    win: window,
+	    authenticateOnStart: true,
+	    apiAuthenticateUrl: 'https://api.mendeley.com/oauth/authorize',
+	    accessTokenCookieName: 'accessToken',
+	    scope: 'all'
+	};
 
-	    var defaultsImplicitFlow = {
-	        clientId: false,
-	        redirectUrl: false
-	    };
+	var defaultsImplicitFlow = {
+	    clientId: false,
+	    redirectUrl: false
+	};
 
-	    var defaultsAuthCodeFlow = {
-	        apiAuthenticateUrl: '/login',
-	        refreshAccessTokenUrl: false
-	    };
+	var defaultsAuthCodeFlow = {
+	    apiAuthenticateUrl: '/login',
+	    refreshAccessTokenUrl: false
+	};
 
-	    var settings = {};
+	var settings = {};
+
+	module.exports = {
+	    implicitGrantFlow: implicitGrantFlow,
+	    authCodeFlow: authCodeFlow
+	};
+
+	function implicitGrantFlow(options) {
+
+	    settings = assign({}, defaults, defaultsImplicitFlow, options || {});
+
+	    if (!settings.clientId) {
+	        console.error('You must provide a clientId for implicit grant flow');
+	        return false;
+	    }
+
+	    // OAuth redirect url defaults to current url
+	    if (!settings.redirectUrl) {
+	        var loc = settings.win.location;
+	        settings.redirectUrl = loc.protocol + '//' + loc.host + loc.pathname;
+	    }
+
+	    settings.apiAuthenticateUrl = settings.apiAuthenticateUrl +
+	        '?client_id=' + settings.clientId +
+	        '&redirect_uri=' + settings.redirectUrl +
+	        '&scope=' + settings.scope +
+	        '&response_type=token';
+
+	    if (settings.authenticateOnStart && !getAccessTokenCookieOrUrl()) {
+	        authenticate();
+	    }
 
 	    return {
-	        implicitGrantFlow: implicitGrantFlow,
-	        authCodeFlow: authCodeFlow
+	        authenticate: authenticate,
+	        getToken: getAccessTokenCookieOrUrl,
+	        refreshToken: noop()
 	    };
+	}
 
-	    function implicitGrantFlow(options) {
+	function authCodeFlow(options) {
 
-	        settings = assign({}, defaults, defaultsImplicitFlow, options || {});
+	    settings = assign({}, defaults, defaultsAuthCodeFlow, options || {});
 
-	        if (!settings.clientId) {
-	            console.error('You must provide a clientId for implicit grant flow');
-	            return false;
-	        }
-
-	        // OAuth redirect url defaults to current url
-	        if (!settings.redirectUrl) {
-	            var loc = settings.win.location;
-	            settings.redirectUrl = loc.protocol + '//' + loc.host + loc.pathname;
-	        }
-
-	        settings.apiAuthenticateUrl = settings.apiAuthenticateUrl +
-	            '?client_id=' + settings.clientId +
-	            '&redirect_uri=' + settings.redirectUrl +
-	            '&scope=' + settings.scope +
-	            '&response_type=token';
-
-	        if (settings.authenticateOnStart && !getAccessTokenCookieOrUrl()) {
-	            authenticate();
-	        }
-
-	        return {
-	            authenticate: authenticate,
-	            getToken: getAccessTokenCookieOrUrl,
-	            refreshToken: noop()
-	        };
+	    if (!settings.apiAuthenticateUrl) {
+	        console.error('You must provide an apiAuthenticateUrl for auth code flow');
+	        return false;
 	    }
 
-	    function authCodeFlow(options) {
-
-	        settings = assign({}, defaults, defaultsAuthCodeFlow, options || {});
-
-	        if (!settings.apiAuthenticateUrl) {
-	            console.error('You must provide an apiAuthenticateUrl for auth code flow');
-	            return false;
-	        }
-
-	        if (settings.authenticateOnStart && !getAccessTokenCookie()) {
-	            authenticate();
-	        }
-
-	        return {
-	            authenticate: authenticate,
-	            getToken: getAccessTokenCookie,
-	            refreshToken: refreshAccessTokenCookie
-	        };
+	    if (settings.authenticateOnStart && !getAccessTokenCookie()) {
+	        authenticate();
 	    }
 
-	    function noop() {
-	        return function() { return false; };
+	    return {
+	        authenticate: authenticate,
+	        getToken: getAccessTokenCookie,
+	        refreshToken: refreshAccessTokenCookie
+	    };
+	}
+
+	function noop() {
+	    return function() { return false; };
+	}
+
+	function authenticate() {
+	    var url = typeof settings.apiAuthenticateUrl === 'function' ?
+	        settings.apiAuthenticateUrl() : settings.apiAuthenticateUrl;
+
+	    clearAccessTokenCookie();
+	    settings.win.location = url;
+	}
+
+	function getAccessTokenCookieOrUrl() {
+	    var location = settings.win.location,
+	        hash = location.hash ? location.hash.split('=')[1] : '',
+	        cookie = getAccessTokenCookie();
+
+	    if (hash && !cookie) {
+	        setAccessTokenCookie(hash);
+	        return hash;
 	    }
-
-	    function authenticate() {
-	        var url = typeof settings.apiAuthenticateUrl === 'function' ?
-	            settings.apiAuthenticateUrl() : settings.apiAuthenticateUrl;
-
-	        clearAccessTokenCookie();
-	        settings.win.location = url;
+	    if (!hash && cookie) {
+	        return cookie;
 	    }
-
-	    function getAccessTokenCookieOrUrl() {
-	        var location = settings.win.location,
-	            hash = location.hash ? location.hash.split('=')[1] : '',
-	            cookie = getAccessTokenCookie();
-
-	        if (hash && !cookie) {
+	    if (hash && cookie) {
+	        if (hash !== cookie) {
 	            setAccessTokenCookie(hash);
 	            return hash;
 	        }
-	        if (!hash && cookie) {
-	            return cookie;
-	        }
-	        if (hash && cookie) {
-	            if (hash !== cookie) {
-	                setAccessTokenCookie(hash);
-	                return hash;
-	            }
-	            return cookie;
-	        }
-
-	        return '';
+	        return cookie;
 	    }
 
-	    function getAccessTokenCookie() {
-	        var name = settings.accessTokenCookieName + '=',
-	            ca = settings.win.document.cookie.split(';');
+	    return '';
+	}
 
-	        for(var i = 0; i < ca.length; i++) {
-	            var c = ca[i];
+	function getAccessTokenCookie() {
+	    var name = settings.accessTokenCookieName + '=',
+	        ca = settings.win.document.cookie.split(';');
 
-	            while (c.charAt(0) === ' ') {
-	                c = c.substring(1);
-	            }
+	    for(var i = 0; i < ca.length; i++) {
+	        var c = ca[i];
 
-	            if (c.indexOf(name) !== -1) {
-	                return c.substring(name.length, c.length);
-	            }
+	        while (c.charAt(0) === ' ') {
+	            c = c.substring(1);
 	        }
 
-	        return '';
-	    }
-
-	    function setAccessTokenCookie(accessToken, expireHours) {
-	        var d = new Date();
-	        d.setTime(d.getTime() + ((expireHours || 1)*60*60*1000));
-	        var expires = 'expires=' + d.toUTCString();
-	        settings.win.document.cookie = settings.accessTokenCookieName + '=' + accessToken + '; ' + expires;
-	    }
-
-	    function clearAccessTokenCookie() {
-	        setAccessTokenCookie('', -1);
-	    }
-
-	    function refreshAccessTokenCookie() {
-	        if (settings.refreshAccessTokenUrl) {
-	            return axios.get(settings.refreshAccessTokenUrl);
+	        if (c.indexOf(name) !== -1) {
+	            return c.substring(name.length, c.length);
 	        }
-
-	        return false;
 	    }
-	}.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
 
+	    return '';
+	}
+
+	function setAccessTokenCookie(accessToken, expireHours) {
+	    var d = new Date();
+	    d.setTime(d.getTime() + ((expireHours || 1)*60*60*1000));
+	    var expires = 'expires=' + d.toUTCString();
+	    settings.win.document.cookie = settings.accessTokenCookieName + '=' + accessToken + '; ' + expires;
+	}
+
+	function clearAccessTokenCookie() {
+	    setAccessTokenCookie('', -1);
+	}
+
+	function refreshAccessTokenCookie() {
+	    if (settings.refreshAccessTokenUrl) {
+	        return axios.get(settings.refreshAccessTokenUrl);
+	    }
+
+	    return false;
+	}
 
 
 /***/ },
 /* 41 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__(26)], __WEBPACK_AMD_DEFINE_RESULT__ = function(assign) {
+	'use strict';
 
-	    'use strict';
-	    var levelClass = {
-	        debug: 0,
-	        info: 1000,
-	        warn: 2000,
-	        error: 3000
-	    };
-	    var notifications = {
-	        startInfo: {
-	            code: 1001,
-	            level: 'info',
-	            message: 'Request Start : $0 $1'
-	        },
-	        redirectInfo: {
-	            code: 1002,
-	            level: 'info',
-	            message: 'Redirection followed'
-	        },
-	        successInfo: {
-	            code: 1003,
-	            level: 'info',
-	            message: 'Request Success'
-	        },
-	        uploadSuccessInfo: {
-	            code: 1005,
-	            level: 'info',
-	            message: 'Upload Success'
-	        },
+	var assign = __webpack_require__(26);
 
-	        commWarning: {
-	            code: 2001,
-	            level: 'warn',
-	            message: 'Communication error (status code $0). Retrying ($1/$2).'
-	        },
-	        authWarning: {
-	            code: 2002,
-	            level: 'warn',
-	            message: 'Authentication error (status code $0). Refreshing access token ($1/$2).'
-	        },
+	var levelClass = {
+	    debug: 0,
+	    info: 1000,
+	    warn: 2000,
+	    error: 3000
+	};
+	var notifications = {
+	    startInfo: {
+	        code: 1001,
+	        level: 'info',
+	        message: 'Request Start : $0 $1'
+	    },
+	    redirectInfo: {
+	        code: 1002,
+	        level: 'info',
+	        message: 'Redirection followed'
+	    },
+	    successInfo: {
+	        code: 1003,
+	        level: 'info',
+	        message: 'Request Success'
+	    },
+	    uploadSuccessInfo: {
+	        code: 1005,
+	        level: 'info',
+	        message: 'Upload Success'
+	    },
 
-	        reqError: {
-	            code: 3001,
-	            level: 'error',
-	            message: 'Request error (status code $0).'
-	        },
-	        commError: {
-	            code: 3002,
-	            level: 'error',
-	            message: 'Communication error (status code $0).  Maximun number of retries reached ($1).'
-	        },
-	        authError: {
-	            code: 3003,
-	            level: 'error',
-	            message: 'Authentication error (status code $0).  Maximun number of retries reached ($1).'
-	        },
-	        refreshNotConfigured: {
-	            code: 3004,
-	            level: 'error',
-	            message: 'Refresh token error. Refresh flow not configured.'
-	        },
-	        refreshError: {
-	            code: 3005,
-	            level: 'error',
-	            message: 'Refresh token error. Request failed (status code $0).'
-	        },
-	        tokenError: {
-	            code: 3006,
-	            level: 'error',
-	            message: 'Missing access token.'
-	        },
-	        parseError: {
-	            code: 3007,
-	            level: 'error',
-	            message: 'JSON Parsing error.'
-	        },
-	        uploadError: {
-	            code: 3008,
-	            level: 'error',
-	            message: 'Upload $0 ($1 %)'
-	        }
-	    };
+	    commWarning: {
+	        code: 2001,
+	        level: 'warn',
+	        message: 'Communication error (status code $0). Retrying ($1/$2).'
+	    },
+	    authWarning: {
+	        code: 2002,
+	        level: 'warn',
+	        message: 'Authentication error (status code $0). Refreshing access token ($1/$2).'
+	    },
 
-	    function createMessage(notificationId, notificationData, request, response) {
-	        var notification = assign({}, notifications[notificationId] || {});
-
-	        if (notificationData) {
-	            notification.message =  notification.message.replace(/\$(\d+)/g, function(m, key) {
-	                return '' + (notificationData[+key] !== undefined ? notificationData[+key] : '');
-	            });
-	        }
-	        if (request) {
-	            notification.request = request;
-	        }
-	        if (response) {
-	            notification.response = response;
-	        }
-	        return notification;
+	    reqError: {
+	        code: 3001,
+	        level: 'error',
+	        message: 'Request error (status code $0).'
+	    },
+	    commError: {
+	        code: 3002,
+	        level: 'error',
+	        message: 'Communication error (status code $0).  Maximun number of retries reached ($1).'
+	    },
+	    authError: {
+	        code: 3003,
+	        level: 'error',
+	        message: 'Authentication error (status code $0).  Maximun number of retries reached ($1).'
+	    },
+	    refreshNotConfigured: {
+	        code: 3004,
+	        level: 'error',
+	        message: 'Refresh token error. Refresh flow not configured.'
+	    },
+	    refreshError: {
+	        code: 3005,
+	        level: 'error',
+	        message: 'Refresh token error. Request failed (status code $0).'
+	    },
+	    tokenError: {
+	        code: 3006,
+	        level: 'error',
+	        message: 'Missing access token.'
+	    },
+	    parseError: {
+	        code: 3007,
+	        level: 'error',
+	        message: 'JSON Parsing error.'
+	    },
+	    uploadError: {
+	        code: 3008,
+	        level: 'error',
+	        message: 'Upload $0 ($1 %)'
 	    }
+	};
 
-	    function createNotifier(logger, minLogLevel) {
-	        if (!logger || typeof logger !== 'function') {
-	            return false;
-	        }
-	        var minCode = levelClass[minLogLevel] || 0;
+	function createMessage(notificationId, notificationData, request, response) {
+	    var notification = assign({}, notifications[notificationId] || {});
 
-	        return {
-	            notify: function notify(notificationId, notificationData, request, response) {
-	                var notification = createMessage(notificationId, notificationData, request, response);
-	                if(notification.code > minCode) {
-	                    logger(notification);
-	                }
-
-	            }
-	        };
+	    if (notificationData) {
+	        notification.message =  notification.message.replace(/\$(\d+)/g, function(m, key) {
+	            return '' + (notificationData[+key] !== undefined ? notificationData[+key] : '');
+	        });
 	    }
+	    if (request) {
+	        notification.request = request;
+	    }
+	    if (response) {
+	        notification.response = response;
+	    }
+	    return notification;
+	}
+
+	function createNotifier(logger, minLogLevel) {
+	    if (!logger || typeof logger !== 'function') {
+	        return false;
+	    }
+	    var minCode = levelClass[minLogLevel] || 0;
 
 	    return {
-	        createNotifier: createNotifier
+	        notify: function notify(notificationId, notificationData, request, response) {
+	            var notification = createMessage(notificationId, notificationData, request, response);
+	            if(notification.code > minCode) {
+	                logger(notification);
+	            }
+
+	        }
 	    };
-	}.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
+	}
+
+	module.exports = {
+	    createNotifier: createNotifier
+	};
 
 
 /***/ }
