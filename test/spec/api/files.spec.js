@@ -32,16 +32,15 @@ define(function(require) {
             var ajaxSpy;
             var ajaxRequest;
             var ajaxResponse = function() {
-                var dfd = Promise;
                 var fileResource = {
                     url: 'http://mendeley.cdn.com/123'
                 };
-                dfd.resolve(fileResource, 1, {
+                return Promise.resolve({
+                    data: fileResource,
                     status: 201,
-                    getResponseHeader: function () { return null; }
+                    headers: {}
                 });
 
-                return dfd.promise();
             };
             var file = getBlob('hello', 'text/plain');
             file.name = '中文file name(1).pdf';
@@ -56,7 +55,7 @@ define(function(require) {
             });
 
             it('should use POST', function() {
-                expect(ajaxRequest.type).toBe('POST');
+                expect(ajaxRequest.method).toBe('post');
             });
 
             it('should use endpoint /files', function() {
@@ -115,7 +114,7 @@ define(function(require) {
             });
 
             it('should use GET', function() {
-                expect(ajaxRequest.type).toBe('GET');
+                expect(ajaxRequest.method).toBe('get');
             });
 
             it('should use endpoint /files?document_id=someId', function() {
@@ -155,7 +154,7 @@ define(function(require) {
             });
 
             it('should use DELETE', function() {
-                expect(ajaxRequest.type).toBe('DELETE');
+                expect(ajaxRequest.method).toBe('delete');
             });
 
             it('should use endpoint /files/fileId', function() {

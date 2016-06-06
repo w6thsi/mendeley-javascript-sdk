@@ -32,7 +32,7 @@ define(function(require) {
             });
 
             it('should use GET', function() {
-                expect(ajaxRequest.type).toBe('GET');
+                expect(ajaxRequest.method).toBe('get');
             });
 
             it('should use endpoint /institutions', function() {
@@ -49,7 +49,7 @@ define(function(require) {
             });
 
             it('should allow paramaters', function() {
-                expect(ajaxRequest.data).toEqual(params);
+                expect(ajaxRequest.params).toEqual(params);
             });
 
         });
@@ -67,7 +67,7 @@ define(function(require) {
             });
 
             it('should use GET', function() {
-                expect(ajaxRequest.type).toBe('GET');
+                expect(ajaxRequest.method).toBe('get');
             });
 
             it('should use endpoint /institutions/some-id', function() {

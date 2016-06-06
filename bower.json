@@ -15,9 +15,6 @@
     "api",
     "sdk"
   ],
-  "dependencies": {
-    "jquery": "~1.11.0"
-  },
   "license": "Apache-2.0",
   "homepage": "http://dev.mendeley.com",
   "ignore": [
