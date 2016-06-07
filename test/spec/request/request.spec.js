@@ -1,7 +1,7 @@
 'use strict';
 
 var axios = require('axios');
-require('es5-shim');
+var Bluebird = require('bluebird');
 
 // Get a function to return promises in order
 function getMockPromises() {
@@ -14,8 +14,8 @@ function getMockPromises() {
 
 describe('request', function() {
 
-    var request = require('request');
-    var mockAuth = require('mocks/auth');
+    var request = require('../../../lib/request');
+    var mockAuth = require('../../mocks/auth');
 
     it('should have a request type property', function() {
         var myRequest = request.create({ method: 'get' }, { authFlow: mockAuth.mockImplicitGrantFlow() });
@@ -32,7 +32,7 @@ describe('request', function() {
         it('should add optional accessToken to the Authorization header', function(done) {
             var myRequest = request.create({ method: 'get' }, { authFlow: mockAuth.mockImplicitGrantFlow() });
             var fun = getMockPromises(
-                Promise.resolve({ status: 200, headers: {} })
+                Bluebird.resolve({ status: 200, headers: {} })
             );
             spyOn(axios, 'request').and.callFake(fun);
 
@@ -49,8 +49,8 @@ describe('request', function() {
             var mockAuthInterface = mockAuth.mockAuthCodeFlow();
             var myRequest = request.create({ method: 'get' }, { authFlow: mockAuthInterface });
             var fun = getMockPromises(
-                Promise.reject(mockAuth.unauthorisedError), // Auth failure
-                Promise.resolve({ status: 200, headers: {} }) // Original request success
+                Bluebird.reject(mockAuth.unauthorisedError), // Auth failure
+                Bluebird.resolve({ status: 200, headers: {} }) // Original request success
             );
             var ajaxSpy = spyOn(axios, 'request').and.callFake(fun);
             var authRefreshSpy = spyOn(mockAuthInterface, 'refreshToken').and.callThrough();
@@ -67,11 +67,11 @@ describe('request', function() {
             var mockAuthInterface = mockAuth.mockAuthCodeFlow();
             var myRequest = request.create({ method: 'get' }, { authFlow: mockAuthInterface });
             var fun = getMockPromises(
-                Promise.reject(mockAuth.unauthorisedError), // Auth failure
-                Promise.resolve({ status: 200, headers: {} }) // Original request success
+                Bluebird.reject(mockAuth.unauthorisedError), // Auth failure
+                Bluebird.resolve({ status: 200, headers: {} }) // Original request success
             );
             var ajaxSpy = spyOn(axios, 'request').and.callFake(fun);
-            var authRefreshSpy = spyOn(mockAuthInterface, 'refreshToken').and.returnValue(Promise.reject({ status: 500 }));
+            var authRefreshSpy = spyOn(mockAuthInterface, 'refreshToken').and.returnValue(Bluebird.reject({ status: 500 }));
             var authAuthenticateSpy = spyOn(mockAuthInterface, 'authenticate').and.callThrough();
 
             myRequest.send().catch(function() {
@@ -87,8 +87,8 @@ describe('request', function() {
             var mockAuthInterface = mockAuth.mockAuthCodeFlow();
             var myRequest = request.create({ method: 'get' }, { maxAuthRetries: 2, authFlow: mockAuthInterface }, {notify: mockNotifier});
 
-            var ajaxSpy = spyOn(axios, 'request').and.returnValue(Promise.reject(mockAuth.unauthorisedError));
-            var authRefreshSpy = spyOn(mockAuthInterface, 'refreshToken').and.returnValue(Promise.reject({ status: 500 }));
+            var ajaxSpy = spyOn(axios, 'request').and.returnValue(Bluebird.reject(mockAuth.unauthorisedError));
+            var authRefreshSpy = spyOn(mockAuthInterface, 'refreshToken').and.returnValue(Bluebird.reject({ status: 500 }));
 
             myRequest.send().catch(function() {
                 expect(ajaxSpy.calls.count()).toEqual(1);
@@ -107,7 +107,7 @@ describe('request', function() {
             var mockAuthInterface = mockAuth.mockAuthCodeFlow();
             var myRequest = request.create({ method: 'get' }, { maxAuthRetries: 2, authFlow: mockAuthInterface }, {notify: mockNotifier});
 
-            var ajaxSpy = spyOn(axios, 'request').and.returnValue(Promise.reject(mockAuth.unauthorisedError));
+            var ajaxSpy = spyOn(axios, 'request').and.returnValue(Bluebird.reject(mockAuth.unauthorisedError));
             var authRefreshSpy = spyOn(mockAuthInterface, 'refreshToken').and.returnValue(false);
 
             myRequest.send().catch(function() {
@@ -127,7 +127,7 @@ describe('request', function() {
             var mockAuthInterface = mockAuth.mockAuthCodeFlow();
             var myRequest = request.create({ method: 'get' }, { maxAuthRetries: 2, authFlow: mockAuthInterface });
 
-            var ajaxSpy = spyOn(axios, 'request').and.returnValue(Promise.reject(mockAuth.unauthorisedError));
+            var ajaxSpy = spyOn(axios, 'request').and.returnValue(Bluebird.reject(mockAuth.unauthorisedError));
             var authRefreshSpy = spyOn(mockAuthInterface, 'refreshToken').and.callThrough();
             var authAuthenticateSpy = spyOn(mockAuthInterface, 'authenticate').and.callThrough();
 
@@ -143,7 +143,7 @@ describe('request', function() {
             var mockAuthInterface = mockAuth.mockAuthCodeFlow();
             var myRequest = request.create({ method: 'get' }, { maxAuthRetries: 2, authFlow: mockAuthInterface }, {notify: mockNotifier});
 
-            var ajaxSpy = spyOn(axios, 'request').and.returnValue(Promise.reject(mockAuth.unauthorisedError));
+            var ajaxSpy = spyOn(axios, 'request').and.returnValue(Bluebird.reject(mockAuth.unauthorisedError));
             var authRefreshSpy = spyOn(mockAuthInterface, 'refreshToken').and.callThrough();
             var authAuthenticateSpy = spyOn(mockAuthInterface, 'authenticate').and.callThrough();
 
@@ -168,8 +168,8 @@ describe('request', function() {
         it('should NOT retry by default', function(done) {
             var myRequest = request.create({ method: 'get' }, { authFlow: mockAuth.mockImplicitGrantFlow() });
             var fun = getMockPromises(
-                Promise.reject(mockAuth.unauthorisedError),
-                Promise.resolve({ status: 200, headers: {} })
+                Bluebird.reject(mockAuth.unauthorisedError),
+                Bluebird.resolve({ status: 200, headers: {} })
             );
             var ajaxSpy = spyOn(axios, 'request').and.callFake(fun);
 
@@ -182,8 +182,8 @@ describe('request', function() {
         it('should allow setting maximum number of retries', function(done) {
             var myRequest = request.create({ method: 'get' }, { maxRetries: 1, authFlow: mockAuth.mockImplicitGrantFlow() });
             var fun = getMockPromises(
-                Promise.reject(mockAuth.timeoutError),
-                Promise.resolve({ status: 200, headers: {} })
+                Bluebird.reject(mockAuth.timeoutError),
+                Bluebird.resolve({ status: 200, headers: {} })
             );
             var ajaxSpy = spyOn(axios, 'request').and.callFake(fun);
 
@@ -196,9 +196,9 @@ describe('request', function() {
         it('should NOT do more than maxRetries', function(done) {
             var myRequest = request.create({ method: 'get' }, { maxRetries: 1, authFlow: mockAuth.mockImplicitGrantFlow() });
             var fun = getMockPromises(
-                Promise.reject(mockAuth.timeoutError),
-                Promise.reject(mockAuth.timeoutError),
-                Promise.resolve({ status: 200, headers: {} })
+                Bluebird.reject(mockAuth.timeoutError),
+                Bluebird.reject(mockAuth.timeoutError),
+                Bluebird.resolve({ status: 200, headers: {} })
             );
             var ajaxSpy = spyOn(axios, 'request').and.callFake(fun);
 
@@ -210,16 +210,16 @@ describe('request', function() {
         it('should correctly resolve the original deferred', function(done) {
             var myRequest = request.create({ method: 'get' }, { maxRetries: 10, authFlow: mockAuth.mockImplicitGrantFlow() });
             var fun = getMockPromises(
-                Promise.reject(mockAuth.timeoutError),
-                Promise.reject(mockAuth.timeoutError),
-                Promise.reject(mockAuth.timeoutError),
-                Promise.reject(mockAuth.timeoutError),
-                Promise.reject(mockAuth.timeoutError),
-                Promise.reject(mockAuth.timeoutError),
-                Promise.reject(mockAuth.timeoutError),
-                Promise.reject(mockAuth.timeoutError),
-                Promise.reject(mockAuth.timeoutError),
-                Promise.resolve({ status: 200, headers: {} })
+                Bluebird.reject(mockAuth.timeoutError),
+                Bluebird.reject(mockAuth.timeoutError),
+                Bluebird.reject(mockAuth.timeoutError),
+                Bluebird.reject(mockAuth.timeoutError),
+                Bluebird.reject(mockAuth.timeoutError),
+                Bluebird.reject(mockAuth.timeoutError),
+                Bluebird.reject(mockAuth.timeoutError),
+                Bluebird.reject(mockAuth.timeoutError),
+                Bluebird.reject(mockAuth.timeoutError),
+                Bluebird.resolve({ status: 200, headers: {} })
             );
             var ajaxSpy = spyOn(axios, 'request').and.callFake(fun);
 
@@ -232,7 +232,7 @@ describe('request', function() {
             var mockNotifier = jasmine.createSpy('notifier');
             var myRequest = request.create({ method: 'get' }, { maxRetries: 2, authFlow: mockAuth.mockImplicitGrantFlow() }, {notify: mockNotifier});
 
-            var ajaxSpy = spyOn(axios, 'request').and.returnValue(Promise.reject(mockAuth.timeoutError));
+            var ajaxSpy = spyOn(axios, 'request').and.returnValue(Bluebird.reject(mockAuth.timeoutError));
 
             myRequest.send().catch(function() {
                 expect(ajaxSpy.calls.count()).toEqual(3);
@@ -253,8 +253,8 @@ describe('request', function() {
         it('should NOT retry on generic errors', function(done) {
             var myRequest = request.create({ method: 'get' }, { maxRetries: 1, authFlow: mockAuth.mockImplicitGrantFlow() });
             var fun = getMockPromises(
-                Promise.reject(mockAuth.notFoundError),
-                Promise.resolve({ status: 200, headers: {} })
+                Bluebird.reject(mockAuth.notFoundError),
+                Bluebird.resolve({ status: 200, headers: {} })
             );
             var ajaxSpy = spyOn(axios, 'request').and.callFake(fun);
 
@@ -267,7 +267,7 @@ describe('request', function() {
             var mockNotifier = jasmine.createSpy('notifier');
             var myRequest = request.create({ method: 'get' }, { maxRetries: 1, authFlow: mockAuth.mockImplicitGrantFlow() }, {notify: mockNotifier});
 
-            var ajaxSpy = spyOn(axios, 'request').and.returnValue(Promise.reject(mockAuth.notFoundError));
+            var ajaxSpy = spyOn(axios, 'request').and.returnValue(Bluebird.reject(mockAuth.notFoundError));
 
             myRequest.send().catch(function() {
                 expect(ajaxSpy.calls.count()).toEqual(1);

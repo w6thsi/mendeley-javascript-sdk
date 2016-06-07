@@ -1,15 +1,15 @@
 'use strict';
 
 var axios = require('axios');
-require('es5-shim');
+var Bluebird = require('bluebird');
 
 describe('institution trees api', function() {
 
-    var api = require('api');
+    var api = require('../../../lib/api');
     var institutionTreesApi = api.institutionTrees;
     var baseUrl = 'https://api.mendeley.com';
 
-    var mockAuth = require('mocks/auth');
+    var mockAuth = require('../../mocks/auth');
     api.setAuthFlow(mockAuth.mockImplicitGrantFlow());
 
     describe('list method', function() {
@@ -20,11 +20,13 @@ describe('institution trees api', function() {
             institution_id: '123'
         };
         
-         beforeEach(function() {
-            ajaxSpy = spyOn(axios, 'request').and.returnValue(Promise.resolve());
-            institutionTreesApi.list(params);
-            expect(ajaxSpy).toHaveBeenCalled();
-            ajaxRequest = ajaxSpy.calls.mostRecent().args[0];
+        beforeEach(function(done) {
+            ajaxSpy = spyOn(axios, 'request').and.returnValue(Bluebird.resolve({headers: {}}));
+            institutionTreesApi.list(params).finally(function() {
+                expect(ajaxSpy).toHaveBeenCalled();
+                ajaxRequest = ajaxSpy.calls.mostRecent().args[0];
+                done();
+            });
         });
 
         it('should be defined', function() {
@@ -58,11 +60,13 @@ describe('institution trees api', function() {
         var ajaxSpy;
         var ajaxRequest;
         
-        beforeEach(function() {
-            ajaxSpy = spyOn(axios, 'request').and.returnValue(Promise.resolve());
-            institutionTreesApi.retrieve('123');
-            expect(ajaxSpy).toHaveBeenCalled();
-            ajaxRequest = ajaxSpy.calls.mostRecent().args[0];
+        beforeEach(function(done) {
+            ajaxSpy = spyOn(axios, 'request').and.returnValue(Bluebird.resolve({headers: {}}));
+            institutionTreesApi.retrieve('123').finally(function() {
+                expect(ajaxSpy).toHaveBeenCalled();
+                ajaxRequest = ajaxSpy.calls.mostRecent().args[0];
+                done();
+            });
         });
 
         it('should be defined', function() {

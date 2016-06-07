@@ -1,15 +1,15 @@
 'use strict';
 
 var axios = require('axios');
-require('es5-shim');
+var Bluebird = require('bluebird');
 
 describe('locations api', function() {
 
-    var api = require('api');
+    var api = require('../../../lib/api');
     var locationsApi = api.locations;
     var baseUrl = 'https://api.mendeley.com';
 
-    var mockAuth = require('mocks/auth');
+    var mockAuth = require('../../mocks/auth');
     api.setAuthFlow(mockAuth.mockImplicitGrantFlow());
 
     describe('search method', function() {
@@ -20,12 +20,14 @@ describe('locations api', function() {
             limit: 10
         };
 
-        it('should be defined', function() {
+        it('should be defined', function(done) {
             expect(typeof locationsApi.search).toBe('function');
-            ajaxSpy = spyOn(axios, 'request').and.returnValue(Promise.resolve());
-            locationsApi.search(params);
-            expect(ajaxSpy).toHaveBeenCalled();
-            ajaxRequest = ajaxSpy.calls.mostRecent().args[0];
+            ajaxSpy = spyOn(axios, 'request').and.returnValue(Bluebird.resolve({headers: {}}));
+            locationsApi.search(params).finally(function() {
+                expect(ajaxSpy).toHaveBeenCalled();
+                ajaxRequest = ajaxSpy.calls.mostRecent().args[0];
+                done();
+            });
         });
 
         it('should use GET', function() {
@@ -55,12 +57,14 @@ describe('locations api', function() {
         var ajaxSpy;
         var ajaxRequest;
 
-        it('should be defined', function() {
+        it('should be defined', function(done) {
             expect(typeof locationsApi.retrieve).toBe('function');
-            ajaxSpy = spyOn(axios, 'request').and.returnValue(Promise.resolve());
-            locationsApi.retrieve('some-id');
-            expect(ajaxSpy).toHaveBeenCalled();
-            ajaxRequest = ajaxSpy.calls.mostRecent().args[0];
+            ajaxSpy = spyOn(axios, 'request').and.returnValue(Bluebird.resolve({headers: {}}));
+            locationsApi.retrieve('some-id').finally(function() {
+                expect(ajaxSpy).toHaveBeenCalled();
+                ajaxRequest = ajaxSpy.calls.mostRecent().args[0];
+                done();
+            });
         });
 
         it('should use GET', function() {

@@ -1,15 +1,15 @@
 'use strict';
 
 var axios = require('axios');
-require('es5-shim');
+var Bluebird = require('bluebird');
 
 describe('followers api', function() {
 
-    var api = require('api');
+    var api = require('../../../lib/api');
     var followersApi = api.followers;
     var baseUrl = 'https://api.mendeley.com';
 
-    var mockAuth = require('mocks/auth');
+    var mockAuth = require('../../mocks/auth');
     api.setAuthFlow(mockAuth.mockImplicitGrantFlow());
 
     describe('create method', function() {
@@ -19,12 +19,14 @@ describe('followers api', function() {
             followed: 'c52e97f5-dd72-3cbe-a4cc-14bea2ed88f0'
         };
 
-        it('should be defined', function() {
+        it('should be defined', function(done) {
             expect(typeof followersApi.create).toBe('function');
-            ajaxSpy = spyOn(axios, 'request').and.returnValue(Promise.resolve());
-            followersApi.create(params);
-            expect(ajaxSpy).toHaveBeenCalled();
-            ajaxRequest = ajaxSpy.calls.mostRecent().args[0];
+            ajaxSpy = spyOn(axios, 'request').and.returnValue(Bluebird.resolve({headers: {}}));
+            followersApi.create(params).finally(function() {
+                expect(ajaxSpy).toHaveBeenCalled();
+                ajaxRequest = ajaxSpy.calls.mostRecent().args[0];
+                done();
+            });
         });
 
         it('should use POST', function() {
@@ -51,20 +53,21 @@ describe('followers api', function() {
     });
 
     describe('list method', function() {
-
         var ajaxRequest;
         var params = {
             follower: 'c52e97f5-dd72-3cbe-a4cc-14bea2ed88f0',
             limit: 50
         };
 
-        it('should be defined', function() {
+        it('should be defined', function(done) {
             expect(typeof followersApi.list).toBe('function');
-            var ajaxSpy = spyOn(axios, 'request').and.returnValue(Promise.resolve());
+            var ajaxSpy = spyOn(axios, 'request').and.returnValue(Bluebird.resolve({headers: {}}));
 
-            followersApi.list(params);
-            expect(ajaxSpy).toHaveBeenCalled();
-            ajaxRequest = ajaxSpy.calls.mostRecent().args[0];
+            followersApi.list(params).finally(function() {
+                expect(ajaxSpy).toHaveBeenCalled();
+                ajaxRequest = ajaxSpy.calls.mostRecent().args[0];
+                done();
+            });
         });
 
         it('should use GET', function() {
@@ -91,17 +94,18 @@ describe('followers api', function() {
     });
 
     describe('remove method', function() {
-
         var ajaxRequest;
         var relationshipId = 'c52e97f5-dd72-3cbe-a4cc-14bea2ed88f0';
 
-        it('should be defined', function() {
+        it('should be defined', function(done) {
             expect(typeof followersApi.remove).toBe('function');
-            var ajaxSpy = spyOn(axios, 'request').and.returnValue(Promise.resolve());
+            var ajaxSpy = spyOn(axios, 'request').and.returnValue(Bluebird.resolve({headers: {}}));
 
-            followersApi.remove(relationshipId);
-            expect(ajaxSpy).toHaveBeenCalled();
-            ajaxRequest = ajaxSpy.calls.mostRecent().args[0];
+            followersApi.remove(relationshipId).finally(function() {
+                expect(ajaxSpy).toHaveBeenCalled();
+                ajaxRequest = ajaxSpy.calls.mostRecent().args[0];
+                done();
+            });
         });
 
         it('should use DELETE', function() {
@@ -124,17 +128,18 @@ describe('followers api', function() {
     });
 
     describe('accept method', function() {
-
         var ajaxRequest;
         var relationshipId = 'c52e97f5-dd72-3cbe-a4cc-14bea2ed88f0';
 
-        it('should be defined', function() {
+        it('should be defined', function(done) {
             expect(typeof followersApi.accept).toBe('function');
-            var ajaxSpy = spyOn(axios, 'request').and.returnValue(Promise.resolve());
+            var ajaxSpy = spyOn(axios, 'request').and.returnValue(Bluebird.resolve({headers: {}}));
 
-            followersApi.accept(relationshipId, { status: 'following' });
-            expect(ajaxSpy).toHaveBeenCalled();
-            ajaxRequest = ajaxSpy.calls.mostRecent().args[0];
+            followersApi.accept(relationshipId, { status: 'following' }).finally(function() {
+                expect(ajaxSpy).toHaveBeenCalled();
+                ajaxRequest = ajaxSpy.calls.mostRecent().args[0];
+                done();
+            });
         });
 
         it('should use PATCH', function() {

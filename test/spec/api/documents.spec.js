@@ -1,29 +1,26 @@
 'use strict';
 
 var axios = require('axios');
-require('es5-shim');
+var Bluebird = require('bluebird');
 
-// Helper for getting a file blob in phantom vs. others
-function getBlob(content, type) {
-    if (typeof window.WebKitBlobBuilder !== 'undefined') {
-        var builder = new window.WebKitBlobBuilder();
-        builder.append(content);
-        return builder.getBlob(type);
-    }
-    return new Blob([content], { type: type });
+function getFakeFile(name, type) {
+    return {
+        name: name,
+        type: type
+    };
 }
 
 describe('documents api', function() {
 
-    var api = require('api');
+    var api = require('../../../lib/api');
     var documentsApi = api.documents;
     var baseUrl = 'https://api.mendeley.com';
 
-    var mockAuth = require('mocks/auth');
+    var mockAuth = require('../../mocks/auth');
     api.setAuthFlow(mockAuth.mockImplicitGrantFlow());
 
     // Mock ajax response promises
-    var mockPromiseCreate = Promise.resolve({
+    var mockPromiseCreate = Bluebird.resolve({
         data: '',
         status: 201,
         headers: {
@@ -31,15 +28,13 @@ describe('documents api', function() {
         }
     });
 
-    var mockPromiseRetrieve = Promise.resolve({
+    var mockPromiseRetrieve = Bluebird.resolve({
         data: { id: '15', title: 'foo' },
         status: 200,
-        headers: {
-            'location': baseUrl + '/documents/123'
-        }
+        headers: {}
     });
 
-    var mockPromiseCreateFromFile = Promise.resolve({
+    var mockPromiseCreateFromFile = Bluebird.resolve({
         data: { id: '15', title: 'foo' },
         status: 201,
         headers: {
@@ -47,7 +42,7 @@ describe('documents api', function() {
         }
     });
 
-    var mockPromiseUpdate = Promise.resolve({
+    var mockPromiseUpdate = Bluebird.resolve({
         data: { id: '15', title: 'foo' },
         status: 200,
         headers: {
@@ -55,7 +50,7 @@ describe('documents api', function() {
         }
     });
 
-    var mockPromiseClone = Promise.resolve({
+    var mockPromiseClone = Bluebird.resolve({
         data: {  id: '16', title: 'foo', 'group_id': 'bar' },
         status: 200,
         headers: {
@@ -63,7 +58,7 @@ describe('documents api', function() {
         }
     });
 
-    var mockPromiseList = Promise.resolve({
+    var mockPromiseList = Bluebird.resolve({
         data: [{ id: '15', title: 'foo' }],
         status: 200,
         headers: {
@@ -71,7 +66,7 @@ describe('documents api', function() {
         }
     });
 
-    var mockPromiseTrash = Promise.resolve({
+    var mockPromiseTrash = Bluebird.resolve({
         data: null,
         status: 204,
         headers: {
@@ -79,11 +74,11 @@ describe('documents api', function() {
         }
     });
 
-    var mockPromiseNotFound = Promise.reject({ status: 404 });
+    var mockPromiseNotFound = Bluebird.reject({ status: 404 });
 
-    var mockPromiseInternalError = Promise.reject({ status: 500 });
+    var mockPromiseInternalError = Bluebird.reject({ status: 500 });
 
-    var mockPromiseGatewayTimeout = Promise.reject({ status: 504 });
+    var mockPromiseGatewayTimeout = Bluebird.reject({ status: 504 });
 
     // Get a function to return promises in order
     function getMockPromises() {
@@ -103,41 +98,53 @@ describe('documents api', function() {
             ajaxSpy = spyOn(axios, 'request').and.callFake(getMockPromises(mockPromiseCreate, mockPromiseRetrieve));
         });
 
-        it('should be defined', function() {
+        it('should be defined', function(done) {
             expect(typeof documentsApi.create).toBe('function');
-            documentsApi.create({ title: 'foo' });
-            expect(ajaxSpy).toHaveBeenCalled();
+            documentsApi.create({ title: 'foo' }).finally(function() {
+                expect(ajaxSpy).toHaveBeenCalled();
+                done();
+            });
         });
 
-        it('should use POST', function() {
-            documentsApi.create({ title: 'foo' });
-            ajaxRequest = ajaxSpy.calls.first().args[0];
-            expect(ajaxRequest.method).toBe('post');
+        it('should use POST', function(done) {
+            documentsApi.create({ title: 'foo' }).finally(function() {
+                ajaxRequest = ajaxSpy.calls.first().args[0];
+                expect(ajaxRequest.method).toBe('post');
+                done();
+            });
         });
 
-        it('should use endpoint /documents', function() {
-            documentsApi.create({ title: 'foo' });
-            ajaxRequest = ajaxSpy.calls.first().args[0];
-            expect(ajaxRequest.url).toBe(baseUrl + '/documents');
+        it('should use endpoint /documents', function(done) {
+            documentsApi.create({ title: 'foo' }).finally(function() {
+                ajaxRequest = ajaxSpy.calls.first().args[0];
+                expect(ajaxRequest.url).toBe(baseUrl + '/documents');
+                done();
+            });
         });
 
-        it('should have a Content-Type header', function() {
-            documentsApi.create({ title: 'foo' });
-            ajaxRequest = ajaxSpy.calls.first().args[0];
-            expect(ajaxRequest.headers['Content-Type']).toBeDefined();
+        it('should have a Content-Type header', function(done) {
+            documentsApi.create({ title: 'foo' }).finally(function() {
+                ajaxRequest = ajaxSpy.calls.first().args[0];
+                expect(ajaxRequest.headers['Content-Type']).toBeDefined();
+                done();
+            });
         });
 
-        it('should have an Authorization header', function() {
-            documentsApi.create({ title: 'foo' });
-            ajaxRequest = ajaxSpy.calls.first().args[0];
-            expect(ajaxRequest.headers.Authorization).toBeDefined();
-            expect(ajaxRequest.headers.Authorization).toBe('Bearer auth');
+        it('should have an Authorization header', function(done) {
+            documentsApi.create({ title: 'foo' }).finally(function() {
+                ajaxRequest = ajaxSpy.calls.first().args[0];
+                expect(ajaxRequest.headers.Authorization).toBeDefined();
+                expect(ajaxRequest.headers.Authorization).toBe('Bearer auth');
+                done();
+            });
         });
 
-        it('should have a body of JSON string', function() {
-            documentsApi.create({ title: 'foo' });
-            ajaxRequest = ajaxSpy.calls.first().args[0];
-            expect(ajaxRequest.data).toBe('{"title":"foo"}');
+        it('should have a body of JSON string', function(done) {
+            documentsApi.create({ title: 'foo' }).finally(function() {
+                ajaxRequest = ajaxSpy.calls.first().args[0];
+                expect(ajaxRequest.data).toBe('{"title":"foo"}');
+                done();
+            });
         });
 
         it('should follow Location header', function(done) {
@@ -182,15 +189,16 @@ describe('documents api', function() {
         var ajaxSpy;
         var apiRequest;
         var ajaxRequest;
-        var file = getBlob('hello', 'text/plain');
-        file.name = '中文file name(1).pdf';
+        var file = getFakeFile('中文file name(1).pdf', 'text/plain');
 
-        it('should be defined', function() {
+        it('should be defined', function(done) {
             expect(typeof documentsApi.createFromFile).toBe('function');
             ajaxSpy = spyOn(axios, 'request').and.callFake(getMockPromises(mockPromiseCreateFromFile));
-            apiRequest = documentsApi.createFromFile(file);
-            expect(ajaxSpy).toHaveBeenCalled();
-            ajaxRequest = ajaxSpy.calls.first().args[0];
+            apiRequest = documentsApi.createFromFile(file).finally(function() {
+                expect(ajaxSpy).toHaveBeenCalled();
+                ajaxRequest = ajaxSpy.calls.first().args[0];
+                done();
+            });
         });
 
         it('should use POST', function() {
@@ -232,15 +240,16 @@ describe('documents api', function() {
         var ajaxSpy;
         var apiRequest;
         var ajaxRequest;
-        var file = getBlob('hello', 'text/plain');
-        file.name = '中文file name(1).pdf';
+        var file = getFakeFile('中文file name(1).pdf', 'text/plain');
 
-        it('should be defined', function() {
+        it('should be defined', function(done) {
             expect(typeof documentsApi.createFromFile).toBe('function');
             ajaxSpy = spyOn(axios, 'request').and.callFake(getMockPromises(mockPromiseCreateFromFile));
-            apiRequest = documentsApi.createFromFileInGroup(file, 123);
-            expect(ajaxSpy).toHaveBeenCalled();
-            ajaxRequest = ajaxSpy.calls.first().args[0];
+            apiRequest = documentsApi.createFromFileInGroup(file, 123).finally(function() {
+                expect(ajaxSpy).toHaveBeenCalled();
+                ajaxRequest = ajaxSpy.calls.first().args[0];
+                done();
+            });
         });
 
         it('should have a Link header', function() {
@@ -252,12 +261,14 @@ describe('documents api', function() {
 
         var ajaxRequest;
 
-        it('should be defined', function() {
+        it('should be defined', function(done) {
             expect(typeof documentsApi.retrieve).toBe('function');
             var ajaxSpy = spyOn(axios, 'request').and.callFake(getMockPromises(mockPromiseRetrieve));
-            documentsApi.retrieve(15);
-            expect(ajaxSpy).toHaveBeenCalled();
-            ajaxRequest = ajaxSpy.calls.mostRecent().args[0];
+            documentsApi.retrieve(15).finally(function() {
+                expect(ajaxSpy).toHaveBeenCalled();
+                ajaxRequest = ajaxSpy.calls.mostRecent().args[0];
+                done();
+            });
         });
 
         it('should use GET', function() {
@@ -299,12 +310,14 @@ describe('documents api', function() {
 
         var ajaxRequest;
 
-        it('should be defined', function() {
+        it('should be defined', function(done) {
             expect(typeof documentsApi.update).toBe('function');
             var ajaxSpy = spyOn(axios, 'request').and.callFake(getMockPromises(mockPromiseUpdate));
-            documentsApi.update(15, { title: 'bar' });
-            expect(ajaxSpy).toHaveBeenCalled();
-            ajaxRequest = ajaxSpy.calls.mostRecent().args[0];
+            documentsApi.update(15, { title: 'bar' }).finally(function() {
+                expect(ajaxSpy).toHaveBeenCalled();
+                ajaxRequest = ajaxSpy.calls.mostRecent().args[0];
+                done();
+            });
         });
 
         it('should use PATCH', function() {
@@ -335,12 +348,14 @@ describe('documents api', function() {
         var ajaxRequest,
             apiRequest;
 
-        it('should be defined', function() {
+        it('should be defined', function(done) {
             expect(typeof documentsApi.clone).toBe('function');
             var ajaxSpy = spyOn(axios, 'request').and.callFake(getMockPromises(mockPromiseClone));
-            apiRequest = documentsApi.clone(15, { 'group_id': 'bar' });
-            expect(ajaxSpy).toHaveBeenCalled();
-            ajaxRequest = ajaxSpy.calls.mostRecent().args[0];
+            apiRequest = documentsApi.clone(15, { 'group_id': 'bar' }).finally(function() {
+                expect(ajaxSpy).toHaveBeenCalled();
+                ajaxRequest = ajaxSpy.calls.mostRecent().args[0];
+                done();
+            });
         });
 
         it('should use POST', function() {
@@ -381,13 +396,15 @@ describe('documents api', function() {
             limit: 50
         };
 
-        it('should be defined', function() {
+        it('should be defined', function(done) {
             expect(typeof documentsApi.list).toBe('function');
             var ajaxSpy = spyOn(axios, 'request').and.callFake(getMockPromises(mockPromiseList));
 
-            documentsApi.list(params);
-            expect(ajaxSpy).toHaveBeenCalled();
-            ajaxRequest = ajaxSpy.calls.mostRecent().args[0];
+            documentsApi.list(params).finally(function() {
+                expect(ajaxSpy).toHaveBeenCalled();
+                ajaxRequest = ajaxSpy.calls.mostRecent().args[0];
+                done();
+            });
         });
 
         it('should use GET', function() {
@@ -423,11 +440,13 @@ describe('documents api', function() {
             folderId: 'xyz'
         };
 
-        it('should use the folders API', function() {
+        it('should use the folders API', function(done) {
             var ajaxSpy = spyOn(axios, 'request').and.callFake(getMockPromises(mockPromiseList));
-            documentsApi.list(params);
-            expect(ajaxSpy).toHaveBeenCalled();
-            ajaxRequest = ajaxSpy.calls.mostRecent().args[0];
+            documentsApi.list(params).finally(function() {
+                expect(ajaxSpy).toHaveBeenCalled();
+                ajaxRequest = ajaxSpy.calls.mostRecent().args[0];
+                done();
+            });
         });
 
         it('should use GET', function() {
@@ -448,12 +467,14 @@ describe('documents api', function() {
 
         var ajaxRequest;
 
-        it('should be defined', function() {
+        it('should be defined', function(done) {
             expect(typeof documentsApi.trash).toBe('function');
             var ajaxSpy = spyOn(axios, 'request').and.callFake(getMockPromises(mockPromiseTrash));
-            documentsApi.trash(15);
-            expect(ajaxSpy).toHaveBeenCalled();
-            ajaxRequest = ajaxSpy.calls.mostRecent().args[0];
+            documentsApi.trash(15).finally(function() {
+                expect(ajaxSpy).toHaveBeenCalled();
+                ajaxRequest = ajaxSpy.calls.mostRecent().args[0];
+                done();
+            });
         });
 
         it('should use POST', function() {
@@ -541,7 +562,7 @@ describe('documents api', function() {
                 headers.link = ['<' + linkNext + '>; rel="next"', '<' + linkPrev + '>; rel="previous"', '<' + linkLast + '>; rel="last"'].join(', ');
             }
 
-            spy.and.returnValue(Promise.resolve({
+            spy.and.returnValue(Bluebird.resolve({
                 headers: headers
             }));
             axios.request = spy;
@@ -563,30 +584,37 @@ describe('documents api', function() {
             });
         });
 
-        it('should get correct link on nextPage()', function() {
+        it('should get correct link on nextPage()', function(done) {
             var spy = ajaxSpy();
-            documentsApi.nextPage();
-            expect(spy.calls.mostRecent().args[0].url).toEqual(linkNext);
+            documentsApi.nextPage().finally(function() {
+                expect(spy.calls.mostRecent().args[0].url).toEqual(linkNext);
+                done();
+            });
         });
 
-        it('should get correct link on previousPage()', function() {
+        it('should get correct link on previousPage()', function(done) {
             var spy = ajaxSpy();
-            documentsApi.previousPage();
-            expect(spy.calls.mostRecent().args[0].url).toEqual(linkPrev);
+            documentsApi.previousPage().finally(function() {
+                expect(spy.calls.mostRecent().args[0].url).toEqual(linkPrev);
+                done();
+            });
         });
 
-        it('should get correct link on lastPage()', function() {
+        it('should get correct link on lastPage()', function(done) {
             var spy = ajaxSpy();
-            documentsApi.lastPage();
-            expect(spy.calls.mostRecent().args[0].url).toEqual(linkLast);
+            documentsApi.lastPage().finally(function() {
+                expect(spy.calls.mostRecent().args[0].url).toEqual(linkLast);
+                done();
+            });
         });
 
-        it('should fail if no link for rel', function() {
+        it('should fail if no link for rel', function(done) {
             documentsApi.resetPagination();
             var spy = ajaxSpy();
-            var result = documentsApi.previousPage();
-            expect(result.isRejected()).toEqual(true);
-            expect(spy).not.toHaveBeenCalled();
+            documentsApi.previousPage().catch(function() {
+                expect(spy).not.toHaveBeenCalled();
+                done();
+            });
         });
 
         it('should store the total document count', function(done) {

@@ -2,18 +2,18 @@
 'use strict';
 
 var axios = require('axios');
-require('es5-shim');
+var Bluebird = require('bluebird');
 
 describe('profiles api', function() {
 
-    var api = require('api');
+    var api = require('../../../lib/api');
     var profilesApi = api.profiles;
     var baseUrl = 'https://api.mendeley.com';
 
-    var mockAuth = require('mocks/auth');
+    var mockAuth = require('../../mocks/auth');
     api.setAuthFlow(mockAuth.mockImplicitGrantFlow());
 
-    var mockPromiseUpdate = Promise.resolve({
+    var mockPromiseUpdate = Bluebird.resolve({
         data: [],
         status: 200,
         headers: {
@@ -31,16 +31,17 @@ describe('profiles api', function() {
     }
 
     describe('me method', function() {
-
         var ajaxSpy;
         var ajaxRequest;
 
-        it('should be defined', function() {
+        it('should be defined', function(done) {
             expect(typeof profilesApi.me).toBe('function');
-            ajaxSpy = spyOn(axios, 'request').and.returnValue(Promise.resolve());
-            profilesApi.me();
-            expect(ajaxSpy).toHaveBeenCalled();
-            ajaxRequest = ajaxSpy.calls.mostRecent().args[0];
+            ajaxSpy = spyOn(axios, 'request').and.returnValue(Bluebird.resolve({headers: {}}));
+            profilesApi.me().finally(function() {
+                expect(ajaxSpy).toHaveBeenCalled();
+                ajaxRequest = ajaxSpy.calls.mostRecent().args[0];
+                done();
+            });
         });
 
         it('should use GET', function() {
@@ -67,16 +68,17 @@ describe('profiles api', function() {
     });
 
     describe('retrieve method', function() {
-
         var ajaxSpy;
         var ajaxRequest;
 
-        it('should be defined', function() {
+        it('should be defined', function(done) {
             expect(typeof profilesApi.retrieve).toBe('function');
-            ajaxSpy = spyOn(axios, 'request').and.returnValue(Promise.resolve());
-            profilesApi.retrieve(123);
-            expect(ajaxSpy).toHaveBeenCalled();
-            ajaxRequest = ajaxSpy.calls.mostRecent().args[0];
+            ajaxSpy = spyOn(axios, 'request').and.returnValue(Bluebird.resolve({headers: {}}));
+            profilesApi.retrieve(123).finally(function() {
+                expect(ajaxSpy).toHaveBeenCalled();
+                ajaxRequest = ajaxSpy.calls.mostRecent().args[0];
+                done();
+            });
         });
 
         it('should use GET', function() {
@@ -99,19 +101,19 @@ describe('profiles api', function() {
         it('should NOT have a body', function() {
             expect(ajaxRequest.data).toBeUndefined();
         });
-
     });
 
     describe('update method', function() {
-
         var ajaxRequest;
 
-        it('should be defined', function() {
+        it('should be defined', function(done) {
             expect(typeof profilesApi.update).toBe('function');
             var ajaxSpy = spyOn(axios, 'request').and.callFake(getMockPromises(mockPromiseUpdate));
-            profilesApi.update({first_name: 'John', last_name: 'Doe'});
-            expect(ajaxSpy).toHaveBeenCalled();
-            ajaxRequest = ajaxSpy.calls.mostRecent().args[0];
+            profilesApi.update({first_name: 'John', last_name: 'Doe'}).finally(function() {
+                expect(ajaxSpy).toHaveBeenCalled();
+                ajaxRequest = ajaxSpy.calls.mostRecent().args[0];
+                done();
+            });
         });
 
         it('should use PATCH', function() {
@@ -138,15 +140,16 @@ describe('profiles api', function() {
     });
     
     describe('retrieve by email method', function() {
-
         var ajaxSpy;
         var ajaxRequest;
         
-        beforeEach(function() {
-            ajaxSpy = spyOn(axios, 'request').and.returnValue(Promise.resolve());
-            profilesApi.retrieveByEmail('test@test.com');
-            expect(ajaxSpy).toHaveBeenCalled();
-            ajaxRequest = ajaxSpy.calls.mostRecent().args[0];
+        beforeEach(function(done) {
+            ajaxSpy = spyOn(axios, 'request').and.returnValue(Bluebird.resolve({headers: {}}));
+            profilesApi.retrieveByEmail('test@test.com').finally(function() {
+                expect(ajaxSpy).toHaveBeenCalled();
+                ajaxRequest = ajaxSpy.calls.mostRecent().args[0];
+                done();
+            });
         });
 
         it('should be defined', function() {
@@ -172,8 +175,6 @@ describe('profiles api', function() {
         it('should NOT have a body', function() {
             expect(ajaxRequest.data).not.toBeDefined();
         });
-
     });
-
 });
 /* jshint camelcase: true */

@@ -2,25 +2,22 @@
 'use strict';
 
 var axios = require('axios');
-require('es5-shim');
+var Bluebird = require('bluebird');
 
 describe('files api', function() {
 
-    var api = require('api');
+    var api = require('../../../lib/api');
     var filesApi = api.files;
     var baseUrl = 'https://api.mendeley.com';
 
-    var mockAuth = require('mocks/auth');
+    var mockAuth = require('../../mocks/auth');
     api.setAuthFlow(mockAuth.mockImplicitGrantFlow());
 
-    // Helper for getting a file blob in phantom vs. others
-    function getBlob(content, type) {
-        if (typeof window.WebKitBlobBuilder !== 'undefined') {
-            var builder = new window.WebKitBlobBuilder();
-            builder.append(content);
-            return builder.getBlob(type);
-        }
-        return new Blob([content], { type: type });
+    function getFakeFile(name, type) {
+        return {
+            name: name,
+            type: type
+        };
     }
 
     describe('create method', function() {
@@ -32,22 +29,23 @@ describe('files api', function() {
             var fileResource = {
                 url: 'http://mendeley.cdn.com/123'
             };
-            return Promise.resolve({
+            return Bluebird.resolve({
                 data: fileResource,
                 status: 201,
                 headers: {}
             });
 
         };
-        var file = getBlob('hello', 'text/plain');
-        file.name = '中文file name(1).pdf';
+        var file = getFakeFile('中文file name(1).pdf', 'text/plain');
 
-        it('should be defined', function() {
+        it('should be defined', function(done) {
             expect(typeof filesApi.create).toBe('function');
             ajaxSpy = spyOn(axios, 'request').and.callFake(ajaxResponse);
-            filesApi.create(file, 123);
-            expect(ajaxSpy).toHaveBeenCalled();
-            ajaxRequest = ajaxSpy.calls.first().args[0];
+            filesApi.create(file, 123).finally(function() {
+                expect(ajaxSpy).toHaveBeenCalled();
+                ajaxRequest = ajaxSpy.calls.first().args[0];
+                done();
+            });
 
         });
 
@@ -83,31 +81,30 @@ describe('files api', function() {
             expect(ajaxRequest.data).toEqual(file);
         });
 
-        it('should use Content-Type application/octet-stream if no type', function() {
-            var typelessFile = getBlob('hello', '');
-            typelessFile.name = 'filename.pdf';
+        it('should use Content-Type application/octet-stream if no type', function(done) {
+            var typelessFile = getFakeFile('filename.pdf', '');
             ajaxSpy = spyOn(axios, 'request').and.callFake(ajaxResponse);
 
-            filesApi.create(123, typelessFile);
-
-            ajaxRequest = ajaxSpy.calls.first().args[0];
-            expect(ajaxRequest.headers['Content-Type']).toEqual('application/octet-stream');
+            filesApi.create(123, typelessFile).finally(function() {
+                ajaxRequest = ajaxSpy.calls.first().args[0];
+                expect(ajaxRequest.headers['Content-Type']).toEqual('application/octet-stream');
+                done();
+            });
         });
-
-
     });
 
     describe('list method', function() {
-
         var ajaxSpy;
         var ajaxRequest;
 
-        it('be defined', function() {
+        it('be defined', function(done) {
             expect(typeof filesApi.list).toBe('function');
-            ajaxSpy = spyOn(axios, 'request').and.returnValue(Promise.resolve());
-            filesApi.list('someId');
-            expect(ajaxSpy).toHaveBeenCalled();
-            ajaxRequest = ajaxSpy.calls.mostRecent().args[0];
+            ajaxSpy = spyOn(axios, 'request').and.returnValue(Bluebird.resolve({headers: {}}));
+            filesApi.list('someId').finally(function() {
+                expect(ajaxSpy).toHaveBeenCalled();
+                ajaxRequest = ajaxSpy.calls.mostRecent().args[0];
+                done();
+            });
         });
 
         it('should use GET', function() {
@@ -142,12 +139,14 @@ describe('files api', function() {
         var ajaxSpy;
         var ajaxRequest;
 
-        it('be defined', function() {
+        it('be defined', function(done) {
             expect(typeof filesApi.remove).toBe('function');
-            ajaxSpy = spyOn(axios, 'request').and.returnValue(Promise.resolve());
-            filesApi.remove('fileId');
-            expect(ajaxSpy).toHaveBeenCalled();
-            ajaxRequest = ajaxSpy.calls.mostRecent().args[0];
+            ajaxSpy = spyOn(axios, 'request').and.returnValue(Bluebird.resolve({headers: {}}));
+            filesApi.remove('fileId').finally(function() {
+                expect(ajaxSpy).toHaveBeenCalled();
+                ajaxRequest = ajaxSpy.calls.mostRecent().args[0];
+                done();
+            });
         });
 
         it('should use DELETE', function() {

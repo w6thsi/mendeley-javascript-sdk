@@ -1,15 +1,15 @@
 'use strict';
 
 var axios = require('axios');
-require('es5-shim');
+var Bluebird = require('bluebird');
 
 describe('institutions api', function() {
 
-    var api = require('api');
+    var api = require('../../../lib/api');
     var institutionsApi = api.institutions;
     var baseUrl = 'https://api.mendeley.com';
 
-    var mockAuth = require('mocks/auth');
+    var mockAuth = require('../../mocks/auth');
     api.setAuthFlow(mockAuth.mockImplicitGrantFlow());
 
     describe('search method', function() {
@@ -20,12 +20,14 @@ describe('institutions api', function() {
             limit: 10
         };
 
-        it('should be defined', function() {
+        it('should be defined', function(done) {
             expect(typeof institutionsApi.search).toBe('function');
-            ajaxSpy = spyOn(axios, 'request').and.returnValue(Promise.resolve());
-            institutionsApi.search(params);
-            expect(ajaxSpy).toHaveBeenCalled();
-            ajaxRequest = ajaxSpy.calls.mostRecent().args[0];
+            ajaxSpy = spyOn(axios, 'request').and.returnValue(Bluebird.resolve({headers: {}}));
+            institutionsApi.search(params).finally(function() {
+                expect(ajaxSpy).toHaveBeenCalled();
+                ajaxRequest = ajaxSpy.calls.mostRecent().args[0];
+                done();
+            });
         });
 
         it('should use GET', function() {
@@ -55,12 +57,14 @@ describe('institutions api', function() {
         var ajaxSpy;
         var ajaxRequest;
 
-        it('should be defined', function() {
+        it('should be defined', function(done) {
             expect(typeof institutionsApi.retrieve).toBe('function');
-            ajaxSpy = spyOn(axios, 'request').and.returnValue(Promise.resolve());
-            institutionsApi.retrieve('some-id');
-            expect(ajaxSpy).toHaveBeenCalled();
-            ajaxRequest = ajaxSpy.calls.mostRecent().args[0];
+            ajaxSpy = spyOn(axios, 'request').and.returnValue(Bluebird.resolve({headers: {}}));
+            institutionsApi.retrieve('some-id').finally(function() {
+                expect(ajaxSpy).toHaveBeenCalled();
+                ajaxRequest = ajaxSpy.calls.mostRecent().args[0];
+                done();
+            });
         });
 
         it('should use GET', function() {

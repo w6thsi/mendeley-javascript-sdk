@@ -1,5 +1,7 @@
 'use strict';
 
+var Bluebird = require('bluebird');
+
 var unauthorisedError = new Error();
 unauthorisedError.status = 401;
 
@@ -35,7 +37,7 @@ function mockAuthCodeFlow() {
         authenticate: function() { return false; },
         refreshToken: function() {
             fakeToken = 'auth-refreshed';
-            return Promise.resolve();
+            return Bluebird.resolve({headers: {}});
         }
     };
 }

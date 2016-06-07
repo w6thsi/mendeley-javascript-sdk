@@ -1,28 +1,29 @@
 'use strict';
 
 var axios = require('axios');
-require('es5-shim');
+var Bluebird = require('bluebird');
 
 describe('trash api', function() {
 
-    var api = require('api');
+    var api = require('../../../lib/api');
     var trashApi = api.trash;
     var baseUrl = 'https://api.mendeley.com';
 
-    var mockAuth = require('mocks/auth');
+    var mockAuth = require('../../mocks/auth');
     api.setAuthFlow(mockAuth.mockImplicitGrantFlow());
 
     describe('retrieve method', function() {
-
         var ajaxSpy;
         var ajaxRequest;
 
-        it('should be defined', function() {
+        it('should be defined', function(done) {
             expect(typeof trashApi.retrieve).toBe('function');
-            ajaxSpy = spyOn(axios, 'request').and.returnValue(Promise.resolve({headers: {}}));
-            trashApi.retrieve(15);
-            expect(ajaxSpy).toHaveBeenCalled();
-            ajaxRequest = ajaxSpy.calls.mostRecent().args[0];
+            ajaxSpy = spyOn(axios, 'request').and.returnValue(Bluebird.resolve({headers: {}}));
+            trashApi.retrieve(15).finally(function() {
+                expect(ajaxSpy).toHaveBeenCalled();
+                ajaxRequest = ajaxSpy.calls.mostRecent().args[0];
+                done();
+            });
         });
 
         it('should use GET', function() {
@@ -49,7 +50,6 @@ describe('trash api', function() {
     });
 
     describe('list method', function() {
-
         var ajaxSpy;
         var ajaxRequest;
         var sampleData = {
@@ -58,13 +58,15 @@ describe('trash api', function() {
             limit: 50
         };
 
-        it('be defined', function() {
+        it('be defined', function(done) {
             expect(typeof trashApi.list).toBe('function');
-            ajaxSpy = spyOn(axios, 'request').and.returnValue(Promise.resolve({headers: {}}));
+            ajaxSpy = spyOn(axios, 'request').and.returnValue(Bluebird.resolve({headers: {}}));
 
-            trashApi.list(sampleData);
-            expect(ajaxSpy).toHaveBeenCalled();
-            ajaxRequest = ajaxSpy.calls.mostRecent().args[0];
+            trashApi.list(sampleData).finally(function() {
+                expect(ajaxSpy).toHaveBeenCalled();
+                ajaxRequest = ajaxSpy.calls.mostRecent().args[0];
+                done();
+            });
         });
 
         it('should use GET', function() {
@@ -87,20 +89,20 @@ describe('trash api', function() {
         it('should apply request params', function() {
             expect(ajaxRequest.params).toEqual(sampleData);
         });
-
     });
 
     describe('restore method', function() {
-
         var ajaxSpy;
         var ajaxRequest;
 
-        it('should be defined', function() {
+        it('should be defined', function(done) {
             expect(typeof trashApi.restore).toBe('function');
-            ajaxSpy = spyOn(axios, 'request').and.returnValue(Promise.resolve({headers: {}}));
-            trashApi.restore(15);
-            expect(ajaxSpy).toHaveBeenCalled();
-            ajaxRequest = ajaxSpy.calls.mostRecent().args[0];
+            ajaxSpy = spyOn(axios, 'request').and.returnValue(Bluebird.resolve({headers: {}}));
+            trashApi.restore(15).finally(function() {
+                expect(ajaxSpy).toHaveBeenCalled();
+                ajaxRequest = ajaxSpy.calls.mostRecent().args[0];
+                done();
+            });
         });
 
         it('should use POST', function() {
@@ -123,14 +125,12 @@ describe('trash api', function() {
         it('should NOT have a body', function() {
             expect(ajaxRequest.data).toBeUndefined();
         });
-
     });
 
     describe('restore method failures', function() {
-
         it('should reject restore errors with the response', function(done) {
             var ajaxFailureResponse = function() {
-                return Promise.reject({ status: 404 });
+                return Bluebird.reject({ status: 404 });
             };
             spyOn(axios, 'request').and.callFake(ajaxFailureResponse);
             trashApi.restore().catch(function(response) {
@@ -138,20 +138,20 @@ describe('trash api', function() {
                 done();
             });
         });
-
     });
 
     describe('destroy method', function() {
-
         var ajaxSpy;
         var ajaxRequest;
 
-        it('should be defined', function() {
+        it('should be defined', function(done) {
             expect(typeof trashApi.destroy).toBe('function');
-            ajaxSpy = spyOn(axios, 'request').and.returnValue(Promise.resolve({headers: {}}));
-            trashApi.destroy(15);
-            expect(ajaxSpy).toHaveBeenCalled();
-            ajaxRequest = ajaxSpy.calls.mostRecent().args[0];
+            ajaxSpy = spyOn(axios, 'request').and.returnValue(Bluebird.resolve({headers: {}}));
+            trashApi.destroy(15).finally(function() {
+                expect(ajaxSpy).toHaveBeenCalled();
+                ajaxRequest = ajaxSpy.calls.mostRecent().args[0];
+                done();
+            });
         });
 
         it('should use DELETE', function() {
@@ -174,11 +174,9 @@ describe('trash api', function() {
         it('should NOT have a body', function() {
             expect(ajaxRequest.data).toBeUndefined();
         });
-
     });
 
     describe('pagination', function() {
-
         var sendMendeleyCountHeader = true,
             documentCount = 155,
             sendLinks = true,
@@ -200,7 +198,7 @@ describe('trash api', function() {
                 headers.link = ['<' + linkNext + '>; rel="next"', '<' + linkLast + '>; rel="last"'].join(', ');
             }
 
-            spy.and.returnValue(Promise.resolve({
+            spy.and.returnValue(Bluebird.resolve({
                 headers: headers
             }));
             axios.request = spy;
@@ -223,23 +221,28 @@ describe('trash api', function() {
 
         });
 
-        it('should get correct link on nextPage()', function() {
+        it('should get correct link on nextPage()', function(done) {
             var spy = ajaxSpy();
-            trashApi.nextPage();
-            expect(spy.calls.mostRecent().args[0].url).toEqual(linkNext);
+            trashApi.nextPage().finally(function() {
+                expect(spy.calls.mostRecent().args[0].url).toEqual(linkNext);
+                done();
+            });
         });
 
-        it('should get correct link on lastPage()', function() {
+        it('should get correct link on lastPage()', function(done) {
             var spy = ajaxSpy();
-            trashApi.lastPage();
-            expect(spy.calls.mostRecent().args[0].url).toEqual(linkLast);
+            trashApi.lastPage().finally(function() {
+                expect(spy.calls.mostRecent().args[0].url).toEqual(linkLast);
+                done();
+            });
         });
 
-        it('should fail if no link for rel', function() {
+        it('should fail if no link for rel', function(done) {
             var spy = ajaxSpy();
-            var result = trashApi.previousPage();
-            expect(result.isRejected()).toEqual(true);
-            expect(spy).not.toHaveBeenCalled();
+            trashApi.previousPage().catch(function() {
+                expect(spy).not.toHaveBeenCalled();
+                done();
+            });
         });
 
         it('should store the total trashed documents count', function(done) {

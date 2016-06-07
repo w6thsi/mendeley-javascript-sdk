@@ -1,7 +1,7 @@
 'use strict';
 
 describe('notifier', function() {
-	var notifier = require('notifier');
+	var notifier = require('../../../lib/notifier');
 
     it ('should send a notification to the logger', function() {
         var logger = jasmine.createSpy('logger');
