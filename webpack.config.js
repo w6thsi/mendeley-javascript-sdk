@@ -1,5 +1,7 @@
 var webpack = require('webpack');
-var plugins = [];
+var plugins = [new webpack.ProvidePlugin({
+    Promise: 'bluebird'
+})];
 var useMinifier = (process.argv.slice(1).indexOf('--minify') !== -1);
 
 if (useMinifier) {
