@@ -1510,7 +1510,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	    API: __webpack_require__(3),
 	    Auth: __webpack_require__(42),
 	    Request: __webpack_require__(6),
-	    Notifier: __webpack_require__(43)
 	};
 
 
@@ -1535,7 +1534,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	module.exports = {
 	    setAuthFlow: utils.setAuthFlow,
 	    setBaseUrl:  utils.setBaseUrl,
-	    setNotifier: utils.setNotifier,
 
 	    annotations: __webpack_require__(29)(),
 	    catalog: __webpack_require__(30)(),
@@ -1666,7 +1664,6 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	var baseUrl = 'https://api.mendeley.com';
 	var authFlow = false;
-	var notifier = false;
 
 	/**
 	 * Utilities
@@ -1677,7 +1674,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	module.exports = {
 	    setAuthFlow: setAuthFlow,
 	    setBaseUrl: setBaseUrl,
-	    setNotifier: setNotifier,
 
 	    requestFun: requestFun,
 	    requestPageFun: requestPageFun,
@@ -1693,10 +1689,6 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	function setBaseUrl(url) {
 	    baseUrl = url;
-	}
-
-	function setNotifier(newNotifier) {
-	    notifier = newNotifier;
 	}
 
 	/**
@@ -1733,7 +1725,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	            settings.maxRetries = 1;
 	        }
 
-	        var promise = Request.create(request, settings, notifier).send();
+	        var promise = Request.create(request, settings).send();
 	        
 	        return promise.then(function(response) {
 	            setPaginationLinks.call(this, response.headers);
@@ -1770,7 +1762,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	            maxRetries: 1
 	        };
 
-	        var promise = Request.create(request, settings, notifier).send();
+	        var promise = Request.create(request, settings).send();
 	        
 	        return promise.then(function(response) {
 	            setPaginationLinks.call(this, response.headers);
@@ -1812,7 +1804,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	            followLocation: followLocation
 	        };
 
-	        var promise = Request.create(request, settings, notifier).send();
+	        var promise = Request.create(request, settings).send();
 
 	        return promise.then(function(response) {
 	            return response.data;
@@ -1856,7 +1848,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	            authFlow: authFlow
 	        };
 
-	        var promise = Request.create(request, settings, notifier).send();
+	        var promise = Request.create(request, settings).send();
 
 	        return promise.then(function(response) {
 	            return response.data;
@@ -2024,13 +2016,12 @@ return /******/ (function(modules) { // webpackBootstrap
 	    followLocation: false,
 	    fileUpload: false,
 	};
-	var noopNotifier = { notify: function() {}};
 
-	function create(request, settings, notifier) {
-	    return new Request(request, assign({}, defaults, settings), notifier);
+	function create(request, settings) {
+	    return new Request(request, assign({}, defaults, settings));
 	}
 
-	function Request(request, settings, notifier) {
+	function Request(request, settings) {
 	    if (!settings.authFlow) {
 	        throw new Error('Please provide an authentication interface');
 	    }
@@ -2038,9 +2029,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	    this.settings = settings;
 	    this.retries = 0;
 	    this.authRetries = 0;
-	    this.notifier = notifier || noopNotifier;
-
-	    this.notifier.notify('startInfo', [this.request.method, this.request.url], this.request);
 	}
 
 	function send(request) {
@@ -2053,7 +2041,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	    // because if you send 'Bearer ' you get a 400 rather than a 401 - is that a bug in the api?
 	    if (!token) {
 	        this.authRetries++;
-	        this.notifier.notify('authWarning', ['n.a.', this.authRetries, this.settings.maxAuthRetries], this.request);
 	        return refreshToken.call(this);
 	    }
 
@@ -2076,10 +2063,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	            // 504 Gateway timeout or communication error
 	            if (this.retries < this.settings.maxRetries) {
 	                this.retries++;
-	                this.notifier.notify('commWarning', [response.status, this.retries, this.settings.maxRetries], this.request, response);
 	                return this.send();
 	            } else {
-	                this.notifier.notify('commError', [response.status, this.settings.maxRetries], this.request, response);
 	                throw response;
 	            }
 	            break;
@@ -2088,17 +2073,14 @@ return /******/ (function(modules) { // webpackBootstrap
 	            // 401 Unauthorized
 	            if (this.authRetries < this.settings.maxAuthRetries) {
 	                this.authRetries++;
-	                this.notifier.notify('authWarning', [response.status, this.authRetries, this.settings.maxAuthRetries], this.request, response);
 	                return refreshToken.call(this);
 	            } else {
-	                this.notifier.notify('authError', [response.status, this.settings.maxAuthRetries], this.request, response);
 	                this.settings.authFlow.authenticate(200);
 	                throw response;
 	            }
 	            break;
 
 	        default:
-	            this.notifier.notify('reqError', [response.status], this.request, response);
 	            throw response;
 	    }
 	}
@@ -2112,7 +2094,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	            url: locationHeader,
 	            responseType: 'json'
 	        };
-	        this.notifier.notify('redirectInfo', null, this.request, redirect);
 	        return this.send(redirect);
 	    } else {
 	        if (response.headers.link && typeof response.headers.link === 'string') {
@@ -2125,13 +2106,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	                try {
 	                    response = JSON.parse(response);
 	                } catch (error) {
-	                    this.notifier.notify('parseError', null, this.request, response);
 	                    throw error;
 	                }
 	            }
-	            this.notifier.notify('uploadSuccessInfo', null, this.request, response);
-	        } else {
-	            this.notifier.notify('successInfo', null, this.request, response);
 	        }
 	        return response;
 	    }
@@ -2143,7 +2120,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	        return refresh
 	            // If fails then we need to re-authenticate
 	            .catch(function(response) {
-	                this.notifier.notify('refreshError', [response.status], this.request, response.request);
 	                this.settings.authFlow.authenticate(200);
 	                throw response;
 	            }.bind(this))
@@ -2152,7 +2128,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	                return this.send();
 	            }.bind(this));
 	    } else {
-	        this.notifier.notify('refreshNotConfigured', []);
 	        this.settings.authFlow.authenticate(200);
 	        return Bluebird.reject(new Error('No token'));
 	    }
@@ -10313,134 +10288,6 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	    return false;
 	}
-
-
-/***/ },
-/* 43 */
-/***/ function(module, exports, __webpack_require__) {
-
-	'use strict';
-
-	var assign = __webpack_require__(28);
-
-	var levelClass = {
-	    debug: 0,
-	    info: 1000,
-	    warn: 2000,
-	    error: 3000
-	};
-	var notifications = {
-	    startInfo: {
-	        code: 1001,
-	        level: 'info',
-	        message: 'Request Start : $0 $1'
-	    },
-	    redirectInfo: {
-	        code: 1002,
-	        level: 'info',
-	        message: 'Redirection followed'
-	    },
-	    successInfo: {
-	        code: 1003,
-	        level: 'info',
-	        message: 'Request Success'
-	    },
-	    uploadSuccessInfo: {
-	        code: 1005,
-	        level: 'info',
-	        message: 'Upload Success'
-	    },
-
-	    commWarning: {
-	        code: 2001,
-	        level: 'warn',
-	        message: 'Communication error (status code $0). Retrying ($1/$2).'
-	    },
-	    authWarning: {
-	        code: 2002,
-	        level: 'warn',
-	        message: 'Authentication error (status code $0). Refreshing access token ($1/$2).'
-	    },
-
-	    reqError: {
-	        code: 3001,
-	        level: 'error',
-	        message: 'Request error (status code $0).'
-	    },
-	    commError: {
-	        code: 3002,
-	        level: 'error',
-	        message: 'Communication error (status code $0).  Maximun number of retries reached ($1).'
-	    },
-	    authError: {
-	        code: 3003,
-	        level: 'error',
-	        message: 'Authentication error (status code $0).  Maximun number of retries reached ($1).'
-	    },
-	    refreshNotConfigured: {
-	        code: 3004,
-	        level: 'error',
-	        message: 'Refresh token error. Refresh flow not configured.'
-	    },
-	    refreshError: {
-	        code: 3005,
-	        level: 'error',
-	        message: 'Refresh token error. Request failed (status code $0).'
-	    },
-	    tokenError: {
-	        code: 3006,
-	        level: 'error',
-	        message: 'Missing access token.'
-	    },
-	    parseError: {
-	        code: 3007,
-	        level: 'error',
-	        message: 'JSON Parsing error.'
-	    },
-	    uploadError: {
-	        code: 3008,
-	        level: 'error',
-	        message: 'Upload $0 ($1 %)'
-	    }
-	};
-
-	function createMessage(notificationId, notificationData, request, response) {
-	    var notification = assign({}, notifications[notificationId] || {});
-
-	    if (notificationData) {
-	        notification.message =  notification.message.replace(/\$(\d+)/g, function(m, key) {
-	            return '' + (notificationData[+key] !== undefined ? notificationData[+key] : '');
-	        });
-	    }
-	    if (request) {
-	        notification.request = request;
-	    }
-	    if (response) {
-	        notification.response = response;
-	    }
-	    return notification;
-	}
-
-	function createNotifier(logger, minLogLevel) {
-	    if (!logger || typeof logger !== 'function') {
-	        return false;
-	    }
-	    var minCode = levelClass[minLogLevel] || 0;
-
-	    return {
-	        notify: function notify(notificationId, notificationData, request, response) {
-	            var notification = createMessage(notificationId, notificationData, request, response);
-	            if(notification.code > minCode) {
-	                logger(notification);
-	            }
-
-	        }
-	    };
-	}
-
-	module.exports = {
-	    createNotifier: createNotifier
-	};
 
 
 /***/ }

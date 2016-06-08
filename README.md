@@ -23,6 +23,16 @@ The SDK is available as a CommonJS module or a standalone bundle. To use the sta
 
 To use as a CommonJS module in the browser, you'll need a module loader like [browserify][] or [webpack][].
 
+Depending on your target browsers, you may need to polyfill Promise because the SDK relies on a global Promise variable being defined. For example, in webpack configuration include the following:
+
+```
+{
+    plugins: [new webpack.ProvidePlugin({
+        Promise: 'bluebird'
+    })];
+}
+```
+
 Some ECMAScript5 features are used so for older browsers you may need to shim these methods, for example with [es5-shim][].
 
 
@@ -116,42 +126,6 @@ define(function(require) {
         console.log('Status:', response.status);
 
     });
-});
-```
-
-## Logging API events
-
-For logging API communication e.g. warning and error, you can attach a notifier that will send a message to a delegated logger function when a relevant event happens. If you want to limit the verbosity of the notifier just pass the minimum log level as the second parameter of the notifier creator.
-
-The message structure is :
-
-```javascript
-{
-    code: 'Unique numeric identification of the error ',
-    level: 'Severity level of the message (error, warn, info, debug)'
-    message: 'Textual explanation of the error',
-    request : 'If available, the request who generated the event',
-    response : 'If available, the response who generated the event'
-}
-```
-
-Here's an example using the browser console as logger.
-
-```javascript
-define(function(require) {
-    var api = require('mendeley-javascript-sdk/api');
-    var auth = require('mendeley-javascript-sdk/auth');
-    var notifier = require('mendeley-javascript-sdk/notifier');
-
-    var logger = function(message) {
-        console[message.level](message);
-    };
-
-    // notifier.createNotifier(<logger function>, <minimum log level>)
-    var apiNotifier = notifier.createNotifier(logger, 'warn');
-
-    api.setAuthFlow(auth.authCodeFlow(authSettings));
-    api.setNotifier(apiNotifier);
 });
 ```
 
