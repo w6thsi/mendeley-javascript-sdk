@@ -199,7 +199,7 @@ var params = {
     folder_id: '345-jkl-ghj'
 };
 
-myDocumentsApi.for(JSON.stringify(params)).list().then(function (result) {
+api.documents.for(JSON.stringify(params)).list(params).then(function (result) {
     // handle the result
 });
 ```
