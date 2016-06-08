@@ -24,8 +24,6 @@ The SDK is available as an AMD module or a standalone library. To use the standa
 
 To use as an AMD module you'll need an AMD loader like [requirejs][] or [webpack][].
 
-The only hard-dependency is jquery 1.10.1 or above (it may work with earlier versions but these are untested).
-
 Some ECMAScript5 features are used so for older browsers you may need to shim these methods, for example with [es5-shim][].
 
 
@@ -84,18 +82,17 @@ Once the OAuth flow is complete you can start grabbing data for the user. CORS i
 
 Each API is exposed as a property of the SDK, for example `MendeleySDK.API.documents`, `MendeleySDK.API.folders`.
 
-Methods that make API calls use [jquery deferred objects][] and return promises. Each call will either resolve with some data or reject with the original request and the API response. Here's an example using the standalone version:
+Methods that make API calls return [Bluebird promises][]. Each call will either resolve with some data or reject with a response object according to the response from [axios][]. Here's an example using the standalone version:
 
 ```javascript
-MendeleySDK.API.documents.list().done(function(docs) {
+MendeleySDK.API.documents.list().then(function(docs) {
 
     console.log('Success!');
     console.log(docs);
 
-}).fail(function(request, response) {
+}).catch(function(response) {
 
     console.log('Failed!');
-    console.log('URL:', request.url);
     console.log('Status:', response.status);
 
 });
@@ -109,15 +106,14 @@ define(function(require) {
     var auth = require('mendeley-javascript-sdk/lib/auth');
     api.setAuthFlow(auth.authCodeFlow());
 
-    api.documents.list().done(function() {
+    api.documents.list().then(function() {
 
         console.log('Success!');
         console.log(docs);
 
-    }).fail(function(request, response) {
+    }).catch(function(response) {
 
         console.log('Failed!');
-        console.log('URL:', request.url);
         console.log('Status:', response.status);
 
     });
@@ -204,7 +200,7 @@ All contributions should be made by pull request (even if you have commit rights
 
 In lieu of a formal styleguide, take care to maintain the existing coding style.
 
-Please add unit tests for any new or changed functionality. Tests use karma and jasmine, run them with:
+Please add unit tests for any new or changed functionality. Tests run twice: in PhantomJS using Karma and Jasmine, and in Node using only Jasmine, run them with:
 
     $ npm test
 
@@ -213,7 +209,8 @@ If you make changes please check coverage reports under `/coverage` to make sure
 Please note the aim of this SDK is to connect to the existing Mendeley API, not to add to that API. For more information about the API and to give any feedback please visit [the Mendeley developers site].
 
 
-[jquery deferred objects]:http://api.jquery.com/category/deferred-object/
+[Bluebird promises]:http://bluebirdjs.com/docs/api-reference.html
+[axios]:https://github.com/mzabriskie/axios#response-schema
 [es5-shim]:https://github.com/es-shims/es5-shim
 [requirejs]:http://requirejs.org
 [webpack]:http://webpack.github.io
