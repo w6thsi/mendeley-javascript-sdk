@@ -10,9 +10,7 @@ if (minify) {
 }
 
 module.exports = {
-    entry: {
-        main: './lib/index.js'
-    },
+    entry: ['./bower_components/es5-shim/es5-shim.js', './lib/index.js'],
     output: {
         path: './dist',
         filename: 'standalone' + (minify ? '.min' : '') + '.js',
