@@ -104,7 +104,7 @@ describe('folders api', function() {
             foldersApi.create({ name: 'foo' }).then(function(data) {
                 expect(data).toEqual({ id: '123', name: 'foo' });
                 done();
-            });
+            }).catch(function() {});
         });
     });
 

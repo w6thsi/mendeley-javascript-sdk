@@ -78,8 +78,6 @@ describe('documents api', function() {
 
     var mockPromiseInternalError = Bluebird.reject({ status: 500 });
 
-    var mockPromiseGatewayTimeout = Bluebird.reject({ status: 504 });
-
     // Get a function to return promises in order
     function getMockPromises() {
         var responses = Array.prototype.slice.call(arguments);
@@ -161,7 +159,7 @@ describe('documents api', function() {
             documentsApi.create({ title: 'foo' }).then(function(data) {
                 expect(data).toEqual({ id: '15', title: 'foo' });
                 done();
-            });
+            }).catch(function() {});
         });
     });
 
@@ -187,48 +185,73 @@ describe('documents api', function() {
     describe('createFromFile method', function() {
 
         var ajaxSpy;
-        var apiRequest;
         var ajaxRequest;
         var file = getFakeFile('中文file name(1).pdf', 'text/plain');
 
+        beforeEach(function() {
+            ajaxSpy = spyOn(axios, 'request').and.callFake(getMockPromises(mockPromiseCreateFromFile));
+        });
+
         it('should be defined', function(done) {
             expect(typeof documentsApi.createFromFile).toBe('function');
-            ajaxSpy = spyOn(axios, 'request').and.callFake(getMockPromises(mockPromiseCreateFromFile));
-            apiRequest = documentsApi.createFromFile(file).finally(function() {
+            documentsApi.createFromFile(file).finally(function() {
                 expect(ajaxSpy).toHaveBeenCalled();
-                ajaxRequest = ajaxSpy.calls.first().args[0];
                 done();
             });
         });
 
-        it('should use POST', function() {
-            expect(ajaxRequest.method).toBe('post');
+        it('should use POST', function(done) {
+            documentsApi.createFromFile(file).finally(function() {
+                ajaxRequest = ajaxSpy.calls.first().args[0];
+                expect(ajaxRequest.method).toBe('post');
+                done();
+            });
         });
 
-        it('should use endpoint /documents', function() {
-            expect(ajaxRequest.url).toBe(baseUrl + '/documents');
+        it('should use endpoint /documents', function(done) {
+            documentsApi.createFromFile(file).finally(function() {
+                ajaxRequest = ajaxSpy.calls.first().args[0];
+                expect(ajaxRequest.url).toBe(baseUrl + '/documents');
+                done();
+            });
         });
 
-        it('should have a Content-Type header the same as the file', function() {
-            expect(ajaxRequest.headers['Content-Type']).toBeDefined();
-            expect(ajaxRequest.headers['Content-Type']).toEqual('text/plain');
+        it('should have a Content-Type header the same as the file', function(done) {
+            documentsApi.createFromFile(file).finally(function() {
+                ajaxRequest = ajaxSpy.calls.first().args[0];
+                expect(ajaxRequest.headers['Content-Type']).toBeDefined();
+                expect(ajaxRequest.headers['Content-Type']).toEqual('text/plain');
+                done();
+            });
         });
 
-        it('should have a Content-Disposition header based on file name', function() {
-            expect(ajaxRequest.headers['Content-Disposition']).toEqual('attachment; filename*=UTF-8\'\'%E4%B8%AD%E6%96%87file%20name%281%29.pdf');
+        it('should have a Content-Disposition header based on file name', function(done) {
+            documentsApi.createFromFile(file).finally(function() {
+                ajaxRequest = ajaxSpy.calls.first().args[0];
+                expect(ajaxRequest.headers['Content-Disposition']).toEqual('attachment; filename*=UTF-8\'\'%E4%B8%AD%E6%96%87file%20name%281%29.pdf');
+                done();
+            });
         });
 
-        it('should have an Authorization header', function() {
-            expect(ajaxRequest.headers.Authorization).toBeDefined();
-            expect(ajaxRequest.headers.Authorization).toBe('Bearer auth');
+        it('should have an Authorization header', function(done) {
+            documentsApi.createFromFile(file).finally(function() {
+                ajaxRequest = ajaxSpy.calls.first().args[0];
+                expect(ajaxRequest.headers.Authorization).toBeDefined();
+                expect(ajaxRequest.headers.Authorization).toBe('Bearer auth');
+                done();
+            });
         });
 
-        it('should have a body of the file contents', function() {
-            expect(ajaxRequest.data).toEqual(file);
+        it('should have a body of the file contents', function(done) {
+            documentsApi.createFromFile(file).finally(function() {
+                ajaxRequest = ajaxSpy.calls.first().args[0];
+                expect(ajaxRequest.data).toEqual(file);
+                done();
+            });
         });
 
         it('should resolve with the response', function(done) {
-            apiRequest.then(function(data) {
+            documentsApi.createFromFile(file).then(function(data) {
                 expect(data).toEqual({ id: '15', title: 'foo' });
                 done();
             });
@@ -383,7 +406,7 @@ describe('documents api', function() {
             apiRequest.then(function(data) {
                 expect(data).toEqual({ id : '16', title : 'foo', 'group_id' : 'bar' });
                 done();
-            });
+            }).catch(function() {});
         });
     });
 
@@ -505,8 +528,8 @@ describe('documents api', function() {
         var ajaxSpy;
 
         it('should retry on 504', function(done) {
-            ajaxSpy = spyOn(axios, 'request').and.callFake(getMockPromises(mockPromiseGatewayTimeout, mockPromiseList));
-            documentsApi.list().finally(function() {
+            ajaxSpy = spyOn(axios, 'request').and.callFake(getMockPromises(Bluebird.reject({ status: 504 }), mockPromiseList));
+            documentsApi.list().then(function() {
                 expect(ajaxSpy).toHaveBeenCalled();
                 expect(ajaxSpy.calls.count()).toBe(2);
                 done();
@@ -514,8 +537,8 @@ describe('documents api', function() {
         });
 
         it('should only retry once', function(done) {
-            ajaxSpy = spyOn(axios, 'request').and.callFake(getMockPromises(mockPromiseGatewayTimeout, mockPromiseGatewayTimeout, mockPromiseList));
-            documentsApi.list().finally(function() {
+            ajaxSpy = spyOn(axios, 'request').and.callFake(getMockPromises(Bluebird.reject({ status: 504 }), Bluebird.reject({ status: 504 }), mockPromiseList));
+            documentsApi.list().catch(function() {
                 expect(ajaxSpy).toHaveBeenCalled();
                 expect(ajaxSpy.calls.count()).toBe(2);
                 done();
@@ -524,7 +547,7 @@ describe('documents api', function() {
 
         it('should NOT retry on response != 504', function(done) {
             ajaxSpy = spyOn(axios, 'request').and.callFake(getMockPromises(mockPromiseNotFound, mockPromiseList));
-            documentsApi.list().finally(function() {
+            documentsApi.list().catch(function() {
                 expect(ajaxSpy).toHaveBeenCalled();
                 expect(ajaxSpy.calls.count()).toBe(1);
                 done();
@@ -533,7 +556,7 @@ describe('documents api', function() {
 
         it('should NOT retry on failed create', function(done) {
             ajaxSpy = spyOn(axios, 'request').and.callFake(getMockPromises(mockPromiseInternalError, mockPromiseList));
-            documentsApi.create({ title: 'foo' }).finally(function() {
+            documentsApi.create({ title: 'foo' }).catch(function() {
                 expect(ajaxSpy).toHaveBeenCalled();
                 expect(ajaxSpy.calls.count()).toBe(1);
                 done();

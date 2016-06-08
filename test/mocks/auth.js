@@ -37,7 +37,7 @@ function mockAuthCodeFlow() {
         authenticate: function() { return false; },
         refreshToken: function() {
             fakeToken = 'auth-refreshed';
-            return Bluebird.resolve({headers: {}});
+            return Bluebird.resolve();
         }
     };
 }

@@ -145,4 +145,13 @@ describe('auth', function() {
         });
 
     });
+
+    describe('pre auth flow', function() {
+
+        it('should return the previously created access token', function() {
+            var authFlow = auth.authenticatedFlow('token1234');
+            expect(authFlow.getToken()).toBe('token1234');
+        });
+
+    });
 });

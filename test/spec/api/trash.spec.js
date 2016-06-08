@@ -268,7 +268,7 @@ describe('trash api', function() {
                 expect(trashApi.paginationLinks.last).toEqual(linkLast);
                 expect(trashApi.paginationLinks.prev).toEqual(false);
                 done();
-            });
+            }).catch(function() {});
         });
     });
 });

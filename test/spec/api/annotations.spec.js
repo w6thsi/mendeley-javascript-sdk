@@ -220,7 +220,7 @@ describe('annotations api', function() {
                 expect(annotationsApi.paginationLinks.last).toEqual(linkLast);
                 expect(annotationsApi.paginationLinks.prev).toEqual(false);
                 done();
-            });
+            }).catch(function() {});
 
         });
 

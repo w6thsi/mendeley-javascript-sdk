@@ -3,6 +3,8 @@
 var axios = require('axios');
 var Bluebird = require('bluebird');
 
+Bluebird.onPossiblyUnhandledRejection(function() {});
+
 // Get a function to return promises in order
 function getMockPromises() {
     var responses = Array.prototype.slice.call(arguments);
@@ -49,17 +51,18 @@ describe('request', function() {
             var mockAuthInterface = mockAuth.mockAuthCodeFlow();
             var myRequest = request.create({ method: 'get' }, { authFlow: mockAuthInterface });
             var fun = getMockPromises(
-                Bluebird.reject(mockAuth.unauthorisedError), // Auth failure
+                Bluebird.reject({ status: 401 }), // Auth failure
                 Bluebird.resolve({ status: 200, headers: {} }) // Original request success
             );
             var ajaxSpy = spyOn(axios, 'request').and.callFake(fun);
             var authRefreshSpy = spyOn(mockAuthInterface, 'refreshToken').and.callThrough();
 
-            myRequest.send().finally(function() {
+            myRequest.send().then(function() {
                 expect(authRefreshSpy.calls.count()).toEqual(1);
                 expect(ajaxSpy.calls.count()).toEqual(2);
                 expect(ajaxSpy.calls.mostRecent().args[0].headers.Authorization).toEqual('Bearer auth-refreshed');
-            }).finally(done);
+                done();
+            });
 
         });
 
@@ -67,7 +70,7 @@ describe('request', function() {
             var mockAuthInterface = mockAuth.mockAuthCodeFlow();
             var myRequest = request.create({ method: 'get' }, { authFlow: mockAuthInterface });
             var fun = getMockPromises(
-                Bluebird.reject(mockAuth.unauthorisedError), // Auth failure
+                Bluebird.reject({ status: 401 }), // Auth failure
                 Bluebird.resolve({ status: 200, headers: {} }) // Original request success
             );
             var ajaxSpy = spyOn(axios, 'request').and.callFake(fun);
@@ -78,8 +81,8 @@ describe('request', function() {
                 expect(ajaxSpy.calls.count()).toEqual(1);
                 expect(authRefreshSpy.calls.count()).toEqual(1);
                 expect(authAuthenticateSpy.calls.count()).toEqual(1);
-            }).finally(done);
-
+                done();
+            });
         });
 
         it('should send a notification if cannot refresh token', function(done) {
@@ -87,7 +90,7 @@ describe('request', function() {
             var mockAuthInterface = mockAuth.mockAuthCodeFlow();
             var myRequest = request.create({ method: 'get' }, { maxAuthRetries: 2, authFlow: mockAuthInterface }, {notify: mockNotifier});
 
-            var ajaxSpy = spyOn(axios, 'request').and.returnValue(Bluebird.reject(mockAuth.unauthorisedError));
+            var ajaxSpy = spyOn(axios, 'request').and.returnValue(Bluebird.reject({ status: 401 }));
             var authRefreshSpy = spyOn(mockAuthInterface, 'refreshToken').and.returnValue(Bluebird.reject({ status: 500 }));
 
             myRequest.send().catch(function() {
@@ -99,7 +102,8 @@ describe('request', function() {
                 //     ['authWarning', [ 401, 1, 2 ], { method : 'get', headers : { Accept: '', Authorization : 'Bearer auth' } } ],
                 //     ['refreshError', [500], { method : 'get', headers : { Accept: '', Authorization : 'Bearer auth' } }, undefined ]
                 // ]);
-            }).finally(done);
+                done();
+            });
         });
 
         it('should send a notification if no refresh token defined', function(done) {
@@ -119,7 +123,8 @@ describe('request', function() {
                 //     ['authWarning', [ 401, 1, 2 ], { method : 'get', headers : { Accept: '', Authorization : 'Bearer auth' } } ],
                 //     ['refreshNotConfigured', [] ]
                 // ]);
-            }).finally(done);
+                done();
+            });
         });
 
 
@@ -202,9 +207,10 @@ describe('request', function() {
             );
             var ajaxSpy = spyOn(axios, 'request').and.callFake(fun);
 
-            myRequest.send().finally(function() {
+            myRequest.send().catch(function() {
                 expect(ajaxSpy.calls.count()).toEqual(2);
-            }).finally(done);
+                done();
+            });
         });
 
         it('should correctly resolve the original deferred', function(done) {
@@ -225,7 +231,8 @@ describe('request', function() {
 
             myRequest.send().finally(function() {
                 expect(ajaxSpy.calls.count()).toEqual(10);
-            }).finally(done);
+                done();
+            }).catch(function() {});
         });
 
         it('should send a notification on request failure', function(done) {
