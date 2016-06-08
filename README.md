@@ -168,7 +168,7 @@ var folder123Api = api.documents.for('folder_id_abc-123-xyz');
 
 folder123Api.list({folder_id: 'abc-123-xyz'}).then(function (result) {
     // handle the first page of "123" folder documents
-    // api.documents.nextPage() gets set up to retrieve the next page of "123" folder documents
+    // folder123Api.nextPage() gets set up to retrieve the next page of "123" folder documents
 });
 
 folder123Api.nextPage().then(function (result) {
@@ -180,9 +180,15 @@ myDocumentsApi.nextPage().then(function (result) {
 });
 ```
 
-Calling the ```api.endpoint.for()``` method with a falsy or no params will return the original ```api.endpoint``` instance.
+Each call to ```api.endpoint.for()``` with the same string parameter will return
+exactly tha same instance of endpoint object.
 
-The convenient way of preparing the string parameter for the ```for()``` method is serialising the params object passed to list.
+Calling the ```api.endpoint.for()``` method with a falsy or no params will return
+the original ```api.endpoint``` instance.
+
+If you work with many folders at the same time, the convenient way of preparing
+the string parameter for the ```for()``` method is serialising the params object
+passed to the ```list()``` method.
 
 Example
 ```javascript
