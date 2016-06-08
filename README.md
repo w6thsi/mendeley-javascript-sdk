@@ -2,7 +2,7 @@
 
 ## About the SDK
 
-The SDK provides a convenient library for accessing the Mendeley API with client-side JavaScript.
+The SDK provides a convenient library for accessing the Mendeley API with client-side and server-side JavaScript.
 
 
 ## Installation
@@ -15,14 +15,13 @@ Or clone the git repository:
 
     $ git clone https://github.com/Mendeley/mendeley-javascript-sdk
 
-The SDK is available as an AMD module or a standalone library. To use the standalone library add a link from your HTML page. It has a dependency on jquery which must be loaded first.
+The SDK is available as a CommonJS module or a standalone bundle. To use the standalone library add a link from your HTML page.
 
 ```html
-<script src="//cdnjs.cloudflare.com/ajax/libs/jquery/1.10.1/jquery.min.js"></script>
 <script src="/your/path/to/mendeley-javascript-sdk/dist/standalone.js"></script>
 ```
 
-To use as an AMD module you'll need an AMD loader like [requirejs][] or [webpack][].
+To use as a CommonJS module in the browser, you'll need a module loader like [browserify][] or [webpack][].
 
 Some ECMAScript5 features are used so for older browsers you may need to shim these methods, for example with [es5-shim][].
 
@@ -212,7 +211,7 @@ Please note the aim of this SDK is to connect to the existing Mendeley API, not 
 [Bluebird promises]:http://bluebirdjs.com/docs/api-reference.html
 [axios]:https://github.com/mzabriskie/axios#response-schema
 [es5-shim]:https://github.com/es-shims/es5-shim
-[requirejs]:http://requirejs.org
+[browserify]:http://browserify.org/
 [webpack]:http://webpack.github.io
 [the Mendeley developers site]:http://dev.mendeley.com
 [register your application]:http://dev.mendeley.com
