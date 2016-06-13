@@ -10,7 +10,7 @@ if (minify) {
 }
 
 module.exports = {
-    entry: ['./bower_components/es5-shim/es5-shim.js', './lib/index.js'],
+    entry: ['./node_modules/es5-shim/es5-shim.js', './lib/index.js'],
     output: {
         path: './dist',
         filename: 'standalone' + (minify ? '.min' : '') + '.js',
@@ -21,7 +21,6 @@ module.exports = {
     resolve: {
         modulesDirectories: [
             'node_modules',
-            'bower_components',
             'lib',
             'test'
         ]
