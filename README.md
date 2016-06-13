@@ -129,6 +129,86 @@ define(function(require) {
 });
 ```
 
+## Pagination
+
+The API endpoint objects (e.g. ```MendeleySDK.API.documents```) store their pagination state and pagination methods on themselves. This means each call of ```list()``` method will override the state set by previous call. This wont cause any problems as long as you only use one set of params for ```list()``` method, but will result in wrong pagination results if you request a list of entities with many different param sets.
+
+Example
+```javascript
+var api = require('mendeley-javascript-sdk/lib/api');
+
+api.documents.list().then(function (result) {
+    // handle the first page of "My documents"
+    // api.documents.nextPage() gets set up to retrieve the next page of "My documents"
+});
+
+api.documents.list({folder_id: 'abc-123-xyz'}).then(function (result) {
+    // handle the first page of "123" folder documents
+    // api.documents.nextPage() gets set up to retrieve the next page of "123" folder documents
+});
+
+api.documents.nextPage().then(function (result) {
+    // next page of "123" folder documents will be retrieved,
+    // there's no way to retirieve the next page of "My documents" at this point
+});
+```
+
+To avoid this behavior, every endpoint object allows using separate instances of itself. It also saves you the hassle of storing the instances by exposing a simple getter on the top of string-indexed map.
+
+Example
+```javascript
+var api = require('mendeley-javascript-sdk/lib/api');
+
+// a new instance of api.documents is created under the hood and returned
+var myDocumentsApi = api.documents.for('my_documents');
+
+myDocumentsApi.list().then(function (result) {
+    // handle the first page of "My documents"
+    // myDocumentsApi.nextPage() gets set up to retrieve the next page of "My documents"
+});
+
+
+// another instance of api.documents is created for folder "123"
+var folder123Api = api.documents.for('folder_id_abc-123-xyz');
+
+folder123Api.list({folder_id: 'abc-123-xyz'}).then(function (result) {
+    // handle the first page of "123" folder documents
+    // folder123Api.nextPage() gets set up to retrieve the next page of "123" folder documents
+});
+
+folder123Api.nextPage().then(function (result) {
+    // next page of "123" folder documents will be retrieved
+});
+
+myDocumentsApi.nextPage().then(function (result) {
+    // next page of "My documents" will be retrieved independently of any other folder
+});
+```
+
+Each call to ```api.endpoint.for()``` with the same string parameter will return
+exactly tha same instance of endpoint object.
+
+Calling the ```api.endpoint.for()``` method with a falsy or no params will return
+the original ```api.endpoint``` instance.
+
+If you work with many folders at the same time, the convenient way of preparing
+the string parameter for the ```for()``` method is serialising the params object
+passed to the ```list()``` method.
+
+Example
+```javascript
+var api = require('mendeley-javascript-sdk/lib/api');
+
+var params = {
+    group_id: 'zxc-876-cbm',
+    folder_id: '345-jkl-ghj'
+};
+
+api.documents.for(JSON.stringify(params)).list(params).then(function (result) {
+    // handle the result
+});
+```
+
 ## Examples
 
 There are more examples in the `examples/` directory. To try the examples you will need [nodejs][] installed. *Note:* nodejs is not required to use this library, it is only used to serve the examples from a local URL you can use with OAuth2.
