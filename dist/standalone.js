@@ -1520,9 +1520,29 @@ return /******/ (function(modules) { // webpackBootstrap
 	/* WEBPACK VAR INJECTION */(function(process, global) {'use strict';
 
 	var utils = __webpack_require__(5);
+	var assign = __webpack_require__(28);
 
 	if (typeof process === 'object' && process + '' === '[object process]') {
 	    global.window = {};
+	}
+
+	function decorateWithFor(originalInstance, factory) {
+	    var instanceMap = {};
+
+	    originalInstance.for = function (mappingKey) {
+	        if (!mappingKey) {
+	            return originalInstance;
+	        }
+
+	        if (!instanceMap[mappingKey]) {
+	            // create a new instance
+	            instanceMap[mappingKey] = factory();
+	        }
+
+	        return instanceMap[mappingKey];
+	    };
+
+	    return originalInstance;
 	}
 
 	/**
@@ -1531,24 +1551,38 @@ return /******/ (function(modules) { // webpackBootstrap
 	 * @namespace
 	 * @name api
 	 */
-	module.exports = {
+	var methods = {
 	    setAuthFlow: utils.setAuthFlow,
 	    setBaseUrl:  utils.setBaseUrl,
-
-	    annotations: __webpack_require__(29)(),
-	    catalog: __webpack_require__(30)(),
-	    documents: __webpack_require__(31)(),
-	    files: __webpack_require__(32)(),
-	    folders: __webpack_require__(33)(),
-	    followers: __webpack_require__(34)(),
-	    groups: __webpack_require__(35)(),
-	    institutions: __webpack_require__(36)(),
-	    institutionTrees: __webpack_require__(37)(),
-	    locations: __webpack_require__(38)(),
-	    metadata: __webpack_require__(39)(),
-	    profiles: __webpack_require__(40)(),
-	    trash: __webpack_require__(41)()
+	    decorateWithFor: decorateWithFor
 	};
+
+	var endpointFactories = {
+	    annotations: __webpack_require__(29),
+	    catalog: __webpack_require__(30),
+	    documents: __webpack_require__(31),
+	    files: __webpack_require__(32),
+	    folders: __webpack_require__(33),
+	    followers: __webpack_require__(34),
+	    groups: __webpack_require__(35),
+	    institutions: __webpack_require__(36),
+	    institutionTrees: __webpack_require__(37),
+	    locations: __webpack_require__(38),
+	    metadata: __webpack_require__(39),
+	    profiles: __webpack_require__(40),
+	    trash: __webpack_require__(41)
+	};
+
+	var endpoints = {};
+
+	Object.keys(endpointFactories).forEach(function(endpointName) {
+	    var factory = endpointFactories[endpointName];
+	    var originalInstance = factory();
+
+	    endpoints[endpointName] = decorateWithFor(originalInstance, factory);
+	});
+
+	module.exports = assign(endpoints, methods);
 
 	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(4), (function() { return this; }())))
 
@@ -1691,17 +1725,26 @@ return /******/ (function(modules) { // webpackBootstrap
 	    baseUrl = url;
 	}
 
+	function dataFilter(response) {
+	    return response.data;
+	}
+
 	/**
 	 * A general purpose request functions
 	 *
 	 * @private
+	 * @param {function} [responseFilter] - Optional filter to control which part of the response the promise resolves with
 	 * @param {string} method
 	 * @param {string} uriTemplate
 	 * @param {array} uriVars
 	 * @param {array} headers
 	 * @returns {function}
 	 */
-	function requestFun(method, uriTemplate, uriVars, headers) {
+	function requestFun(responseFilter, method, uriTemplate, uriVars, headers) {
+	    if (typeof responseFilter !== 'function') {
+	        return requestFun(dataFilter, responseFilter, method, uriTemplate, uriVars);
+	    }
+
 	    uriVars = uriVars || [];
 
 	    return function() {
@@ -1730,8 +1773,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	        return promise.then(function(response) {
 	            setPaginationLinks.call(this, response.headers);
 
-	            return response.data;
-	        }.bind(this));
+	            return response;
+	        }.bind(this)).then(responseFilter);
 	    };
 	}
 
@@ -1739,11 +1782,15 @@ return /******/ (function(modules) { // webpackBootstrap
 	 * Get a function for getting a pagination rel
 	 *
 	 * @private
+	 * @param {function} [responseFilter] - Optional filter to control which part of the response the promise resolves with
 	 * @param {string} rel - One of "next", "prev" or "last"
 	 * @param {object} headers
 	 * @returns {function}
 	 */
-	function requestPageFun(rel, headers) {
+	function requestPageFun(responseFilter, rel, headers) {
+	    if (typeof responseFilter !== 'function') {
+	        return requestPageFun(dataFilter, responseFilter, rel);
+	    }
 
 	    return function() {
 	        if (!this.paginationLinks[rel]) {
@@ -1766,8 +1813,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	        
 	        return promise.then(function(response) {
 	            setPaginationLinks.call(this, response.headers);
-	            return response.data;
-	        }.bind(this));
+	            return response;
+	        }.bind(this)).then(responseFilter);
 	    };
 	}
 
@@ -1776,6 +1823,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	 * The data will be taken from the calling argument after any uriVar arguments.
 	 *
 	 * @private
+	 * @param {function} [responseFilter] - Optional filter to control which part of the response the promise resolves with
 	 * @param {string} method - The HTTP method
 	 * @param {string} uriTemplate - A URI template e.g. /documents/{id}
 	 * @param {array} uriVars - The variables for the URI template in the order
@@ -1785,7 +1833,11 @@ return /******/ (function(modules) { // webpackBootstrap
 	 * @param {bool} followLocation - follow the returned location header? Default is false
 	 * @returns {function}
 	 */
-	function requestWithDataFun(method, uriTemplate, uriVars, headers, followLocation) {
+	function requestWithDataFun(responseFilter, method, uriTemplate, uriVars, headers, followLocation) {
+	    if (typeof responseFilter !== 'function') {
+	        return requestWithDataFun(dataFilter, responseFilter, method, uriTemplate, uriVars, headers);
+	    }
+
 	    uriVars = uriVars || [];
 
 	    return function() {
@@ -1806,9 +1858,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	        var promise = Request.create(request, settings).send();
 
-	        return promise.then(function(response) {
-	            return response.data;
-	        });
+	        return promise.then(responseFilter);
 	    };
 	}
 
@@ -1816,13 +1866,17 @@ return /******/ (function(modules) { // webpackBootstrap
 	 * Get a request function that sends a file
 	 *
 	 * @private
+	 * @param {function} [responseFilter] - Optional filter to control which part of the response the promise resolves with
 	 * @param {string} method
 	 * @param {string} uriTemplate
 	 * @param {string} linkType - Type of the element to link this file to
 	 * @param {object} headers - Any additional headers to send
 	 * @returns {function}
 	 */
-	function requestWithFileFun(method, uriTemplate, linkType, headers) {
+	function requestWithFileFun(responseFilter, method, uriTemplate, linkType, headers) {
+	    if (typeof responseFilter !== 'function') {
+	        return requestWithFileFun(dataFilter, responseFilter, method, uriTemplate, linkType);
+	    }
 
 	    return function() {
 	        var args = Array.prototype.slice.call(arguments, 0);
@@ -1850,9 +1904,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	        var promise = Request.create(request, settings).send();
 
-	        return promise.then(function(response) {
-	            return response.data;
-	        });
+	        return promise.then(responseFilter);
 	    };
 	}
 
@@ -2013,8 +2065,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    authFlow: false,
 	    maxRetries: 0,
 	    maxAuthRetries: 1,
-	    followLocation: false,
-	    fileUpload: false,
+	    followLocation: false
 	};
 
 	function create(request, settings) {
@@ -2037,8 +2088,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    var token = this.settings.authFlow.getToken(),
 	        headers = assign({ Accept: '' }, request.headers);
 
-	    // If no token at all (cookie deleted or expired) refresh token if possible or authenticate
-	    // because if you send 'Bearer ' you get a 400 rather than a 401 - is that a bug in the api?
+	    // If no token at all (cookie deleted or expired), attempt to refresh token
 	    if (!token) {
 	        this.authRetries++;
 	        return refreshToken.call(this);
@@ -2075,7 +2125,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	                this.authRetries++;
 	                return refreshToken.call(this);
 	            } else {
-	                this.settings.authFlow.authenticate(200);
+	                this.settings.authFlow.authenticate();
 	                throw response;
 	            }
 	            break;
@@ -2094,22 +2144,13 @@ return /******/ (function(modules) { // webpackBootstrap
 	            url: locationHeader,
 	            responseType: 'json'
 	        };
+
 	        return this.send(redirect);
 	    } else {
 	        if (response.headers.link && typeof response.headers.link === 'string') {
 	            response.headers.link = extractLinkHeaders(response.headers.link);
 	        }
 
-	        // File uploads have type set to text, so if there is some JSON parse it manually
-	        if (this.settings.fileUpload) {
-	            if (response) {
-	                try {
-	                    response = JSON.parse(response);
-	                } catch (error) {
-	                    throw error;
-	                }
-	            }
-	        }
 	        return response;
 	    }
 	}
@@ -2120,7 +2161,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	        return refresh
 	            // If fails then we need to re-authenticate
 	            .catch(function(response) {
-	                this.settings.authFlow.authenticate(200);
+	                this.settings.authFlow.authenticate();
 	                throw response;
 	            }.bind(this))
 	            // If OK update the access token and re-send the request
@@ -2128,7 +2169,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	                return this.send();
 	            }.bind(this));
 	    } else {
-	        this.settings.authFlow.authenticate(200);
+	        this.settings.authFlow.authenticate();
 	        return Bluebird.reject(new Error('No token'));
 	    }
 	}
