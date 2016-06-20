@@ -2,7 +2,7 @@
 
 ## About the SDK
 
-The SDK provides a convenient library for accessing the Mendeley API with client-side JavaScript.
+The SDK provides a convenient library for accessing the Mendeley API with client-side and server-side JavaScript.
 
 
 ## Installation
@@ -15,16 +15,23 @@ Or clone the git repository:
 
     $ git clone https://github.com/Mendeley/mendeley-javascript-sdk
 
-The SDK is available as an AMD module or a standalone library. To use the standalone library add a link from your HTML page. It has a dependency on jquery which must be loaded first.
+The SDK is available as a CommonJS module or a standalone bundle. To use the standalone library add a link from your HTML page.
 
 ```html
-<script src="//cdnjs.cloudflare.com/ajax/libs/jquery/1.10.1/jquery.min.js"></script>
 <script src="/your/path/to/mendeley-javascript-sdk/dist/standalone.js"></script>
 ```
 
-To use as an AMD module you'll need an AMD loader like [requirejs][] or [webpack][].
+To use as a CommonJS module in the browser, you'll need a module loader like [browserify][] or [webpack][].
 
-The only hard-dependency is jquery 1.10.1 or above (it may work with earlier versions but these are untested).
+Depending on your target browsers, you may need to polyfill Promise because the SDK relies on a global Promise variable being defined. For example, in webpack configuration include the following:
+
+```
+{
+    plugins: [new webpack.ProvidePlugin({
+        Promise: 'bluebird'
+    })];
+}
+```
 
 Some ECMAScript5 features are used so for older browsers you may need to shim these methods, for example with [es5-shim][].
 
@@ -84,18 +91,17 @@ Once the OAuth flow is complete you can start grabbing data for the user. CORS i
 
 Each API is exposed as a property of the SDK, for example `MendeleySDK.API.documents`, `MendeleySDK.API.folders`.
 
-Methods that make API calls use [jquery deferred objects][] and return promises. Each call will either resolve with some data or reject with the original request and the API response. Here's an example using the standalone version:
+Methods that make API calls return [Bluebird promises][]. Each call will either resolve with some data or reject with a response object according to the response from [axios][]. Here's an example using the standalone version:
 
 ```javascript
-MendeleySDK.API.documents.list().done(function(docs) {
+MendeleySDK.API.documents.list().then(function(docs) {
 
     console.log('Success!');
     console.log(docs);
 
-}).fail(function(request, response) {
+}).catch(function(response) {
 
     console.log('Failed!');
-    console.log('URL:', request.url);
     console.log('Status:', response.status);
 
 });
@@ -109,54 +115,97 @@ define(function(require) {
     var auth = require('mendeley-javascript-sdk/lib/auth');
     api.setAuthFlow(auth.authCodeFlow());
 
-    api.documents.list().done(function() {
+    api.documents.list().then(function() {
 
         console.log('Success!');
         console.log(docs);
 
-    }).fail(function(request, response) {
+    }).catch(function(response) {
 
         console.log('Failed!');
-        console.log('URL:', request.url);
         console.log('Status:', response.status);
 
     });
 });
 ```
 
-## Logging API events
+## Pagination
 
-For logging API communication e.g. warning and error, you can attach a notifier that will send a message to a delegated logger function when a relevant event happens. If you want to limit the verbosity of the notifier just pass the minimum log level as the second parameter of the notifier creator.
+The API endpoint objects (e.g. ```MendeleySDK.API.documents```) store their pagination state and pagination methods on themselves. This means each call of ```list()``` method will override the state set by previous call. This wont cause any problems as long as you only use one set of params for ```list()``` method, but will result in wrong pagination results if you request a list of entities with many different param sets.
 
-The message structure is :
-
+Example
 ```javascript
-{
-    code: 'Unique numeric identification of the error ',
-    level: 'Severity level of the message (error, warn, info, debug)'
-    message: 'Textual explanation of the error',
-    request : 'If available, the request who generated the event',
-    response : 'If available, the response who generated the event'
-}
+var api = require('mendeley-javascript-sdk/lib/api');
+
+api.documents.list().then(function (result) {
+    // handle the first page of "My documents"
+    // api.documents.nextPage() gets set up to retrieve the next page of "My documents"
+});
+
+api.documents.list({folder_id: 'abc-123-xyz'}).then(function (result) {
+    // handle the first page of "123" folder documents
+    // api.documents.nextPage() gets set up to retrieve the next page of "123" folder documents
+});
+
+api.documents.nextPage().then(function (result) {
+    // next page of "123" folder documents will be retrieved,
+    // there's no way to retirieve the next page of "My documents" at this point
+});
 ```
 
-Here's an example using the browser console as logger.
+To avoid this behavior, every endpoint object allows using separate instances of itself. It also saves you the hassle of storing the instances by exposing a simple getter on the top of string-indexed map.
 
+Example
 ```javascript
-define(function(require) {
-    var api = require('mendeley-javascript-sdk/api');
-    var auth = require('mendeley-javascript-sdk/auth');
-    var notifier = require('mendeley-javascript-sdk/notifier');
+var api = require('mendeley-javascript-sdk/lib/api');
 
-    var logger = function(message) {
-        console[message.level](message);
-    };
+// a new instance of api.documents is created under the hood and returned
+var myDocumentsApi = api.documents.for('my_documents');
 
-    // notifier.createNotifier(<logger function>, <minimum log level>)
-    var apiNotifier = notifier.createNotifier(logger, 'warn');
+myDocumentsApi.list().then(function (result) {
+    // handle the first page of "My documents"
+    // myDocumentsApi.nextPage() gets set up to retrieve the next page of "My documents"
+});
 
-    api.setAuthFlow(auth.authCodeFlow(authSettings));
-    api.setNotifier(apiNotifier);
+
+// another instance of api.documents is created for folder "123"
+var folder123Api = api.documents.for('folder_id_abc-123-xyz');
+
+folder123Api.list({folder_id: 'abc-123-xyz'}).then(function (result) {
+    // handle the first page of "123" folder documents
+    // folder123Api.nextPage() gets set up to retrieve the next page of "123" folder documents
+});
+
+folder123Api.nextPage().then(function (result) {
+    // next page of "123" folder documents will be retrieved
+});
+
+myDocumentsApi.nextPage().then(function (result) {
+    // next page of "My documents" will be retrieved independently of any other folder
+});
+```
+
+Each call to ```api.endpoint.for()``` with the same string parameter will return
+exactly tha same instance of endpoint object.
+
+Calling the ```api.endpoint.for()``` method with a falsy or no params will return
+the original ```api.endpoint``` instance.
+
+If you work with many folders at the same time, the convenient way of preparing
+the string parameter for the ```for()``` method is serialising the params object
+passed to the ```list()``` method.
+
+Example
+```javascript
+var api = require('mendeley-javascript-sdk/lib/api');
+
+var params = {
+    group_id: 'zxc-876-cbm',
+    folder_id: '345-jkl-ghj'
+};
+
+api.documents.for(JSON.stringify(params)).list(params).then(function (result) {
+    // handle the result
 });
 ```
 
@@ -204,7 +253,7 @@ All contributions should be made by pull request (even if you have commit rights
 
 In lieu of a formal styleguide, take care to maintain the existing coding style.
 
-Please add unit tests for any new or changed functionality. Tests use karma and jasmine, run them with:
+Please add unit tests for any new or changed functionality. Tests run twice: in PhantomJS using Karma and Jasmine, and in Node using only Jasmine, run them with:
 
     $ npm test
 
@@ -213,9 +262,10 @@ If you make changes please check coverage reports under `/coverage` to make sure
 Please note the aim of this SDK is to connect to the existing Mendeley API, not to add to that API. For more information about the API and to give any feedback please visit [the Mendeley developers site].
 
 
-[jquery deferred objects]:http://api.jquery.com/category/deferred-object/
+[Bluebird promises]:http://bluebirdjs.com/docs/api-reference.html
+[axios]:https://github.com/mzabriskie/axios#response-schema
 [es5-shim]:https://github.com/es-shims/es5-shim
-[requirejs]:http://requirejs.org
+[browserify]:http://browserify.org/
 [webpack]:http://webpack.github.io
 [the Mendeley developers site]:http://dev.mendeley.com
 [register your application]:http://dev.mendeley.com

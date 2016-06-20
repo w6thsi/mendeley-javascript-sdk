@@ -7,7 +7,7 @@
     "url": "git://github.com/Mendeley/mendeley-javascript-sdk"
   },
   "moduleType": [
-    "amd",
+    "node",
     "globals"
   ],
   "keywords": [
@@ -15,9 +15,6 @@
     "api",
     "sdk"
   ],
-  "dependencies": {
-    "jquery": "~1.11.0"
-  },
   "license": "Apache-2.0",
   "homepage": "http://dev.mendeley.com",
   "ignore": [
@@ -27,8 +24,5 @@
     "bin",
     "test",
     "tests"
-  ],
-  "devDependencies": {
-    "es5-shim": "~4.0.3"
-  }
+  ]
 }

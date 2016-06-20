@@ -10,45 +10,52 @@ module.exports = function(app, config) {
     });
 
     var cookieParser = require('cookie-parser');
+    var sdk = require('../lib/api');
+    var Bluebird = require('bluebird');
     var accessTokenCookieName = 'accessToken';
     var refreshTokenCookieName = 'refreshToken';
-    var oauthPath = '/oauth';
     var examplesPath = '/examples';
     var tokenExchangePath = '/oauth/token-exchange';
 
     app.use(cookieParser());
 
+    app.use(function(req, res, next) {
+        res.locals.authFlow = serverClientCredentialsFlow(req, res);
+        sdk.setAuthFlow(res.locals.authFlow);
+        next();
+    });
+
     app.get('/', function(req, res) {
-        if (!req.cookies[accessTokenCookieName]) {
-            console.log('No cookie defined, redirecting to', oauthPath);
-            res.redirect(oauthPath);
-        }
-        else {
+        var token = res.locals.authFlow.getToken();
+
+        if (!token) {
+            console.log('No token set - authenticate');
+            res.locals.authFlow.authenticate();
+        } else {
             console.log('Access token set, redirecting to', examplesPath);
             res.redirect(examplesPath);
         }
     });
 
-    app.get(oauthPath, function (req, res) {
-        var authorizationUri = oauth2.authCode.authorizeURL({
-            redirect_uri: config.redirectUri,
-            scope: config.scope || 'all'
-        });
-
-        console.log('oauth started, redirecting to', authorizationUri);
-        res.redirect(authorizationUri);
+    app.get('/profile', function(req, res) {
+        sdk.profiles.retrieve('185e304e-af77-3ce2-9d69-f68f60d2ee4f').then(function(docs) {
+            res.send(JSON.stringify(docs));
+        }).catch(function(reason) {
+            res.status(reason.status).send();
+        })
     });
 
     app.get(tokenExchangePath, function (req, res, next) {
         console.log('Starting token exchange');
         var code = req.query.code;
+
         oauth2.authCode.getToken({
             redirect_uri: config.redirectUri,
             code: code,
         }, function(error, result) {
             if (error) {
-                console.log('Error exchanging token');
-                res.redirect('/logout')
+                console.log('Error exchanging token', error);
+                res.redirect('/logout');
             } else {
                 setCookies(res, result);
                 res.redirect(examplesPath);
@@ -60,49 +67,107 @@ module.exports = function(app, config) {
         console.log('Logging in, clearing any existing cookies');
         res.clearCookie(accessTokenCookieName);
         res.clearCookie(refreshTokenCookieName);
-        res.redirect(oauthPath);
+        res.locals.authFlow.authenticate();
     });
 
     app.get('/oauth/refresh', function(req, res, next) {
-
-        console.log('Attempting to refresh access token');
-
-        var cookies = req.cookies, json = '{ message: "unknown error"}', status;
-
         res.set('Content-Type', 'application/json');
 
-        // No cookies? Don't bother trying to refresh and send a 401
-        if (!cookies[refreshTokenCookieName]) {
-            console.log('Cannot refresh as no refresh token cookie available')
-            status = 401;
-            json = '{ message: "Refresh token unavailable" }';
-            res.status(status).send(json);
-        }
-        // Otherwise attempt refresh
-        else {
-            oauth2.AccessToken.create({
-                access_token: cookies[accessTokenCookieName],
-                refresh_token: cookies[refreshTokenCookieName]
-            }).refresh(function(error, token) {
-                // On error send a 401
-                if (error) {
-                    status = 401;
-                    json = '{ message: "Refresh token invalid" }';
-                }
-                // Otherwise put new access/refresh token in cookies and send 200
-                else {
-                    status = 200;
-                    setCookies(res, token.token);
-                    json = '{ message: "Refresh token succeeded" }';
-                }
-                console.log('Refresh result:', status, json)
-                res.status(status).send(json);
-            });
-        }
+        res.locals.authFlow.refreshToken().then(function() {
+            return {
+                json: '{ message: "Refresh token succeeded" }',
+                status: 200
+            };
+        }).catch(function() {
+            return {
+                status: 401,
+                json: '{ message: "Refresh token invalid" }'
+            };
+        }).then(function(result) {
+            res.status(result.status).send(result.json);
+        });
     });
 
     function setCookies(res, token) {
         res.cookie(accessTokenCookieName, token.access_token, { maxAge: token.expires_in * 1000 });
         res.cookie(refreshTokenCookieName, token.refresh_token, { httpOnly: true });
     }
+
+    function serverAuthCodeFlow(req, res) {
+        var accessToken = req.cookies[accessTokenCookieName];
+        var refreshToken = req.cookies[refreshTokenCookieName];
+
+        return {
+
+            authenticate: function() {
+                var authorizationUri = oauth2.authCode.authorizeURL({
+                    redirect_uri: config.redirectUri,
+                    scope: config.scope || 'all'
+                });
+
+                console.log('No cookie defined, redirecting to', authorizationUri);
+                res.redirect(authorizationUri);
+            },
+
+            getToken: function() {
+                return accessToken;
+            },
+
+            refreshToken: function() {
+                if (!refreshToken) {
+                    return Bluebird.reject(new Error('No refresh token'));
+                } else {
+                    return new Bluebird(function(resolve, reject) {
+                        oauth2.accessToken.create({
+                            access_token: accessToken,
+                            refresh_token: refreshToken
+                        }).refresh(function(error, result) {
+                            if (error) {
+                                console.log('Error while refreshing token', error);
+                                reject(error);
+                            } else {
+                                accessToken = result.token.access_token;
+                                refreshToken = result.token.refresh_token;
+                                setCookies(res, result.token);
+                                resolve();
+                            }
+                        });
+                    });
+                }
+            }
+
+        };
+    }
+
+
+    function serverClientCredentialsFlow(req, res) {
+        var accessToken = req.cookies[accessTokenCookieName];
+
+        return {
+
+            authenticate: function() {},
+
+            getToken: function() {
+                return accessToken;
+            },
+
+            refreshToken: function() {
+                console.log('Refreshing token');
+                return new Bluebird(function(resolve, reject) {
+                    oauth2.client.getToken({
+                        scope: 'all'
+                    }, function(error, token) {
+                        if (error) {
+                            reject(error);
+                        } else {
+                            accessToken = token.access_token;
+                            resolve();
+                        }
+                    });
+                });
+            }
+
+        };
+    }
+
 };

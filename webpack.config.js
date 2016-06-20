@@ -1,26 +1,28 @@
-var webpack = require('webpack'),
+var webpack = require('webpack');
+var plugins = [new webpack.ProvidePlugin({
+    Promise: 'bluebird'
+})];
+var useMinifier = (process.argv.slice(1).indexOf('--minify') !== -1);
 
-    minify = process.argv[2] === '--minify',
-    plugins = minify ? [new webpack.optimize.UglifyJsPlugin()] : [];
+if (useMinifier) {
+    plugins.push(new webpack.optimize.UglifyJsPlugin());
+}
 
 module.exports = {
-    entry: {
-        main: './lib/index.js'
-    },
+    entry: ['./node_modules/es5-shim/es5-shim.js', './lib/index.js'],
     output: {
         path: './dist',
-        filename: 'standalone' + (minify ? '.min' : '') + '.js',
-
+        filename: 'standalone' + (useMinifier ? '.min' : '') + '.js',
         library: 'MendeleySDK',
         libraryTarget: 'umd'
     },
     resolve: {
         modulesDirectories: [
             'node_modules',
-            'bower_components',
-            'lib'
+            'lib',
+            'test'
         ]
     },
-    devtool: minify ? "source-map" : "",
+    devtool: useMinifier ? 'source-map' : '',
     plugins: plugins
 };
