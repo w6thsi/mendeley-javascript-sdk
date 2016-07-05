@@ -12,16 +12,12 @@ module.exports = function(config) {
 
         // frameworks to use
         // available frameworks: https://npmjs.org/browse/keyword/karma-adapter
-        frameworks: ['jasmine', 'requirejs'],
+        frameworks: ['jasmine'],
 
         // list of files / patterns to load in the browser
         files: [
-            'bower_components/jquery/dist/jquery.js',
-            'test/test-main.js',
-            {pattern: 'bower_components/es5-shim/es5-shim.js', included: false },
-            {pattern: 'lib/**/*.js', included: false},
-            {pattern: 'test/mocks/*.js', included: false},
-            {pattern: 'test/spec/**/*.spec.js', included: false}
+            'node_modules/es5-shim/es5-shim.js',
+            'test/spec/**/*.spec.js'
         ],
 
         // list of files to exclude
@@ -31,7 +27,8 @@ module.exports = function(config) {
         // preprocess matching files before serving them to the browser
         // available preprocessors: https://npmjs.org/browse/keyword/karma-preprocessor
         preprocessors: {
-            'lib/**/*.js': 'coverage'
+            'lib/**/*.js': 'coverage',
+            'test/spec/**/*.spec.js': ['webpack']
         },
 
         coverageReporter: {
@@ -68,6 +65,17 @@ module.exports = function(config) {
 
         // Continuous Integration mode
         // if true, Karma captures browsers, runs the tests and exits
-        singleRun: false
+        singleRun: false,
+
+        webpack: require(process.cwd() + '/webpack.config'),
+
+        // Prevents webpack from logging stats on all the chunks
+        webpackMiddleware: {
+            noInfo: true
+        },
+
+        client: {
+            captureConsole: false
+        }
     });
 };

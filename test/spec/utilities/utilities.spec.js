@@ -1,36 +1,35 @@
-define(function(require) {
+'use strict';
 
-    'use strict';
+describe('utilities', function() {
+    var utils = require('../../../lib/utilities');
+    var mockAuth = require('../../mocks/auth');
+    var axios = require('axios');
+    var Bluebird = require('bluebird');
 
-    describe('utilities', function() {
+    utils.setAuthFlow(mockAuth.mockImplicitGrantFlow());
 
-        var utils = require('utilities');
-        var mockAuth = require('mocks/auth');
-        utils.setAuthFlow(mockAuth.mockImplicitGrantFlow());
+    describe('requestWithFileFun', function() {
+        var ajaxSpy;
 
-        describe('requestWithFileFun', function() {
-
-            var ajaxSpy;
-
-            beforeEach(function() {
-                ajaxSpy = spyOn($, 'ajax').and.returnValue($.Deferred().resolve());
-            });
-
-            it('should allow a custom content-type to be set against a request', function() {
-                var file = {
-                    name: 'fileName',
-                    type: 'text/plain'
-                };
-                var requestFunction = utils.requestWithFileFun('POST', 'url', 'link', {
-                    'Content-Type': 'text/html'
-                });
-
-                requestFunction(file);
-                expect(ajaxSpy.calls.mostRecent().args[0].headers['Content-Type']).toBe('text/html');
-            });
-
+        beforeEach(function() {
+            ajaxSpy = spyOn(axios, 'request').and.returnValue(Bluebird.resolve({
+                headers: {}
+            }));
         });
 
+        it('should allow a custom content-type to be set against a request', function(done) {
+            var file = {
+                name: 'fileName',
+                type: 'text/plain'
+            };
+            var requestFunction = utils.requestWithFileFun('POST', 'url', 'link', {
+                'Content-Type': 'text/html'
+            });
+
+            requestFunction(file).finally(function() {
+                expect(ajaxSpy.calls.mostRecent().args[0].headers['Content-Type']).toBe('text/html');
+                done();
+            });
+        });
     });
 });
-

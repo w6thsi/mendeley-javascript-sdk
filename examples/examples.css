@@ -11,13 +11,15 @@ header .login {
 
 .documents,
 .folders,
-.files {
+.files,
+.upload-document {
     padding: 10px 0 0 0;
 }
 
 .documents-cta,
 .folders-cta,
-.files-cta {
+.files-cta,
+.upload-document-cta {
     margin: 20px 0;
 }
 

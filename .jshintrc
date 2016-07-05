@@ -25,6 +25,8 @@
         "jQuery",
         "before",
         "beforeEach",
+        "fdescribe",
+        "fit",
         "waitsFor",
         "runs",
         "define",
