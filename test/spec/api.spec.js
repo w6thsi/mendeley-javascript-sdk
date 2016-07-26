@@ -46,7 +46,7 @@ describe('api endpoints', function() {
       var sdk = require('../../');
 
       it('should remove the global api when using instances', function() {
-          var api = sdk({})
+          var api = sdk({});
 
           expect(api.API).toBeUndefined();
       });
@@ -57,8 +57,8 @@ describe('api endpoints', function() {
           var options = {
             baseUrl: baseUrl,
             authFlow: authFlow
-          }
-          var api = sdk(options)
+          };
+          var api = sdk(options);
 
           expect(options.baseUrl).toEqual(jasmine.any(Function));
           expect(options.baseUrl()).toEqual(baseUrl);
@@ -78,8 +78,8 @@ describe('api endpoints', function() {
           var options = {
             baseUrl: baseUrlFunc,
             authFlow: authFlowFunc
-          }
-          var api = sdk(options)
+          };
+          var api = sdk(options);
 
           expect(options.baseUrl).toEqual(baseUrlFunc);
           expect(options.baseUrl()).toEqual(baseUrl);
@@ -96,13 +96,13 @@ describe('api endpoints', function() {
       it('should allow two sets of authFlow credentials', function() {
           var options1 = {
             authFlow: 'authFlow1'
-          }
+          };
           var options2 = {
             authFlow: 'authFlow2'
-          }
+          };
 
-          var api1 = sdk(options1)
-          var api2 = sdk(options2)
+          var api1 = sdk(options1);
+          var api2 = sdk(options2);
 
           expect(options1.authFlow()).toEqual('authFlow1');
           expect(options2.authFlow()).toEqual('authFlow2');
