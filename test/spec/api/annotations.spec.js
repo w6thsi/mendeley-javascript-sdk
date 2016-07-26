@@ -6,7 +6,7 @@ var Bluebird = require('bluebird');
 
 describe('annotations api', function() {
 
-    var api = require('../../../lib/api');
+    var api = require('../../../').API;
     var annotationsApi = api.annotations;
     var baseUrl = 'https://api.mendeley.com';
 
@@ -36,8 +36,8 @@ describe('annotations api', function() {
             expect(ajaxRequest.method).toBe('get');
         });
 
-        it('should use endpoint /annotations/', function() {
-            expect(ajaxRequest.url).toBe(baseUrl + '/annotations/');
+        it('should use endpoint /annotations', function() {
+            expect(ajaxRequest.url).toBe(baseUrl + '/annotations');
         });
 
         it('should NOT have a Content-Type header', function() {
@@ -109,7 +109,7 @@ describe('annotations api', function() {
         });
 
         it('should use endpoint https://api.mendeley.com/annotations/', function() {
-            expect(ajaxRequest.url).toBe(baseUrl + '/annotations/');
+            expect(ajaxRequest.url).toBe(baseUrl + '/annotations');
         });
 
         it('should have a Content-Type header', function() {
@@ -269,7 +269,7 @@ describe('annotations api', function() {
                 expect(annotationsApi.paginationLinks.next).toEqual(linkNext);
                 expect(annotationsApi.paginationLinks.last).toEqual(linkLast);
                 expect(annotationsApi.paginationLinks.prev).toEqual(false);
-                
+
                 done();
             });
         });

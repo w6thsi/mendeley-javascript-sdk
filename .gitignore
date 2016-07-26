@@ -6,3 +6,4 @@ examples/config.js
 examples/oauth-config.js
 examples/oauth-config.implicit-grant.js
 examples/oauth-config.auth-code.js
+.nyc_output

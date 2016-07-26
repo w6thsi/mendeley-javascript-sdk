@@ -4,7 +4,6 @@
 
 The SDK provides a convenient library for accessing the Mendeley API with client-side and server-side JavaScript.
 
-
 ## Installation
 
 Installation can be done with [bower][]:
@@ -51,9 +50,12 @@ To begin a session you must set an authentication flow. This SDK includes code f
 For purely client-side applications you can use the implicit grant flow which only requires a client id. To initiate the flow call:
 
 ```javascript
-var options = { clientId: /* YOUR CLIENT ID */ };
-var auth = MendeleySDK.Auth.implicitGrantFlow(options);
-MendeleySDK.API.setAuthFlow(auth);
+var sdk = require('mendeley-javascript-sdk');
+var api = sdk({
+  authFlow: sdk.Auth.implicitGrantFlow({
+    clientId: /* YOUR CLIENT ID */
+  })
+});
 ```
 
 The options are:
@@ -71,12 +73,13 @@ For server applications you can use the authorization code flow. This requires s
 The main difference is the server will do the token exchange and set the access token cookie. From the client-side point of view you start the flow like:
 
 ```javascript
-var options = {
+var sdk = require('mendeley-javascript-sdk');
+var api = sdk({
+  authFlow: sdk.Auth.authCodeFlow({
     apiAuthenticateUrl: '/login',
     refreshAccessTokenUrl: '/refresh-token'
-};
-var auth = MendeleySDK.Auth.authCodeFlow(options);
-MendeleySDK.API.setAuthFlow(auth);
+  })
+});
 ```
 
 The options are:
@@ -89,12 +92,12 @@ The options are:
 
 Once the OAuth flow is complete you can start grabbing data for the user. CORS is enabled by default for all clients so there's no need to do anything special to implement the cross-domain requests (unless you need to support browsers that don't have CORS).
 
-Each API is exposed as a property of the SDK, for example `MendeleySDK.API.documents`, `MendeleySDK.API.folders`.
+Each API is exposed as a property of the SDK, for example `api.documents`, `api.folders`.
 
 Methods that make API calls return [Bluebird promises][]. Each call will either resolve with some data or reject with a response object according to the response from [axios][]. Here's an example using the standalone version:
 
 ```javascript
-MendeleySDK.API.documents.list().then(function(docs) {
+api.documents.list().then(function(docs) {
 
     console.log('Success!');
     console.log(docs);
@@ -135,7 +138,7 @@ The API endpoint objects (e.g. ```MendeleySDK.API.documents```) store their pagi
 
 Example
 ```javascript
-var api = require('mendeley-javascript-sdk/lib/api');
+var api = require('mendeley-javascript-sdk')(options);
 
 api.documents.list().then(function (result) {
     // handle the first page of "My documents"
@@ -157,7 +160,7 @@ To avoid this behavior, every endpoint object allows using separate instances of
 
 Example
 ```javascript
-var api = require('mendeley-javascript-sdk/lib/api');
+var api = require('mendeley-javascript-sdk')(options);
 
 // a new instance of api.documents is created under the hood and returned
 var myDocumentsApi = api.documents.for('my_documents');
@@ -197,7 +200,7 @@ passed to the ```list()``` method.
 
 Example
 ```javascript
-var api = require('mendeley-javascript-sdk/lib/api');
+var api = require('mendeley-javascript-sdk')(options);
 
 var params = {
     group_id: 'zxc-876-cbm',

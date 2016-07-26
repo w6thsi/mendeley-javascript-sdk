@@ -5,7 +5,7 @@ var Bluebird = require('bluebird');
 
 describe('followers api', function() {
 
-    var api = require('../../../lib/api');
+    var api = require('../../../').API;
     var followersApi = api.followers;
     var baseUrl = 'https://api.mendeley.com';
 

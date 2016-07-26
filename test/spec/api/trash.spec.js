@@ -5,7 +5,7 @@ var Bluebird = require('bluebird');
 
 describe('trash api', function() {
 
-    var api = require('../../../lib/api');
+    var api = require('../../../').API;
     var trashApi = api.trash;
     var baseUrl = 'https://api.mendeley.com';
 
@@ -73,8 +73,8 @@ describe('trash api', function() {
             expect(ajaxRequest.method).toBe('get');
         });
 
-        it('should use endpoint /trash/', function() {
-            expect(ajaxRequest.url).toBe(baseUrl + '/trash/');
+        it('should use endpoint /trash', function() {
+            expect(ajaxRequest.url).toBe(baseUrl + '/trash');
         });
 
         it('should NOT have a Content-Type header', function() {

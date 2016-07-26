@@ -5,7 +5,7 @@ var Bluebird = require('bluebird');
 
 describe('catalog api', function() {
 
-    var api = require('../../../lib/api');
+    var api = require('../../../').API;
     var catalogApi = api.catalog;
     var baseUrl = 'https://api.mendeley.com';
 
