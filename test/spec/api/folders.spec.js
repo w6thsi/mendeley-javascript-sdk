@@ -5,7 +5,7 @@ var Bluebird = require('bluebird');
 
 describe('folders api', function() {
 
-    var api = require('../../../lib/api');
+    var api = require('../../../').API;
     var foldersApi = api.folders;
     var baseUrl = 'https://api.mendeley.com';
 
@@ -245,8 +245,8 @@ describe('folders api', function() {
             expect(ajaxRequest.method).toBe('get');
         });
 
-        it('should use endpoint /folders/', function() {
-            expect(ajaxRequest.url).toBe(baseUrl + '/folders/');
+        it('should use endpoint /folders', function() {
+            expect(ajaxRequest.url).toBe(baseUrl + '/folders');
         });
 
         it('should NOT have a Content-Type header', function() {
@@ -336,14 +336,14 @@ describe('folders api', function() {
             ajaxSpy();
             foldersApi.list().finally(function() {
                 expect(foldersApi.count).toEqual(56);
-                
+
                 sendMendeleyCountHeader = false;
                 folderCount = 999;
                 ajaxSpy();
                 return foldersApi.list();
             }).finally(function() {
                 expect(foldersApi.count).toEqual(56);
-                
+
                 sendMendeleyCountHeader = true;
                 folderCount = 0;
                 ajaxSpy();

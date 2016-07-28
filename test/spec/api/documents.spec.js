@@ -12,7 +12,7 @@ function getFakeFile(name, type) {
 
 describe('documents api', function() {
 
-    var api = require('../../../lib/api');
+    var api = require('../../../').API;
     var documentsApi = api.documents;
     var baseUrl = 'https://api.mendeley.com';
 
@@ -434,8 +434,8 @@ describe('documents api', function() {
             expect(ajaxRequest.method).toBe('get');
         });
 
-        it('should use endpoint /documents/', function() {
-            expect(ajaxRequest.url).toBe(baseUrl + '/documents/');
+        it('should use endpoint /documents', function() {
+            expect(ajaxRequest.url).toBe(baseUrl + '/documents');
         });
 
         it('should NOT have a Content-Type header', function() {
@@ -644,7 +644,7 @@ describe('documents api', function() {
             ajaxSpy();
             documentsApi.list().finally(function() {
                 expect(documentsApi.count).toEqual(155);
-                
+
                 sendMendeleyCountHeader = false;
                 documentCount = 999;
                 ajaxSpy();
@@ -669,7 +669,7 @@ describe('documents api', function() {
                 expect(documentsApi.paginationLinks.next).toEqual(linkNext);
                 expect(documentsApi.paginationLinks.last).toEqual(linkLast);
                 expect(documentsApi.paginationLinks.previous).toEqual(linkPrev);
-                
+
                 sendLinks = false;
                 ajaxSpy();
                 return documentsApi.retrieve(155);
@@ -688,7 +688,7 @@ describe('documents api', function() {
                 expect(documentsApi.paginationLinks.next).toEqual(linkNext);
                 expect(documentsApi.paginationLinks.last).toEqual(linkLast);
                 expect(documentsApi.paginationLinks.previous).toEqual(linkPrev);
-                
+
                 documentsApi.resetPagination();
 
                 expect(documentsApi.paginationLinks.next).toEqual(false);

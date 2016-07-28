@@ -6,7 +6,7 @@ var Bluebird = require('bluebird');
 
 describe('profiles api', function() {
 
-    var api = require('../../../lib/api');
+    var api = require('../../../').API;
     var profilesApi = api.profiles;
     var baseUrl = 'https://api.mendeley.com';
 
@@ -138,11 +138,11 @@ describe('profiles api', function() {
         });
 
     });
-    
+
     describe('retrieve by email method', function() {
         var ajaxSpy;
         var ajaxRequest;
-        
+
         beforeEach(function(done) {
             ajaxSpy = spyOn(axios, 'request').and.returnValue(Bluebird.resolve({headers: {}}));
             profilesApi.retrieveByEmail('test@test.com').finally(function() {

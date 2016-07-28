@@ -5,8 +5,7 @@ describe('utilities', function() {
     var mockAuth = require('../../mocks/auth');
     var axios = require('axios');
     var Bluebird = require('bluebird');
-
-    utils.setAuthFlow(mockAuth.mockImplicitGrantFlow());
+    var authFlow = mockAuth.mockImplicitGrantFlow();
 
     describe('requestWithFileFun', function() {
         var ajaxSpy;
@@ -22,8 +21,19 @@ describe('utilities', function() {
                 name: 'fileName',
                 type: 'text/plain'
             };
-            var requestFunction = utils.requestWithFileFun('POST', 'url', 'link', {
+            var requestFunction = utils.requestWithFileFun({
+              authFlow: function () {
+                return authFlow;
+              },
+              baseUrl: function () {
+                return 'url';
+              },
+              method: 'POST',
+              resource: 'resource',
+              linkType: 'link',
+              headers: {
                 'Content-Type': 'text/html'
+              }
             });
 
             requestFunction(file).finally(function() {

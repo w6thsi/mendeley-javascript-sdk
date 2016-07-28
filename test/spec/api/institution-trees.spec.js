@@ -5,7 +5,7 @@ var Bluebird = require('bluebird');
 
 describe('institution trees api', function() {
 
-    var api = require('../../../lib/api');
+    var api = require('../../../').API;
     var institutionTreesApi = api.institutionTrees;
     var baseUrl = 'https://api.mendeley.com';
 
@@ -19,7 +19,7 @@ describe('institution trees api', function() {
         var params = {
             institution_id: '123'
         };
-        
+
         beforeEach(function(done) {
             ajaxSpy = spyOn(axios, 'request').and.returnValue(Bluebird.resolve({headers: {}}));
             institutionTreesApi.list(params).finally(function() {
@@ -59,7 +59,7 @@ describe('institution trees api', function() {
     describe('retrieve method', function() {
         var ajaxSpy;
         var ajaxRequest;
-        
+
         beforeEach(function(done) {
             ajaxSpy = spyOn(axios, 'request').and.returnValue(Bluebird.resolve({headers: {}}));
             institutionTreesApi.retrieve('123').finally(function() {

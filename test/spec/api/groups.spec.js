@@ -5,7 +5,7 @@ var Bluebird = require('bluebird');
 
 describe('groups api', function() {
 
-    var api = require('../../../lib/api');
+    var api = require('../../../').API;
     var groupApi = api.groups;
     var baseUrl = 'https://api.mendeley.com';
 
@@ -34,8 +34,8 @@ describe('groups api', function() {
             expect(ajaxRequest.method).toBe('get');
         });
 
-        it('should use endpoint /groups/', function() {
-            expect(ajaxRequest.url).toBe(baseUrl + '/groups/');
+        it('should use endpoint /groups', function() {
+            expect(ajaxRequest.url).toBe(baseUrl + '/groups');
         });
 
         it('should NOT have a Content-Type header', function() {

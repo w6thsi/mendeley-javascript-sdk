@@ -154,4 +154,57 @@ describe('auth', function() {
         });
 
     });
+
+    describe('client credentials auth flow', function() {
+
+        it('should require a client id', function() {
+            expect(function () {
+                auth.clientCredentialsFlow();
+            }).toThrow();
+        });
+
+        it('should require a client secret', function() {
+            expect(function () {
+                auth.clientCredentialsFlow({
+                    clientId: 5
+                });
+            }).toThrow();
+        });
+
+        it('should require a redirect uri', function() {
+            expect(function () {
+                auth.clientCredentialsFlow({
+                    clientId: 5,
+                    clientSecret: 'sssh'
+                });
+            }).toThrow();
+        });
+
+        it('should fetch an access token', function(done) {
+            var authFlow = auth.clientCredentialsFlow({
+                clientId: 5,
+                clientSecret: 'sssh',
+                redirectUri: 'https://example.com/foo'
+            });
+
+            var accessToken = 'accessToken';
+            var ajaxSpy = spyOn(axios, 'post').and.returnValue(Bluebird.resolve({
+                data: {
+                    'access_token': accessToken
+                }
+            }));
+
+            expect(authFlow.getToken()).toBeUndefined();
+
+            authFlow.refreshToken()
+            .then(function () {
+                expect(authFlow.getToken()).toEqual(accessToken);
+
+                done();
+            });
+
+            expect(ajaxSpy).toHaveBeenCalled();
+        });
+
+    });
 });
