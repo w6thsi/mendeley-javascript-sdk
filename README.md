@@ -88,6 +88,31 @@ The options are:
 - `refreshAccessTokenUrl` - A URL on *your server* that will attempt to refresh the current access token. Optional, defaults to false.
 - `accessTokenCookieName` - the name of the cookie to store the access token in. You should only change this if it clashes with another cookie you use. Defaults to `accessToken`.
 
+### Client Credentials Flow
+
+Client Credentials allow you to use your client id & secret to obtain an access token to access the Mendeley API.  This flow should only be used by clients that will not leak your client secret into the public domain, e.g. use only on the server side and never in the browser.
+
+To obtain a client id and secret, register your app on [the Mendeley developers site][].
+
+```javascript
+var sdk = require('mendeley-javascript-sdk');
+var api = sdk({
+  authFlow: sdk.Auth.clientCredentialsFlow({
+    clientId: /* your client id */,
+    clientSecret: /* your client secret */,
+    redirectUri: /* your redirect uri */
+  })
+});
+```
+
+The options are:
+
+- `tokenUrl` - Where we get the access token from, defaults to `https://api.mendeley.com/oauth/token`
+- `clientId` - your client id obtained when you register your app
+- `clientSecret` - Your client secret obtained when you register your app
+- `redirectUri` - A URL on *your server* specified when you register your app
+- `scope` - Defaults to 'all'
+
 ## Basic Usage
 
 Once the OAuth flow is complete you can start grabbing data for the user. CORS is enabled by default for all clients so there's no need to do anything special to implement the cross-domain requests (unless you need to support browsers that don't have CORS).
