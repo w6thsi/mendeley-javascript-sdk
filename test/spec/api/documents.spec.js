@@ -508,10 +508,6 @@ describe('documents api', function() {
             expect(ajaxRequest.url).toBe(baseUrl + '/documents/15/trash');
         });
 
-        it('should have a Content-Type header', function() {
-            expect(ajaxRequest.headers['Content-Type']).toBeDefined();
-        });
-
         it('should have an Authorization header', function() {
             expect(ajaxRequest.headers.Authorization).toBeDefined();
             expect(ajaxRequest.headers.Authorization).toBe('Bearer auth');
