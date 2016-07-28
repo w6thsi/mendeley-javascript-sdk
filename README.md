@@ -1,4 +1,6 @@
-# Mendeley JavaScript SDK [![Build Status][travis-image]][travis-url]
+# Mendeley JavaScript SDK
+
+[![Build Status][travis-image]][travis-url] [![Dependencies][david-image]][david-url]
 
 ## About the SDK
 
@@ -302,3 +304,5 @@ Please note the aim of this SDK is to connect to the existing Mendeley API, not 
 
 [travis-image]: http://img.shields.io/travis/Mendeley/mendeley-javascript-sdk/master.svg?style=flat
 [travis-url]: https://travis-ci.org/Mendeley/mendeley-javascript-sdk
+[david-image]: https://david-dm.org/Mendeley/mendeley-javascript-sdk.svg
+[david-url]: https://travis-ci.org/Mendeley/mendeley-javascript-sdk
