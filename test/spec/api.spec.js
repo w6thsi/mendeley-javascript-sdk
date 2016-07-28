@@ -45,10 +45,12 @@ describe('api endpoints', function() {
     describe('multiple instances', function() {
       var sdk = require('../../');
 
-      it('should remove the global api when using instances', function() {
+      it('should object strenuously when accessing the global api and using instances', function() {
           var api = sdk({});
 
-          expect(api.API).toBeUndefined();
+          expect(function () {
+              sdk.API.toString()
+          }).toThrow();
       });
 
       it('should turn baseUrl and authFlow into functions', function() {
