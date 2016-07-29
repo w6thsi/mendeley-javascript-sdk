@@ -207,4 +207,60 @@ describe('auth', function() {
         });
 
     });
+
+    describe('refresh token auth flow', function() {
+
+        it('should require a client id', function() {
+            expect(function () {
+                auth.refreshTokenFlow();
+            }).toThrow();
+        });
+
+        it('should require a client secret', function() {
+            expect(function () {
+                auth.refreshTokenFlow({
+                    clientId: 5
+                });
+            }).toThrow();
+        });
+
+        it('should require a refresh token', function() {
+            expect(function () {
+                auth.refreshTokenFlow({
+                    clientId: 5,
+                    clientSecret: 'sssh'
+                });
+            }).toThrow();
+        });
+
+        it('should fetch an access token', function(done) {
+            var authFlow = auth.refreshTokenFlow({
+                clientId: 5,
+                clientSecret: 'sssh',
+                refreshToken: 'token'
+            });
+
+            var accessToken = 'accessToken';
+            var refreshToken = 'newRefreshToken';
+
+            var ajaxSpy = spyOn(axios, 'post').and.returnValue(Bluebird.resolve({
+                data: {
+                    'access_token': accessToken,
+                    'refresh_token': refreshToken
+                }
+            }));
+
+            expect(authFlow.getToken()).toBeUndefined();
+
+            authFlow.refreshToken()
+            .then(function (result) {
+                expect(authFlow.getToken()).toEqual(accessToken);
+                expect(result.accessToken).toEqual(accessToken);
+
+                done();
+            });
+
+            expect(ajaxSpy).toHaveBeenCalled();
+        });
+    });
 });

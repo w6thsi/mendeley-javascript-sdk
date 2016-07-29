@@ -92,7 +92,9 @@ The options are:
 
 ### Client Credentials Flow
 
-Client Credentials allow you to use your client id & secret to obtain an access token to access the Mendeley API.  This flow should only be used by clients that will not leak your client secret into the public domain, e.g. use only on the server side and never in the browser.
+Client Credentials allow you to use your client id & secret to obtain an access token to access the Mendeley API.  Use this to read publicly available data that is not specific to an individual user.
+
+This flow should only be used by clients that will not leak your client secret into the public domain, e.g. never use this in the browser.
 
 To obtain a client id and secret, register your app on [the Mendeley developers site][].
 
@@ -114,6 +116,66 @@ The options are:
 - `clientSecret` - Your client secret obtained when you register your app
 - `redirectUri` - A URL on *your server* specified when you register your app
 - `scope` - Defaults to 'all'
+
+### Refresh token flow
+
+This flow is for when a user has previously obtained a refresh token from the Mendeley OAuth endpoint and lets your app use it to obtain an access token on the users' behalf.
+
+This flow should only be used by clients that will not leak your client secret into the public domain, e.g. never use this in the browser.
+
+To obtain a client id and secret, register your app on [the Mendeley developers site][].
+
+```javascript
+var sdk = require('mendeley-javascript-sdk');
+var api = sdk({
+  authFlow: sdk.Auth.refreshTokenFlow({
+    refreshToken: /* refresh token */,
+    clientId: /* your client id */,
+    clientSecret: /* your client secret */
+  })
+});
+```
+
+The options are:
+
+- `refreshToken` - The refresh token
+- `tokenUrl` - Where we get the access token from, defaults to `https://api.mendeley.com/oauth/token`
+- `clientId` - your client id obtained when you register your app
+- `clientSecret` - Your client secret obtained when you register your app
+- `onAccessToken` - An optional callback function invoked when the access token changes with the signature `(accessToken, expiresIn)`. Use this to set cookies, etc.
+- `onRefreshToken` - An optional callback function invoked when a refresh token is received with the signature `(refreshToken)`. Use this to store the refresh token securely, etc.
+- `accessToken` - If you have an access token from a previous request, specify it to save the initial token exchange request
+
+A full example using [Express][] middleware might be:
+
+```javascript
+module.exports = function (request, response, next) {
+  if (!request.cookies.refreshToken) {
+    // no valid credentials
+    return next();
+  }
+
+  response.locals.mendeley = sdk({
+    authFlow: mendeley.Auth.refreshTokenFlow({
+      accessToken: request.cookies.accessToken, // will be used if previously set
+      refreshToken: request.cookies.refreshToken,
+      clientId: process.env.MENDELEY_CLIENT_ID,
+      clientSecret: process.env.MENDELEY_CLIENT_SECRET,
+      onAccessToken: function (accessToken, expiresIn) {
+          // set the accessToken cookie for use on the next request
+          response.cookie('accessToken', accessToken, {
+            maxAge: expiresIn,
+            httpOnly: false
+          });
+        }
+      })
+    });
+
+    return next();
+  }
+};
+```
+
 
 ## Basic Usage
 
@@ -301,6 +363,7 @@ Please note the aim of this SDK is to connect to the existing Mendeley API, not 
 [register your application]:http://dev.mendeley.com
 [nodejs]:http://nodejs.org
 [bower]:http://bower.io
+[Express]:http://expressjs.com
 
 [travis-image]: http://img.shields.io/travis/Mendeley/mendeley-javascript-sdk/master.svg?style=flat
 [travis-url]: https://travis-ci.org/Mendeley/mendeley-javascript-sdk
