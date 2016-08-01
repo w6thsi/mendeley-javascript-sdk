@@ -2,44 +2,304 @@
 
 describe('utilities', function() {
     var utils = require('../../../lib/utilities');
+    var Request = require('../../../lib/request');
     var mockAuth = require('../../mocks/auth');
-    var axios = require('axios');
+    var assign = require('object-assign');
     var Bluebird = require('bluebird');
     var authFlow = mockAuth.mockImplicitGrantFlow();
+    var requestCreateSpy;
 
-    describe('requestWithFileFun', function() {
-        var ajaxSpy;
+    var defaultOptions = {
+        authFlow: function() {
+            return authFlow;
+        },
+        baseUrl: function() {
+            return 'https://api.mendeley.com';
+        }
+    };
 
-        beforeEach(function() {
-            ajaxSpy = spyOn(axios, 'request').and.returnValue(Bluebird.resolve({
-                headers: {}
-            }));
+    var responsePromise = Bluebird.resolve({
+        headers: {
+            Header: '123'
+        },
+        data: {
+            id: '456'
+        }
+    });
+
+    beforeEach(function() {
+        requestCreateSpy = spyOn(Request, 'create').and.returnValue({
+            send: function() {
+                return responsePromise;
+            }
+        });
+    });
+
+    describe('requestFun', function() {
+
+        it('should create a request with given properties', function() {
+            var requestParameters = {
+                param: 'This is a request parameter'
+            };
+            var requestFunction = utils.requestFun(assign({
+                method: 'GET',
+                resource: '/test',
+                headers: {
+                    Accept: 'mime/type1',
+                    'Content-Type': 'mime/type2'
+                }
+            }, defaultOptions));
+
+            requestFunction(requestParameters);
+
+            expect(requestCreateSpy).toHaveBeenCalledWith({
+                method: 'GET',
+                responseType: 'json',
+                url: 'https://api.mendeley.com/test',
+                headers: {
+                    Accept: 'mime/type1',
+                    'Content-Type': 'mime/type2'
+                },
+                params: requestParameters
+            }, {
+                authFlow: authFlow,
+                maxRetries: 1
+            });
         });
 
-        it('should allow a custom content-type to be set against a request', function(done) {
-            var file = {
-                name: 'fileName',
-                type: 'text/plain'
-            };
-            var requestFunction = utils.requestWithFileFun({
-              authFlow: function () {
-                return authFlow;
-              },
-              baseUrl: function () {
-                return 'url';
-              },
-              method: 'POST',
-              resource: 'resource',
-              linkType: 'link',
-              headers: {
-                'Content-Type': 'text/html'
-              }
-            });
+        it('should construct the url from supplied pattern and arguments', function() {
+            var requestFunction = utils.requestFun(assign({
+                method: 'GET',
+                resource: '/test/{first}/{second}',
+                args: ['first', 'second']
+            }, defaultOptions));
 
-            requestFunction(file).finally(function() {
-                expect(ajaxSpy.calls.mostRecent().args[0].headers['Content-Type']).toBe('text/html');
+            requestFunction(1, 2);
+
+            expect(requestCreateSpy).toHaveBeenCalledWith({
+                method: 'GET',
+                responseType: 'json',
+                url: 'https://api.mendeley.com/test/1/2',
+                headers: {},
+                params: undefined
+            }, {
+                authFlow: authFlow,
+                maxRetries: 1
+            });
+        });
+
+        it('should filter data from the response by default', function(done) {
+            var requestFunction = utils.requestFun(assign({
+                method: 'GET',
+                resource: '/test'
+            }, defaultOptions));
+
+            requestFunction().then(function(data) {
+                expect(data.id).toBe('456');
                 done();
             });
         });
+
+        it('should allow properties to be filtered from the response using a responseFilter', function(done) {
+            var requestFunction = utils.requestFun(assign({
+                responseFilter: function(response) {
+                    return response.headers;
+                },
+                method: 'GET',
+                resource: '/test'
+            }, defaultOptions));
+
+            requestFunction().then(function(data) {
+                expect(data.Header).toBe('123');
+                done();
+            });
+        });
+
+        it('should allow headers to be supplied as functions', function() {
+            var requestFunction = utils.requestFun(assign({
+                method: 'GET',
+                resource: '/test',
+                headers: {
+                    Header: function() {
+                        return 'footer';
+                    }
+                }
+            }, defaultOptions));
+
+            requestFunction();
+
+            expect(requestCreateSpy).toHaveBeenCalledWith({
+                method: 'GET',
+                responseType: 'json',
+                url: 'https://api.mendeley.com/test',
+                headers: {
+                    Header: 'footer'
+                },
+                params: undefined
+            }, {
+                authFlow: authFlow,
+                maxRetries: 1
+            });
+        });
+
+    });
+
+    describe('requestWithDataFun', function() {
+
+        it('should create a request with given properties', function() {
+            var requestData = {
+                id: '123'
+            };
+            var requestFunction = utils.requestWithDataFun(assign({
+                method: 'POST',
+                resource: '/test',
+                headers: {
+                    Accept: 'mime/type1',
+                    'Content-Type': 'mime/type2'
+                },
+                followLocation: true
+            }, defaultOptions));
+
+            requestFunction(requestData);
+
+            expect(requestCreateSpy).toHaveBeenCalledWith({
+                method: 'POST',
+                url: 'https://api.mendeley.com/test',
+                headers: {
+                    Accept: 'mime/type1',
+                    'Content-Type': 'mime/type2'
+                },
+                data: JSON.stringify(requestData)
+            }, {
+                authFlow: authFlow,
+                followLocation: true
+            });
+        });
+
+        it('should construct the url from supplied pattern and arguments', function() {
+            var requestFunction = utils.requestWithDataFun(assign({
+                method: 'POST',
+                resource: '/test/{first}/{second}',
+                args: ['first', 'second']
+            }, defaultOptions));
+
+            requestFunction(1, 2);
+
+            expect(requestCreateSpy).toHaveBeenCalledWith({
+                method: 'POST',
+                url: 'https://api.mendeley.com/test/1/2',
+                headers: {},
+                data: undefined
+            }, {
+                authFlow: authFlow,
+                followLocation: undefined
+            });
+        });
+
+        it('should allow properties to be filtered from the response using a responseFilter', function(done) {
+            var requestFunction = utils.requestWithDataFun(assign({
+                responseFilter: function(response) {
+                    return response.headers;
+                },
+                method: 'POST',
+                resource: '/test'
+            }, defaultOptions));
+
+            requestFunction().then(function(data) {
+                expect(data.Header).toBe('123');
+                done();
+            });
+        });
+
+    });
+
+    describe('requestWithFileFun', function() {
+
+        var file = {
+            type: 'mime/type',
+            name: 'file.type'
+        };
+
+        var headers = {
+            'Content-Type': 'mime/type',
+            'Content-Disposition': 'attachment; filename*=UTF-8\'\'file.type'
+        };
+
+        it('should create a request with given properties', function() {
+            var requestFunction = utils.requestWithFileFun(assign({
+                method: 'POST',
+                resource: '/test'
+            }, defaultOptions));
+
+            requestFunction(file);
+
+            expect(requestCreateSpy).toHaveBeenCalledWith({
+                method: 'POST',
+                url: 'https://api.mendeley.com/test',
+                headers: headers,
+                data: file,
+                progress: undefined
+            }, {
+                authFlow: authFlow
+            });
+        });
+
+        it('should allow properties to be filtered from the response using a responseFilter', function(done) {
+            var requestFunction = utils.requestWithFileFun(assign({
+                responseFilter: function(response) {
+                    return response.headers;
+                },
+                method: 'POST',
+                resource: '/test'
+            }, defaultOptions));
+
+            requestFunction(file).then(function(data) {
+                expect(data.Header).toBe('123');
+                done();
+            });
+        });
+
+        it('should allow a progress handler to be passed as the last argment', function() {
+            var progressHandler = function() {};
+            var requestFunction = utils.requestWithFileFun(assign({
+                method: 'POST',
+                resource: '/test'
+            }, defaultOptions));
+
+            requestFunction(file, progressHandler);
+
+            expect(requestCreateSpy).toHaveBeenCalledWith({
+                method: 'POST',
+                url: 'https://api.mendeley.com/test',
+                headers: headers,
+                data: file,
+                progress: progressHandler
+            }, {
+                authFlow: authFlow
+            });
+        });
+
+        it('should set Link header when necessary', function() {
+            var requestFunction = utils.requestWithFileFun(assign({
+                method: 'POST',
+                resource: '/test',
+                linkType: 'document'
+            }, defaultOptions));
+
+            requestFunction(file, 'zelda');
+
+            expect(requestCreateSpy).toHaveBeenCalledWith({
+                method: 'POST',
+                url: 'https://api.mendeley.com/test',
+                headers: assign({
+                    Link: '<https://api.mendeley.com/documents/zelda>; rel="document"'
+                }, headers),
+                data: file,
+                progress: undefined
+            }, {
+                authFlow: authFlow
+            });
+        });
+
     });
 });
