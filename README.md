@@ -8,7 +8,11 @@ The SDK provides a convenient library for accessing the Mendeley API with client
 
 ## Installation
 
-Installation can be done with [bower][]:
+Installation can be done with [npm][]:
+
+    $ npm install @mendeley/api
+
+Or with [bower][]:
 
     $ bower install mendeley-javascript-sdk
 
@@ -52,7 +56,7 @@ To begin a session you must set an authentication flow. This SDK includes code f
 For purely client-side applications you can use the implicit grant flow which only requires a client id. To initiate the flow call:
 
 ```javascript
-var sdk = require('mendeley-javascript-sdk');
+var sdk = require('@mendeley/api');
 var api = sdk({
   authFlow: sdk.Auth.implicitGrantFlow({
     clientId: /* YOUR CLIENT ID */
@@ -75,7 +79,7 @@ For server applications you can use the authorization code flow. This requires s
 The main difference is the server will do the token exchange and set the access token cookie. From the client-side point of view you start the flow like:
 
 ```javascript
-var sdk = require('mendeley-javascript-sdk');
+var sdk = require('@mendeley/api');
 var api = sdk({
   authFlow: sdk.Auth.authCodeFlow({
     apiAuthenticateUrl: '/login',
@@ -99,7 +103,7 @@ This flow should only be used by clients that will not leak your client secret i
 To obtain a client id and secret, register your app on [the Mendeley developers site][].
 
 ```javascript
-var sdk = require('mendeley-javascript-sdk');
+var sdk = require('@mendeley/api');
 var api = sdk({
   authFlow: sdk.Auth.clientCredentialsFlow({
     clientId: /* your client id */,
@@ -126,7 +130,7 @@ This flow should only be used by clients that will not leak your client secret i
 To obtain a client id and secret, register your app on [the Mendeley developers site][].
 
 ```javascript
-var sdk = require('mendeley-javascript-sdk');
+var sdk = require('@mendeley/api');
 var api = sdk({
   authFlow: sdk.Auth.refreshTokenFlow({
     refreshToken: /* refresh token */,
@@ -203,9 +207,12 @@ Here's an example using [requirejs][]:
 
 ```javascript
 define(function(require) {
-    var api = require('mendeley-javascript-sdk/lib/api');
-    var auth = require('mendeley-javascript-sdk/lib/auth');
-    api.setAuthFlow(auth.authCodeFlow());
+    var sdk = require('@mendeley/api')({
+      authFlow:
+    });
+    var api = sdk({
+      authFlow: sdk.Auth.authCodeFlow()
+    })
 
     api.documents.list().then(function() {
 
@@ -227,7 +234,7 @@ The API endpoint objects (e.g. ```MendeleySDK.API.documents```) store their pagi
 
 Example
 ```javascript
-var api = require('mendeley-javascript-sdk')(options);
+var api = require('@mendeley/api')(options);
 
 api.documents.list().then(function (result) {
     // handle the first page of "My documents"
@@ -249,7 +256,7 @@ To avoid this behavior, every endpoint object allows using separate instances of
 
 Example
 ```javascript
-var api = require('mendeley-javascript-sdk')(options);
+var api = require('@mendeley/api')(options);
 
 // a new instance of api.documents is created under the hood and returned
 var myDocumentsApi = api.documents.for('my_documents');
@@ -289,7 +296,7 @@ passed to the ```list()``` method.
 
 Example
 ```javascript
-var api = require('mendeley-javascript-sdk')(options);
+var api = require('@mendeley/api')(options);
 
 var params = {
     group_id: 'zxc-876-cbm',
@@ -362,6 +369,7 @@ Please note the aim of this SDK is to connect to the existing Mendeley API, not 
 [the Mendeley developers site]:http://dev.mendeley.com
 [register your application]:http://dev.mendeley.com
 [nodejs]:http://nodejs.org
+[npm]:http://npmjs.com
 [bower]:http://bower.io
 [Express]:http://expressjs.com
 
