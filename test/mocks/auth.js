@@ -3,13 +3,13 @@
 var Bluebird = require('bluebird');
 
 var unauthorisedError = new Error();
-unauthorisedError.status = 401;
+unauthorisedError.response = { status: 401 };
 
 var timeoutError = new Error();
-timeoutError.status = 504;
+timeoutError.response = { status: 504 };
 
 var notFoundError = new Error();
-notFoundError.status = 404;
+notFoundError.response = { status: 404 };
 
 module.exports = {
     mockImplicitGrantFlow: mockImplicitGrantFlow,

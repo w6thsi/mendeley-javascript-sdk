@@ -112,11 +112,11 @@ describe('folders api', function() {
 
         it('should reject create errors with the response', function(done) {
             var ajaxFailureResponse = function() {
-                return Bluebird.reject({ status: 500 });
+                return Bluebird.reject({ response: { status: 500 } });
             };
             spyOn(axios, 'request').and.callFake(ajaxFailureResponse);
-            foldersApi.create({ name: 'foo' }).catch(function(response) {
-                expect(response.status).toEqual(500);
+            foldersApi.create({ name: 'foo' }).catch(function(error) {
+                expect(error.response.status).toEqual(500);
                 done();
             });
         });
@@ -135,12 +135,12 @@ describe('folders api', function() {
                 }
                 // But following the location fails
                 else {
-                    return Bluebird.reject({ status: 404 });
+                    return Bluebird.reject({ response: { status: 404 } });
                 }
             };
             spyOn(axios, 'request').and.callFake(ajaxMixedResponse);
-            foldersApi.create({ name: 'foo' }).catch(function(response) {
-                expect(response.status).toEqual(404);
+            foldersApi.create({ name: 'foo' }).catch(function(error) {
+                expect(error.response.status).toEqual(404);
                 done();
             });
         });
@@ -336,14 +336,14 @@ describe('folders api', function() {
             ajaxSpy();
             foldersApi.list().finally(function() {
                 expect(foldersApi.count).toEqual(56);
-                
+
                 sendMendeleyCountHeader = false;
                 folderCount = 999;
                 ajaxSpy();
                 return foldersApi.list();
             }).finally(function() {
                 expect(foldersApi.count).toEqual(56);
-                
+
                 sendMendeleyCountHeader = true;
                 folderCount = 0;
                 ajaxSpy();

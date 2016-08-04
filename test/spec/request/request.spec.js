@@ -50,7 +50,7 @@ describe('request', function() {
             var mockAuthInterface = mockAuth.mockAuthCodeFlow();
             var myRequest = request.create({ method: 'get' }, { authFlow: mockAuthInterface });
             var fun = getMockPromises(
-                Bluebird.reject({ status: 401 }), // Auth failure
+                Bluebird.reject({ response: { status: 401 } }), // Auth failure
                 Bluebird.resolve({ status: 200, headers: {} }) // Original request success
             );
             var ajaxSpy = spyOn(axios, 'request').and.callFake(fun);
@@ -69,7 +69,7 @@ describe('request', function() {
             var mockAuthInterface = mockAuth.mockAuthCodeFlow();
             var myRequest = request.create({ method: 'get' }, { authFlow: mockAuthInterface });
             var fun = getMockPromises(
-                Bluebird.reject({ status: 401 }), // Auth failure
+                Bluebird.reject({ response: { status: 401 } }), // Auth failure
                 Bluebird.resolve({ status: 200, headers: {} }) // Original request success
             );
             var ajaxSpy = spyOn(axios, 'request').and.callFake(fun);
