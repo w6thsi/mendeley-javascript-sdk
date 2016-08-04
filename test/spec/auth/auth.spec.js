@@ -36,6 +36,15 @@ describe('auth', function() {
             expect(win.location).toMatch(new RegExp('^https://api.mendeley.com/oauth/authorize?.+'));
         });
 
+        it('should allow specifying a redirect url', function() {
+            var win = mockWindow();
+            var redirectUrl = 'http://foo.com';
+            var options = {win: win, clientId: 9999, authenticateOnStart: true, redirectUrl: redirectUrl};
+
+            auth.implicitGrantFlow(options);
+            expect(win.location).toMatch(new RegExp(encodeURIComponent(redirectUrl)));
+        });
+
         it('should read the access token from a cookie', function() {
             var win = mockWindow();
             win.document.cookie = 'accessToken=auth';
@@ -73,7 +82,6 @@ describe('auth', function() {
     });
 
     describe('auth code flow', function() {
-
         it('should authenticate on start by default', function() {
             var win = mockWindow();
             var options = {win: win, clientId: 9999};
@@ -113,6 +121,19 @@ describe('auth', function() {
             expect(win.location).toEqual('/login?state=foo');
         });
 
+        it('should support using a string to get the auth URL', function() {
+            var win = mockWindow();
+            var options = {
+              win: win,
+              clientId: 9999,
+              authenticateOnStart: false,
+              apiAuthenticateUrl: '/login?state=foo'
+           };
+
+            auth.authCodeFlow(options).authenticate();
+            expect(win.location).toEqual('/login?state=foo');
+        });
+
         it('should read the access token from a cookie', function() {
             var win = mockWindow();
             win.document.cookie = 'accessToken=auth';
@@ -142,6 +163,15 @@ describe('auth', function() {
 
             ajaxRequest = ajaxSpy.calls.mostRecent().args[0];
             expect(ajaxRequest).toBe('/refresh');
+        });
+
+        it('should allow not having a refresh token URL', function() {
+            var win = mockWindow();
+            var options = {win: win, clientId: 9999, refreshAccessTokenUrl: null};
+
+            var flow = auth.authCodeFlow(options);
+            var result = flow.refreshToken();
+            expect(result).toBe(false);
         });
 
     });

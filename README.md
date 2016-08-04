@@ -69,6 +69,8 @@ The options are:
 - `clientId` - Your registered client ID. **Required**.
 - `redirectUrl` - must match the redirect URL you used when registering the client. Defaults to the current URL.
 - `accessTokenCookieName` - the name of the cookie to store the access token in. You should only change this if it clashes with another cookie you use. Defaults to `accessToken`.
+- `apiAuthenticateUrl` - Where to direct the user if authentication fails. Defaults to `https://api.mendeley.com/oauth/authorize`
+- `onNotAuthenticated` - Invoked when getting a token fails. By default they will be directed to `apiAuthenticateUrl`.
 
 The API internally will handle stale cookies by redirecting to the log-in page if any request fails with a status of 401 Unauthorized.
 
@@ -93,6 +95,7 @@ The options are:
 - `apiAuthenticateUrl` - A URL on *your server* to redirect to when authentication fails. That URL should in turn redirect to the Mendeley OAuth endpoint passing the relevant credentials, as in this flow the client doesn't have any credentials. Required, defaults to `'/login'`.
 - `refreshAccessTokenUrl` - A URL on *your server* that will attempt to refresh the current access token. Optional, defaults to false.
 - `accessTokenCookieName` - the name of the cookie to store the access token in. You should only change this if it clashes with another cookie you use. Defaults to `accessToken`.
+- `onNotAuthenticated` - Invoked when getting a token fails. By default they will be directed to `apiAuthenticateUrl`.
 
 ### Client Credentials Flow
 
@@ -120,6 +123,7 @@ The options are:
 - `clientSecret` - Your client secret obtained when you register your app
 - `redirectUri` - A URL on *your server* specified when you register your app
 - `scope` - Defaults to 'all'
+- `onNotAuthenticated` - Invoked when getting a token fails.
 
 ### Refresh token flow
 
@@ -148,6 +152,7 @@ The options are:
 - `clientSecret` - Your client secret obtained when you register your app
 - `onAccessToken` - An optional callback function invoked when the access token changes with the signature `(accessToken, expiresIn)`. Use this to set cookies, etc.
 - `onRefreshToken` - An optional callback function invoked when a refresh token is received with the signature `(refreshToken)`. Use this to store the refresh token securely, etc.
+- `onNotAuthenticated` - Invoked when refreshing the users' token fails. You should redirect the user somewhere where they can acquire a new refresh token.
 - `accessToken` - If you have an access token from a previous request, specify it to save the initial token exchange request
 
 A full example using [Express][] middleware might be:
@@ -165,6 +170,9 @@ module.exports = function (request, response, next) {
       refreshToken: request.cookies.refreshToken,
       clientId: process.env.MENDELEY_CLIENT_ID,
       clientSecret: process.env.MENDELEY_CLIENT_SECRET,
+      onNotAuthenticated: function () {
+        response.redirect('/sign/in');
+      },
       onAccessToken: function (accessToken, expiresIn) {
           // set the accessToken cookie for use on the next request
           response.cookie('accessToken', accessToken, {
