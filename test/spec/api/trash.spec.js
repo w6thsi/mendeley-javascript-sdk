@@ -130,11 +130,11 @@ describe('trash api', function() {
     describe('restore method failures', function() {
         it('should reject restore errors with the response', function(done) {
             var ajaxFailureResponse = function() {
-                return Bluebird.reject({ status: 404 });
+                return Bluebird.reject({ response: { status: 404 } });
             };
             spyOn(axios, 'request').and.callFake(ajaxFailureResponse);
-            trashApi.restore().catch(function(response) {
-                expect(response.status).toEqual(404);
+            trashApi.restore().catch(function(error) {
+                expect(error.response.status).toEqual(404);
                 done();
             });
         });

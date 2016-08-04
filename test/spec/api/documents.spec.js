@@ -74,9 +74,9 @@ describe('documents api', function() {
         }
     });
 
-    var mockPromiseNotFound = Bluebird.reject({ status: 404 });
+    var mockPromiseNotFound = Bluebird.reject({ response: { status: 404 } });
 
-    var mockPromiseInternalError = Bluebird.reject({ status: 500 });
+    var mockPromiseInternalError = Bluebird.reject({ response: { status: 500 } });
 
     // Get a function to return promises in order
     function getMockPromises() {
@@ -167,16 +167,16 @@ describe('documents api', function() {
 
         it('should reject create errors with the request and response', function(done) {
             spyOn(axios, 'request').and.callFake(getMockPromises(mockPromiseInternalError));
-            documentsApi.create({ title: 'foo' }).catch(function(response) {
-                expect(response.status).toEqual(500);
+            documentsApi.create({ title: 'foo' }).catch(function(error) {
+                expect(error.response.status).toEqual(500);
                 done();
             });
         });
 
         it('should fail redirect errors with the request and the response', function(done) {
             spyOn(axios, 'request').and.callFake(getMockPromises(mockPromiseCreate, mockPromiseNotFound));
-            documentsApi.create({ title: 'foo' }).catch(function(response) {
-                expect(response.status).toEqual(404);
+            documentsApi.create({ title: 'foo' }).catch(function(error) {
+                expect(error.response.status).toEqual(404);
                 done();
             });
         });
@@ -321,8 +321,8 @@ describe('documents api', function() {
 
         it('should reject retrieve errors with the request and response', function(done) {
             spyOn(axios, 'request').and.callFake(getMockPromises(mockPromiseNotFound));
-            documentsApi.list().catch(function(response) {
-                expect(response.status).toEqual(404);
+            documentsApi.list().catch(function(error) {
+                expect(error.response.status).toEqual(404);
                 done();
             });
         });
@@ -524,7 +524,7 @@ describe('documents api', function() {
         var ajaxSpy;
 
         it('should retry on 504', function(done) {
-            ajaxSpy = spyOn(axios, 'request').and.callFake(getMockPromises(Bluebird.reject({ status: 504 }), mockPromiseList));
+            ajaxSpy = spyOn(axios, 'request').and.callFake(getMockPromises(Bluebird.reject({ response: { status: 504 } }), mockPromiseList));
             documentsApi.list().then(function() {
                 expect(ajaxSpy).toHaveBeenCalled();
                 expect(ajaxSpy.calls.count()).toBe(2);
@@ -533,7 +533,7 @@ describe('documents api', function() {
         });
 
         it('should only retry once', function(done) {
-            ajaxSpy = spyOn(axios, 'request').and.callFake(getMockPromises(Bluebird.reject({ status: 504 }), Bluebird.reject({ status: 504 }), mockPromiseList));
+            ajaxSpy = spyOn(axios, 'request').and.callFake(getMockPromises(Bluebird.reject({ response: { status: 504 } }), Bluebird.reject({ response: { status: 504 } }), mockPromiseList));
             documentsApi.list().catch(function() {
                 expect(ajaxSpy).toHaveBeenCalled();
                 expect(ajaxSpy.calls.count()).toBe(2);
