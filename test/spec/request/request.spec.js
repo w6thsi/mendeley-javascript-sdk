@@ -28,6 +28,21 @@ describe('request', function() {
         expect(myRequest.request.method).toBe('POST');
     });
 
+    it('should remove headers without a value', function(done) {
+        var myRequest = request.create({ method: 'POST', headers: {
+          foo: undefined
+        } }, { authFlow: mockAuth.mockImplicitGrantFlow() });
+
+        var fun = getMockPromises(
+            Bluebird.resolve({ status: 200, headers: {} })
+        );
+        spyOn(axios, 'request').and.callFake(fun);
+
+        myRequest.send().finally(function() {
+            expect(myRequest.request.headers.hasOwnProperty('foo')).toBe(false);
+        }).finally(done);
+    });
+
     describe('authentication', function() {
 
         it('should add optional accessToken to the Authorization header', function(done) {
