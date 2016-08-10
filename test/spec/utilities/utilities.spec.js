@@ -102,7 +102,7 @@ describe('utilities', function() {
 
         it('should allow properties to be filtered from the response using a responseFilter', function(done) {
             var requestFunction = utils.requestFun(assign({
-                responseFilter: function(response) {
+                responseFilter: function(options, response) {
                     return response.headers;
                 },
                 method: 'GET',
@@ -198,7 +198,7 @@ describe('utilities', function() {
 
         it('should allow properties to be filtered from the response using a responseFilter', function(done) {
             var requestFunction = utils.requestWithDataFun(assign({
-                responseFilter: function(response) {
+                responseFilter: function(options, response) {
                     return response.headers;
                 },
                 method: 'POST',
@@ -246,7 +246,7 @@ describe('utilities', function() {
 
         it('should allow properties to be filtered from the response using a responseFilter', function(done) {
             var requestFunction = utils.requestWithFileFun(assign({
-                responseFilter: function(response) {
+                responseFilter: function(options, response) {
                     return response.headers;
                 },
                 method: 'POST',

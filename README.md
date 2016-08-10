@@ -238,81 +238,37 @@ define(function(require) {
 
 ## Pagination
 
-The API endpoint objects (e.g. ```MendeleySDK.API.documents```) store their pagination state and pagination methods on themselves. This means each call of ```list()``` method will override the state set by previous call. This wont cause any problems as long as you only use one set of params for ```list()``` method, but will result in wrong pagination results if you request a list of entities with many different param sets.
+API resources that implement `list` functions return paginated responses.
 
-Example
+These add a `total` property that represents the total number of resources and some of `firstPage`, `nextPage`, `previousPage` and `lastPage` methods that return promises which resolve to the first, next, previous and last page of resources respectively.
+
+The presence of the pagination methods depend on where in the collection you are at the time.  If you are on the first page of results for example, the `firstPage` method will not be present.  Similarly if there is only one page of results there will be no pagination methods available.
+
+### Example
+
 ```javascript
 var api = require('@mendeley/api')(options);
 
-api.documents.list().then(function (result) {
-    // handle the first page of "My documents"
-    // api.documents.nextPage() gets set up to retrieve the next page of "My documents"
-});
+api.documents.list()
+.then(function (documents) {
+  console.info('There are ' + documents.total + ' documents in total');
 
-api.documents.list({folder_id: 'abc-123-xyz'}).then(function (result) {
-    // handle the first page of "123" folder documents
-    // api.documents.nextPage() gets set up to retrieve the next page of "123" folder documents
-});
+  console.info('The first page of documents is ' + documents);
 
-api.documents.nextPage().then(function (result) {
-    // next page of "123" folder documents will be retrieved,
-    // there's no way to retirieve the next page of "My documents" at this point
-});
-```
+  return documents.nextPage();
+})
+.then(function (documents) {
+  console.info('The next page of documents is ' + documents);
 
-To avoid this behavior, every endpoint object allows using separate instances of itself. It also saves you the hassle of storing the instances by exposing a simple getter on the top of string-indexed map.
+  return documents.previousPage();
+})
+.then(function (documents) {
+  console.info('The previous page of documents is ' + documents);
 
-Example
-```javascript
-var api = require('@mendeley/api')(options);
-
-// a new instance of api.documents is created under the hood and returned
-var myDocumentsApi = api.documents.for('my_documents');
-
-myDocumentsApi.list().then(function (result) {
-    // handle the first page of "My documents"
-    // myDocumentsApi.nextPage() gets set up to retrieve the next page of "My documents"
-});
-
-
-// another instance of api.documents is created for folder "123"
-var folder123Api = api.documents.for('folder_id_abc-123-xyz');
-
-folder123Api.list({folder_id: 'abc-123-xyz'}).then(function (result) {
-    // handle the first page of "123" folder documents
-    // folder123Api.nextPage() gets set up to retrieve the next page of "123" folder documents
-});
-
-folder123Api.nextPage().then(function (result) {
-    // next page of "123" folder documents will be retrieved
-});
-
-myDocumentsApi.nextPage().then(function (result) {
-    // next page of "My documents" will be retrieved independently of any other folder
-});
-```
-
-Each call to ```api.endpoint.for()``` with the same string parameter will return
-exactly tha same instance of endpoint object.
-
-Calling the ```api.endpoint.for()``` method with a falsy or no params will return
-the original ```api.endpoint``` instance.
-
-If you work with many folders at the same time, the convenient way of preparing
-the string parameter for the ```for()``` method is serialising the params object
-passed to the ```list()``` method.
-
-Example
-```javascript
-var api = require('@mendeley/api')(options);
-
-var params = {
-    group_id: 'zxc-876-cbm',
-    folder_id: '345-jkl-ghj'
-};
-
-api.documents.for(JSON.stringify(params)).list(params).then(function (result) {
-    // handle the result
+  return documents.lastPage();
+})
+.then(function (documents) {
+  console.info('The last page of documents is ' + documents);
 });
 ```
 

@@ -295,14 +295,12 @@ describe('folders api', function() {
 
         it('should parse link headers', function(done) {
             ajaxSpy();
-            foldersApi.paginationLinks.next = 'nonsense';
-            foldersApi.paginationLinks.prev = 'nonsense';
-            foldersApi.paginationLinks.last = 'nonsense';
 
-            foldersApi.list().finally(function() {
-                expect(foldersApi.paginationLinks.next).toEqual(linkNext);
-                expect(foldersApi.paginationLinks.last).toEqual(linkLast);
-                expect(foldersApi.paginationLinks.prev).toEqual(false);
+            foldersApi.list()
+            .then(function (folders) {
+                expect(folders.nextPage).toEqual(jasmine.any(Function));
+                expect(folders.lastPage).toEqual(jasmine.any(Function));
+                expect(folders.previousPage).toEqual(undefined);
                 done();
             });
 
@@ -310,7 +308,12 @@ describe('folders api', function() {
 
         it('should get correct link on nextPage()', function(done) {
             var spy = ajaxSpy();
-            foldersApi.nextPage().finally(function() {
+
+            foldersApi.list()
+            .then(function (folders) {
+                return folders.nextPage();
+            })
+            .finally(function () {
                 expect(spy.calls.mostRecent().args[0].url).toEqual(linkNext);
                 done();
             });
@@ -318,56 +321,38 @@ describe('folders api', function() {
 
         it('should get correct link on lastPage()', function(done) {
             var spy = ajaxSpy();
-            foldersApi.lastPage().finally(function() {
-                expect(spy.calls.mostRecent().args[0].url).toEqual(linkLast);
-                done();
-            });
-        });
 
-        it('should fail if no link for rel', function(done) {
-            var spy = ajaxSpy();
-            foldersApi.previousPage().catch(function() {
-                expect(spy).not.toHaveBeenCalled();
+            foldersApi.list()
+            .then(function (folders) {
+                return folders.lastPage();
+            })
+            .finally(function () {
+                expect(spy.calls.mostRecent().args[0].url).toEqual(linkLast);
                 done();
             });
         });
 
         it('should store the total document count', function(done) {
             ajaxSpy();
-            foldersApi.list().finally(function() {
-                expect(foldersApi.count).toEqual(56);
+            foldersApi.list()
+            .then(function (folders) {
+                expect(folders.total).toEqual(56);
 
                 sendMendeleyCountHeader = false;
                 folderCount = 999;
                 ajaxSpy();
                 return foldersApi.list();
-            }).finally(function() {
-                expect(foldersApi.count).toEqual(56);
+            })
+            .then(function (folders) {
+                expect(folders.total).toEqual(0);
 
                 sendMendeleyCountHeader = true;
                 folderCount = 0;
                 ajaxSpy();
                 return foldersApi.list();
-            }).finally(function() {
-                expect(foldersApi.count).toEqual(0);
-                done();
-            });
-        });
-
-        it('should not break when you GET something else that does not have pagination links', function(done) {
-            ajaxSpy();
-
-            foldersApi.list().finally(function() {
-                expect(foldersApi.paginationLinks.next).toEqual(linkNext);
-                expect(foldersApi.paginationLinks.last).toEqual(linkLast);
-                expect(foldersApi.paginationLinks.prev).toEqual(false);
-
-                sendLinks = false;
-                return foldersApi.retrieve(56);
-            }).finally(function() {
-                expect(foldersApi.paginationLinks.next).toEqual(linkNext);
-                expect(foldersApi.paginationLinks.last).toEqual(linkLast);
-                expect(foldersApi.paginationLinks.prev).toEqual(false);
+            })
+            .then(function (folders) {
+                expect(folders.total).toEqual(0);
                 done();
             });
         });
