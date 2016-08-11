@@ -3,15 +3,16 @@
 
 var axios = require('axios');
 var Bluebird = require('bluebird');
+var sdk = require('../../../');
+var baseUrl = 'https://api.mendeley.com';
+var mockAuth = require('../../mocks/auth');
+
 
 describe('files api', function() {
-
-    var api = require('../../../').API;
-    var filesApi = api.files;
-    var baseUrl = 'https://api.mendeley.com';
-
-    var mockAuth = require('../../mocks/auth');
-    api.setAuthFlow(mockAuth.mockImplicitGrantFlow());
+    var filesApi = sdk({
+      baseUrl: baseUrl,
+      authFlow: mockAuth.mockImplicitGrantFlow()
+    }).files;
 
     function getFakeFile(name, type) {
         return {

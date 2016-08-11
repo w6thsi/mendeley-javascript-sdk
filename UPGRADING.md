@@ -53,12 +53,12 @@ https://github.com/mzabriskie/axios#global-axios-defaults
 
     ```javascript
     // old
-    var Mendeley = require('mendeley-javascript-sdk');
+    var Mendeley = require('@mendeley/api');
     Mendeley.setAuthFlow(Mendeley.Auth.implicitGrantFlow(/* ... */))
     Mendeley.API.documents.list().then(/* ... */)
 
     // new
-    var mendeley = require('mendeley-javascript-sdk');
+    var mendeley = require('@mendeley/api');
     var api = mendeley({
        authFlow: mendeley.Auth.implicitGrantFlow(/* ... */)
     })
@@ -69,55 +69,73 @@ https://github.com/mzabriskie/axios#global-axios-defaults
 
 ## Upgrading to v4.x
 
-Pagination has been overhauled in v4.
+1. Pagination has been overhauled in v4.
 
-Old code:
+  Old code:
 
-```javascript
-// global based
-api.documents.list()
-.then(function (documents) {
-  console.info('I have ' + api.documents.count + 'documents')
+    ```javascript
+    // global based
+    api.documents.list()
+    .then(function (documents) {
+      console.info('I have ' + api.documents.count + 'documents')
 
-  return api.documents.nextPage() // or .previousPage() or lastPage()
-})
-.then(function (documents) {
-  console.info('Now I am on the next page')
+      return api.documents.nextPage() // or .previousPage() or lastPage()
+    })
+    .then(function (documents) {
+      console.info('Now I am on the next page')
 
-  // tidy up
-  api.documents.resetPagination();
-})
+      // tidy up
+      api.documents.resetPagination();
+    })
 
-// instance based
-var instance = api.documents.for('my-request')
-instance.list()
-.then(function (documents) {
-  console.info('I have ' + instance.count + 'documents')
-  console.info('The documents are ' + documents)
+    // instance based
+    var instance = api.documents.for('my-request')
+    instance.list()
+    .then(function (documents) {
+      console.info('I have ' + instance.count + 'documents')
+      console.info('The documents are ' + documents)
 
-  return instance.nextPage() // or .previousPage() or lastPage()
-})
-.then(function (documents) {
-  console.info('Now I am on the next page')
+      return instance.nextPage() // or .previousPage() or lastPage()
+    })
+    .then(function (documents) {
+      console.info('Now I am on the next page')
 
-  // tidy up
-  instance.resetPagination();
-})
-```
+      // tidy up
+      instance.resetPagination();
+    })
+    ```
 
-New code:
+  New code:
 
-```javascript
-api.documents.list()
-.then(function (documents) {
-  console.info('I have ' + documents.total + 'documents')
-  console.info('The documents are ' + documents)
+    ```javascript
+    api.documents.list()
+    .then(function (documents) {
+      console.info('I have ' + documents.total + 'documents')
+      console.info('The documents are ' + documents)
 
-  return documents.nextPage() // or .previousPage() or .lastPage()
-})
-.then(function (documents) {
-  console.info('Now I am on the next page')
+      return documents.nextPage() // or .previousPage() or .lastPage()
+    })
+    .then(function (documents) {
+      console.info('Now I am on the next page')
 
-  // no tidy up necessary
-})
-```
+      // no tidy up necessary
+    })
+    ```
+
+1. The global API object has been removed as multiple requests overwrite global data.
+
+  All code should now get an instance of the api by calling the function returned from this module:
+
+  ```javascript
+  // old
+  var Mendeley = require('@mendeley/api');
+  Mendeley.setAuthFlow(Mendeley.Auth.implicitGrantFlow(/* ... */))
+  Mendeley.API.documents.list().then(/* ... */)
+
+  // new
+  var mendeley = require('@mendeley/api');
+  var api = mendeley({
+     authFlow: mendeley.Auth.implicitGrantFlow(/* ... */)
+  })
+  api.documents.list().then(/* ... */)
+  ```

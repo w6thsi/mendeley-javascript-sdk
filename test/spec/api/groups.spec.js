@@ -2,15 +2,15 @@
 
 var axios = require('axios');
 var Bluebird = require('bluebird');
+var sdk = require('../../../');
+var baseUrl = 'https://api.mendeley.com';
+var mockAuth = require('../../mocks/auth');
 
 describe('groups api', function() {
-
-    var api = require('../../../').API;
-    var groupApi = api.groups;
-    var baseUrl = 'https://api.mendeley.com';
-
-    var mockAuth = require('../../mocks/auth');
-    api.setAuthFlow(mockAuth.mockImplicitGrantFlow());
+    var groupApi = sdk({
+      baseUrl: baseUrl,
+      authFlow: mockAuth.mockImplicitGrantFlow()
+    }).groups;
 
     describe('list method', function() {
         var ajaxSpy;

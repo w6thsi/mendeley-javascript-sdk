@@ -2,15 +2,15 @@
 
 var axios = require('axios');
 var Bluebird = require('bluebird');
+var sdk = require('../../../');
+var baseUrl = 'https://api.mendeley.com';
+var mockAuth = require('../../mocks/auth');
 
 describe('institution trees api', function() {
-
-    var api = require('../../../').API;
-    var institutionTreesApi = api.institutionTrees;
-    var baseUrl = 'https://api.mendeley.com';
-
-    var mockAuth = require('../../mocks/auth');
-    api.setAuthFlow(mockAuth.mockImplicitGrantFlow());
+    var institutionTreesApi = sdk({
+      baseUrl: baseUrl,
+      authFlow: mockAuth.mockImplicitGrantFlow()
+    }).institutionTrees;
 
     describe('list method', function() {
         /* jshint camelcase: false */

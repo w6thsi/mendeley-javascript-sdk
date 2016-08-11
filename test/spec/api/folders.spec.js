@@ -2,15 +2,15 @@
 
 var axios = require('axios');
 var Bluebird = require('bluebird');
+var sdk = require('../../../');
+var baseUrl = 'https://api.mendeley.com';
+var mockAuth = require('../../mocks/auth');
 
 describe('folders api', function() {
-
-    var api = require('../../../').API;
-    var foldersApi = api.folders;
-    var baseUrl = 'https://api.mendeley.com';
-
-    var mockAuth = require('../../mocks/auth');
-    api.setAuthFlow(mockAuth.mockImplicitGrantFlow());
+    var foldersApi = sdk({
+      baseUrl: baseUrl,
+      authFlow: mockAuth.mockImplicitGrantFlow()
+    }).folders;
 
     describe('create method', function() {
 

@@ -2,6 +2,9 @@
 
 var axios = require('axios');
 var Bluebird = require('bluebird');
+var sdk = require('../../../');
+var baseUrl = 'https://api.mendeley.com';
+var mockAuth = require('../../mocks/auth');
 
 function getFakeFile(name, type) {
     return {
@@ -11,13 +14,10 @@ function getFakeFile(name, type) {
 }
 
 describe('documents api', function() {
-
-    var api = require('../../../').API;
-    var documentsApi = api.documents;
-    var baseUrl = 'https://api.mendeley.com';
-
-    var mockAuth = require('../../mocks/auth');
-    api.setAuthFlow(mockAuth.mockImplicitGrantFlow());
+    var documentsApi = sdk({
+      baseUrl: baseUrl,
+      authFlow: mockAuth.mockImplicitGrantFlow()
+    }).documents;
 
     // Mock ajax response promises
     var mockPromiseCreate = Bluebird.resolve({

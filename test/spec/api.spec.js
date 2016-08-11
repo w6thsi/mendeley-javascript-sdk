@@ -1,32 +1,11 @@
 /* jshint sub: true */
 'use strict';
 
+var sdk = require('../../');
+
 describe('api endpoints', function() {
 
-    var api = require('../../').API;
-
-    it('are able to clone their instances', function() {
-        Object.keys(api).map(function(endpointName) {
-            return api[endpointName];
-        }).filter(function(endpointObject) {
-            // we only test enpoint objects (we skip the functions on api object)
-            typeof endpointObject === 'object';
-        }).forEach(function(endpointObject) {
-            expect(typeof endpointObject.for).toBe('function');
-        });
-    });
-
     describe('multiple instances', function() {
-      var sdk = require('../../');
-
-      it('should object strenuously when accessing the global api and using instances', function() {
-          var api = sdk({});
-
-          expect(function () {
-              sdk.API.toString()
-          }).toThrow();
-      });
-
       it('should turn baseUrl and authFlow into functions', function() {
           var baseUrl = 'baseUrl';
           var authFlow = 'authFlow';
@@ -84,6 +63,5 @@ describe('api endpoints', function() {
           expect(options2.authFlow()).toEqual('authFlow2');
       });
     })
-
 });
 /* jshint sub: false */
