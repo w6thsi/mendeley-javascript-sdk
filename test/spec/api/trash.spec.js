@@ -208,22 +208,23 @@ describe('trash api', function() {
 
         it('should parse link headers', function(done) {
             ajaxSpy();
-            trashApi.paginationLinks.next = 'nonsense';
-            trashApi.paginationLinks.prev = 'nonsense';
-            trashApi.paginationLinks.last = 'nonsense';
 
-            trashApi.list().finally(function() {
-                expect(trashApi.paginationLinks.next).toEqual(linkNext);
-                expect(trashApi.paginationLinks.last).toEqual(linkLast);
-                expect(trashApi.paginationLinks.prev).toEqual(false);
+            trashApi.list()
+            .then(function (trash) {
+                expect(trash.nextPage).toEqual(jasmine.any(Function));
+                expect(trash.lastPage).toEqual(jasmine.any(Function));
+                expect(trash.previousPage).toEqual(undefined);
                 done();
             });
-
         });
 
         it('should get correct link on nextPage()', function(done) {
             var spy = ajaxSpy();
-            trashApi.nextPage().finally(function() {
+
+            trashApi.list().then(function(trash) {
+                return trash.nextPage();
+            })
+            .finally(function() {
                 expect(spy.calls.mostRecent().args[0].url).toEqual(linkNext);
                 done();
             });
@@ -231,44 +232,24 @@ describe('trash api', function() {
 
         it('should get correct link on lastPage()', function(done) {
             var spy = ajaxSpy();
-            trashApi.lastPage().finally(function() {
-                expect(spy.calls.mostRecent().args[0].url).toEqual(linkLast);
-                done();
-            });
-        });
 
-        it('should fail if no link for rel', function(done) {
-            var spy = ajaxSpy();
-            trashApi.previousPage().catch(function() {
-                expect(spy).not.toHaveBeenCalled();
+            trashApi.list().then(function(trash) {
+                return trash.lastPage();
+            })
+            .finally(function() {
+                expect(spy.calls.mostRecent().args[0].url).toEqual(linkLast);
                 done();
             });
         });
 
         it('should store the total trashed documents count', function(done) {
             ajaxSpy();
-            trashApi.list().finally(function() {
-                expect(trashApi.count).toEqual(155);
+
+            trashApi.list()
+            .then(function(trash) {
+                expect(trash.total).toEqual(155);
                 done();
             });
-        });
-
-        it('should not break when you GET something else that does not have pagination links', function(done) {
-            ajaxSpy();
-            trashApi.list().then(function() {
-                expect(trashApi.paginationLinks.next).toEqual(linkNext);
-                expect(trashApi.paginationLinks.last).toEqual(linkLast);
-                expect(trashApi.paginationLinks.prev).toEqual(false);
-
-                sendLinks = false;
-
-                return trashApi.retrieve(155);
-            }).then(function() {
-                expect(trashApi.paginationLinks.next).toEqual(linkNext);
-                expect(trashApi.paginationLinks.last).toEqual(linkLast);
-                expect(trashApi.paginationLinks.prev).toEqual(false);
-                done();
-            }).catch(function() {});
         });
     });
 });

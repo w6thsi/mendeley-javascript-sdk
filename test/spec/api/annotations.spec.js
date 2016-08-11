@@ -197,13 +197,14 @@ describe('annotations api', function() {
 
     describe('pagination', function() {
 
+        var linkFirst = baseUrl + '/annotations/?limit=5&reverse=false&marker=03726a18-140d-3e79-9c2f-b63473668360';
         var linkNext = baseUrl + '/annotations/?limit=5&reverse=false&marker=03726a18-140d-3e79-9c2f-b63473668359';
         var linkLast = baseUrl + '/annotations/?limit=5&reverse=true';
 
         function ajaxSpy() {
             return spyOn(axios, 'request').and.returnValue(Bluebird.resolve({
                 headers: {
-                    link: '<' + linkNext + '>; rel="next",<' + linkLast + '>; rel="last"',
+                    link: '<' + linkNext + '>; rel="next",<' + linkLast + '>; rel="last",<' + linkFirst + '>; rel="first"',
                     'mendeley-count': 56
                 }
             }));
@@ -211,22 +212,23 @@ describe('annotations api', function() {
 
         it('should parse link headers', function(done) {
             ajaxSpy();
-            annotationsApi.paginationLinks.next = 'nonsense';
-            annotationsApi.paginationLinks.prev = 'nonsense';
-            annotationsApi.paginationLinks.last = 'nonsense';
 
-            annotationsApi.list().then(function() {
-                expect(annotationsApi.paginationLinks.next).toEqual(linkNext);
-                expect(annotationsApi.paginationLinks.last).toEqual(linkLast);
-                expect(annotationsApi.paginationLinks.prev).toEqual(false);
+            annotationsApi.list().then(function(annotations) {
+                expect(annotations.firstPage).toEqual(jasmine.any(Function));
+                expect(annotations.nextPage).toEqual(jasmine.any(Function));
+                expect(annotations.lastPage).toEqual(jasmine.any(Function));
+                expect(annotations.previousPage).toEqual(undefined);
                 done();
             }).catch(function() {});
-
         });
 
         it('should get correct link on nextPage()', function(done) {
             var spy = ajaxSpy();
-            annotationsApi.nextPage().finally(function() {
+
+            annotationsApi.list().then(function(annotations) {
+                return annotations.nextPage();
+            })
+            .finally(function() {
                 expect(spy.calls.mostRecent().args[0].url).toEqual(linkNext);
                 done();
             });
@@ -234,46 +236,24 @@ describe('annotations api', function() {
 
         it('should get correct link on lastPage()', function(done) {
             var spy = ajaxSpy();
-            annotationsApi.lastPage().finally(function() {
-                expect(spy.calls.mostRecent().args[0].url).toEqual(linkLast);
-                done();
-            });
-        });
 
-        it('should fail if no link for rel', function(done) {
-            var spy = ajaxSpy();
-            annotationsApi.previousPage().catch(function() {
-                expect(spy).not.toHaveBeenCalled();
+            annotationsApi.list().then(function(anotations) {
+                return anotations.lastPage();
+            })
+            .finally(function() {
+                expect(spy.calls.mostRecent().args[0].url).toEqual(linkLast);
                 done();
             });
         });
 
         it('should store the total document count', function(done) {
             ajaxSpy();
-            annotationsApi.list().finally(function() {
-                expect(annotationsApi.count).toEqual(56);
+
+            annotationsApi.list().then(function(anotations) {
+                expect(anotations.total).toEqual(56);
                 done();
             });
         });
-
-        it('should not break when you GET something else that does not have pagination links', function(done) {
-            ajaxSpy();
-
-            annotationsApi.list().finally(function() {
-                expect(annotationsApi.paginationLinks.next).toEqual(linkNext);
-                expect(annotationsApi.paginationLinks.last).toEqual(linkLast);
-                expect(annotationsApi.paginationLinks.prev).toEqual(false);
-
-                return annotationsApi.retrieve(56);
-            }).finally(function() {
-                expect(annotationsApi.paginationLinks.next).toEqual(linkNext);
-                expect(annotationsApi.paginationLinks.last).toEqual(linkLast);
-                expect(annotationsApi.paginationLinks.prev).toEqual(false);
-
-                done();
-            });
-        });
-
     });
 });
 /* jshint camelcase: true */

@@ -104,22 +104,23 @@ describe('groups api', function() {
 
         it('should parse link headers', function(done) {
             ajaxSpy();
-            groupApi.paginationLinks.next = 'nonsense';
-            groupApi.paginationLinks.prev = 'nonsense';
-            groupApi.paginationLinks.last = 'nonsense';
 
-            groupApi.list().finally(function() {
-                expect(groupApi.paginationLinks.next).toEqual(linkNext);
-                expect(groupApi.paginationLinks.last).toEqual(linkLast);
-                expect(groupApi.paginationLinks.prev).toEqual(false);
+            groupApi.list()
+            .then(function (groups) {
+                expect(groups.nextPage).toEqual(jasmine.any(Function));
+                expect(groups.lastPage).toEqual(jasmine.any(Function));
+                expect(groups.previousPage).toEqual(undefined);
                 done();
             });
-
         });
 
         it('should get correct link on nextPage()', function(done) {
             var spy = ajaxSpy();
-            groupApi.nextPage().finally(function() {
+
+            groupApi.list().then(function(groups) {
+                return groups.nextPage();
+            })
+            .finally(function() {
                 expect(spy.calls.mostRecent().args[0].url).toEqual(linkNext);
                 done();
             });
@@ -127,35 +128,22 @@ describe('groups api', function() {
 
         it('should get correct link on lastPage()', function(done) {
             var spy = ajaxSpy();
-            groupApi.lastPage().finally(function() {
-                expect(spy.calls.mostRecent().args[0].url).toEqual(linkLast);
-                done();
-            });
-        });
 
-        it('should fail if no link for rel', function(done) {
-            var spy = ajaxSpy();
-            groupApi.previousPage().catch(function() {
-                expect(spy).not.toHaveBeenCalled();
+            groupApi.list().then(function(groups) {
+                return groups.lastPage();
+            })
+            .finally(function() {
+                expect(spy.calls.mostRecent().args[0].url).toEqual(linkLast);
                 done();
             });
         });
 
         it('should store the total document count', function(done) {
             ajaxSpy();
-            groupApi.list().finally(function() {
-                expect(groupApi.count).toEqual(56);
-                done();
-            });
-        });
 
-        it('should not break when you GET something else that does not have pagination links', function(done) {
-            ajaxSpy();
-
-            groupApi.list().finally(function() {
-                expect(groupApi.paginationLinks.next).toEqual(linkNext);
-                expect(groupApi.paginationLinks.last).toEqual(linkLast);
-                expect(groupApi.paginationLinks.prev).toEqual(false);
+            groupApi.list()
+            .then(function (groups) {
+                expect(groups.total).toEqual(56);
                 done();
             });
         });

@@ -1,5 +1,6 @@
-Upgrading to v3.x
-=================
+# UPGRADING
+
+## Upgrading to v3.x
 
 This version introduces some breaking changes that will effect client applications. These six breaking changes are approximately in order of impact.
 
@@ -65,3 +66,58 @@ https://github.com/mzabriskie/axios#global-axios-defaults
     ```
 
   Any attempt to access the `.API` object after creating an instance will result in an error being thrown.
+
+## Upgrading to v4.x
+
+Pagination has been overhauled in v4.
+
+Old code:
+
+```javascript
+// global based
+api.documents.list()
+.then(function (documents) {
+  console.info('I have ' + api.documents.count + 'documents')
+
+  return api.documents.nextPage() // or .previousPage() or lastPage()
+})
+.then(function (documents) {
+  console.info('Now I am on the next page')
+
+  // tidy up
+  api.documents.resetPagination();
+})
+
+// instance based
+var instance = api.documents.for('my-request')
+instance.list()
+.then(function (documents) {
+  console.info('I have ' + instance.count + 'documents')
+  console.info('The documents are ' + documents)
+
+  return instance.nextPage() // or .previousPage() or lastPage()
+})
+.then(function (documents) {
+  console.info('Now I am on the next page')
+
+  // tidy up
+  instance.resetPagination();
+})
+```
+
+New code:
+
+```javascript
+api.documents.list()
+.then(function (documents) {
+  console.info('I have ' + documents.total + 'documents')
+  console.info('The documents are ' + documents)
+
+  return documents.nextPage() // or .previousPage() or .lastPage()
+})
+.then(function (documents) {
+  console.info('Now I am on the next page')
+
+  // no tidy up necessary
+})
+```
