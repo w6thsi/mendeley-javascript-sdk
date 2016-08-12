@@ -593,20 +593,20 @@ describe('documents api', function() {
             ajaxSpy();
 
             documentsApi.list()
-            .then(function(documents) {
-                expect(documents.nextPage).toEqual(jasmine.any(Function));
-                expect(documents.lastPage).toEqual(jasmine.any(Function));
-                expect(documents.previousPage).toEqual(jasmine.any(Function));
+            .then(function(page) {
+                expect(page.next).toEqual(jasmine.any(Function));
+                expect(page.last).toEqual(jasmine.any(Function));
+                expect(page.previous).toEqual(jasmine.any(Function));
                 done();
             });
         });
 
-        it('should get correct link on nextPage()', function(done) {
+        it('should get correct link on next()', function(done) {
             var spy = ajaxSpy();
 
             documentsApi.list()
-            .then(function(documents) {
-                return documents.nextPage();
+            .then(function(page) {
+                return page.next();
             })
             .finally(function () {
                 expect(spy.calls.mostRecent().args[0].url).toEqual(linkNext);
@@ -614,12 +614,12 @@ describe('documents api', function() {
             });
         });
 
-        it('should get correct link on previousPage()', function(done) {
+        it('should get correct link on previous()', function(done) {
             var spy = ajaxSpy();
 
             documentsApi.list()
-            .then(function(documents) {
-                return documents.previousPage();
+            .then(function(page) {
+                return page.previous();
             })
             .finally(function () {
                 expect(spy.calls.mostRecent().args[0].url).toEqual(linkPrev);
@@ -631,8 +631,8 @@ describe('documents api', function() {
             var spy = ajaxSpy();
 
             documentsApi.list()
-            .then(function(documents) {
-                return documents.lastPage();
+            .then(function(page) {
+                return page.last();
             })
             .finally(function () {
                 expect(spy.calls.mostRecent().args[0].url).toEqual(linkLast);
@@ -643,24 +643,24 @@ describe('documents api', function() {
         it('should store the total document count', function(done) {
             ajaxSpy();
             documentsApi.list()
-            .then(function (documents) {
-                expect(documents.total).toEqual(155);
+            .then(function (page) {
+                expect(page.total).toEqual(155);
 
                 sendMendeleyCountHeader = false;
                 documentCount = 999;
                 ajaxSpy();
                 return documentsApi.list();
             })
-            .then(function (documents) {
-                expect(documents.total).toEqual(0);
+            .then(function (page) {
+                expect(page.total).toEqual(0);
 
                 sendMendeleyCountHeader = true;
                 documentCount = 0;
                 ajaxSpy();
                 return documentsApi.list();
             })
-            .then(function (documents) {
-                expect(documents.total).toEqual(0);
+            .then(function (page) {
+                expect(page.total).toEqual(0);
                 done();
             });
         });
@@ -673,11 +673,11 @@ describe('documents api', function() {
             ajaxSpy();
 
             documentsApi.list()
-            .then(function(documents) {
-                expect(documents.total).toEqual(10);
-                expect(documents.nextPage).toEqual(undefined);
-                expect(documents.lastPage).toEqual(undefined);
-                expect(documents.previousPage).toEqual(undefined);
+            .then(function(page) {
+                expect(page.total).toEqual(10);
+                expect(page.next).toEqual(undefined);
+                expect(page.last).toEqual(undefined);
+                expect(page.previous).toEqual(undefined);
                 done();
             });
         });

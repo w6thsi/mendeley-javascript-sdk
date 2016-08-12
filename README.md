@@ -240,7 +240,9 @@ define(function(require) {
 
 API resources that implement `list` functions return paginated responses.
 
-These add a `total` property that represents the total number of resources and some of `firstPage`, `nextPage`, `previousPage` and `lastPage` methods that return promises which resolve to the first, next, previous and last page of resources respectively.
+These have a `total` property that represents the total number of resources and some of `firstPage`, `nextPage`, `previousPage` and `lastPage` methods that return promises which resolve to the first, next, previous and last page of resources respectively.
+
+The actual resources loaded are accessible by the `page` property.
 
 The presence of the pagination methods depend on where in the collection you are at the time.  If you are on the first page of results for example, the `firstPage` method will not be present.  Similarly if there is only one page of results there will be no pagination methods available.
 
@@ -250,25 +252,25 @@ The presence of the pagination methods depend on where in the collection you are
 var api = require('@mendeley/api')(options);
 
 api.documents.list()
-.then(function (documents) {
-  console.info('There are ' + documents.total + ' documents in total');
+.then(function (result) {
+  console.info('There are ' + result.total + ' documents in total');
 
-  console.info('The first page of documents is ' + documents);
+  console.info('The first page of documents is ' + result.page);
 
-  return documents.nextPage();
+  return result.nextPage();
 })
-.then(function (documents) {
-  console.info('The next page of documents is ' + documents);
+.then(function (result) {
+  console.info('The next page of documents is ' + result.page);
 
-  return documents.previousPage();
+  return result.previousPage();
 })
-.then(function (documents) {
-  console.info('The previous page of documents is ' + documents);
+.then(function (result) {
+  console.info('The previous page of documents is ' + result.page);
 
-  return documents.lastPage();
+  return result.lastPage();
 })
-.then(function (documents) {
-  console.info('The last page of documents is ' + documents);
+.then(function (result) {
+  console.info('The last page of documents is ' + result.page);
 });
 ```
 

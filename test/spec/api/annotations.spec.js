@@ -214,10 +214,10 @@ describe('annotations api', function() {
             ajaxSpy();
 
             annotationsApi.list().then(function(annotations) {
-                expect(annotations.firstPage).toEqual(jasmine.any(Function));
-                expect(annotations.nextPage).toEqual(jasmine.any(Function));
-                expect(annotations.lastPage).toEqual(jasmine.any(Function));
-                expect(annotations.previousPage).toEqual(undefined);
+                expect(annotations.first).toEqual(jasmine.any(Function));
+                expect(annotations.next).toEqual(jasmine.any(Function));
+                expect(annotations.last).toEqual(jasmine.any(Function));
+                expect(annotations.previous).toEqual(undefined);
                 done();
             }).catch(function() {});
         });
@@ -225,8 +225,8 @@ describe('annotations api', function() {
         it('should get correct link on nextPage()', function(done) {
             var spy = ajaxSpy();
 
-            annotationsApi.list().then(function(annotations) {
-                return annotations.nextPage();
+            annotationsApi.list().then(function(page) {
+                return page.next();
             })
             .finally(function() {
                 expect(spy.calls.mostRecent().args[0].url).toEqual(linkNext);
@@ -237,8 +237,8 @@ describe('annotations api', function() {
         it('should get correct link on lastPage()', function(done) {
             var spy = ajaxSpy();
 
-            annotationsApi.list().then(function(anotations) {
-                return anotations.lastPage();
+            annotationsApi.list().then(function(page) {
+                return page.last();
             })
             .finally(function() {
                 expect(spy.calls.mostRecent().args[0].url).toEqual(linkLast);
@@ -249,8 +249,8 @@ describe('annotations api', function() {
         it('should store the total document count', function(done) {
             ajaxSpy();
 
-            annotationsApi.list().then(function(anotations) {
-                expect(anotations.total).toEqual(56);
+            annotationsApi.list().then(function(page) {
+                expect(page.total).toEqual(56);
                 done();
             });
         });

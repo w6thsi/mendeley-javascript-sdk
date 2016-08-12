@@ -211,18 +211,18 @@ describe('trash api', function() {
 
             trashApi.list()
             .then(function (trash) {
-                expect(trash.nextPage).toEqual(jasmine.any(Function));
-                expect(trash.lastPage).toEqual(jasmine.any(Function));
-                expect(trash.previousPage).toEqual(undefined);
+                expect(trash.next).toEqual(jasmine.any(Function));
+                expect(trash.last).toEqual(jasmine.any(Function));
+                expect(trash.previous).toEqual(undefined);
                 done();
             });
         });
 
-        it('should get correct link on nextPage()', function(done) {
+        it('should get correct link on next()', function(done) {
             var spy = ajaxSpy();
 
-            trashApi.list().then(function(trash) {
-                return trash.nextPage();
+            trashApi.list().then(function(page) {
+                return page.next();
             })
             .finally(function() {
                 expect(spy.calls.mostRecent().args[0].url).toEqual(linkNext);
@@ -230,11 +230,11 @@ describe('trash api', function() {
             });
         });
 
-        it('should get correct link on lastPage()', function(done) {
+        it('should get correct link on last()', function(done) {
             var spy = ajaxSpy();
 
-            trashApi.list().then(function(trash) {
-                return trash.lastPage();
+            trashApi.list().then(function(page) {
+                return page.last();
             })
             .finally(function() {
                 expect(spy.calls.mostRecent().args[0].url).toEqual(linkLast);
@@ -246,8 +246,8 @@ describe('trash api', function() {
             ajaxSpy();
 
             trashApi.list()
-            .then(function(trash) {
-                expect(trash.total).toEqual(155);
+            .then(function(page) {
+                expect(page.total).toEqual(155);
                 done();
             });
         });

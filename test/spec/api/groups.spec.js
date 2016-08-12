@@ -107,18 +107,18 @@ describe('groups api', function() {
 
             groupApi.list()
             .then(function (groups) {
-                expect(groups.nextPage).toEqual(jasmine.any(Function));
-                expect(groups.lastPage).toEqual(jasmine.any(Function));
-                expect(groups.previousPage).toEqual(undefined);
+                expect(groups.next).toEqual(jasmine.any(Function));
+                expect(groups.last).toEqual(jasmine.any(Function));
+                expect(groups.previous).toEqual(undefined);
                 done();
             });
         });
 
-        it('should get correct link on nextPage()', function(done) {
+        it('should get correct link on next()', function(done) {
             var spy = ajaxSpy();
 
-            groupApi.list().then(function(groups) {
-                return groups.nextPage();
+            groupApi.list().then(function(page) {
+                return page.next();
             })
             .finally(function() {
                 expect(spy.calls.mostRecent().args[0].url).toEqual(linkNext);
@@ -126,11 +126,11 @@ describe('groups api', function() {
             });
         });
 
-        it('should get correct link on lastPage()', function(done) {
+        it('should get correct link on last()', function(done) {
             var spy = ajaxSpy();
 
-            groupApi.list().then(function(groups) {
-                return groups.lastPage();
+            groupApi.list().then(function(page) {
+                return page.last();
             })
             .finally(function() {
                 expect(spy.calls.mostRecent().args[0].url).toEqual(linkLast);
@@ -142,8 +142,8 @@ describe('groups api', function() {
             ajaxSpy();
 
             groupApi.list()
-            .then(function (groups) {
-                expect(groups.total).toEqual(56);
+            .then(function (page) {
+                expect(page.total).toEqual(56);
                 done();
             });
         });

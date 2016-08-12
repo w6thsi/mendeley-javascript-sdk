@@ -139,3 +139,19 @@ https://github.com/mzabriskie/axios#global-axios-defaults
   })
   api.documents.list().then(/* ... */)
   ```
+
+## Upgrading to v5.x
+
+1. Pagination has been tweaked again. Now the result of calls to `list` methods is a wrapper object that holds the actual list of resources under a property named `items`.
+
+  Also `nextPage`, `previousPage`, `firstPage` and `lastPage` become `next`, `previous`, `first` and `last` resepectively:
+
+  ```javascript
+  api.documents.list()
+  .then(function (page) {
+    console.info('I have ' + page.total + 'documents')
+    console.info('The documents are ' + page.items)
+
+    return page.next()
+  })
+  ```

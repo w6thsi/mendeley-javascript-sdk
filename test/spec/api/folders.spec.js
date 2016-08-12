@@ -297,21 +297,21 @@ describe('folders api', function() {
             ajaxSpy();
 
             foldersApi.list()
-            .then(function (folders) {
-                expect(folders.nextPage).toEqual(jasmine.any(Function));
-                expect(folders.lastPage).toEqual(jasmine.any(Function));
-                expect(folders.previousPage).toEqual(undefined);
+            .then(function (page) {
+                expect(page.next).toEqual(jasmine.any(Function));
+                expect(page.last).toEqual(jasmine.any(Function));
+                expect(page.previous).toEqual(undefined);
                 done();
             });
 
         });
 
-        it('should get correct link on nextPage()', function(done) {
+        it('should get correct link on next()', function(done) {
             var spy = ajaxSpy();
 
             foldersApi.list()
-            .then(function (folders) {
-                return folders.nextPage();
+            .then(function (page) {
+                return page.next();
             })
             .finally(function () {
                 expect(spy.calls.mostRecent().args[0].url).toEqual(linkNext);
@@ -319,12 +319,12 @@ describe('folders api', function() {
             });
         });
 
-        it('should get correct link on lastPage()', function(done) {
+        it('should get correct link on last()', function(done) {
             var spy = ajaxSpy();
 
             foldersApi.list()
-            .then(function (folders) {
-                return folders.lastPage();
+            .then(function (page) {
+                return page.last();
             })
             .finally(function () {
                 expect(spy.calls.mostRecent().args[0].url).toEqual(linkLast);
@@ -335,24 +335,24 @@ describe('folders api', function() {
         it('should store the total document count', function(done) {
             ajaxSpy();
             foldersApi.list()
-            .then(function (folders) {
-                expect(folders.total).toEqual(56);
+            .then(function (page) {
+                expect(page.total).toEqual(56);
 
                 sendMendeleyCountHeader = false;
                 folderCount = 999;
                 ajaxSpy();
                 return foldersApi.list();
             })
-            .then(function (folders) {
-                expect(folders.total).toEqual(0);
+            .then(function (page) {
+                expect(page.total).toEqual(0);
 
                 sendMendeleyCountHeader = true;
                 folderCount = 0;
                 ajaxSpy();
                 return foldersApi.list();
             })
-            .then(function (folders) {
-                expect(folders.total).toEqual(0);
+            .then(function (page) {
+                expect(page.total).toEqual(0);
                 done();
             });
         });
