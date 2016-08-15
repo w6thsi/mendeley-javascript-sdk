@@ -195,5 +195,19 @@ describe('request', function() {
                 expect(ajaxSpy.calls.count()).toEqual(1);
             }).finally(done);
         });
+
+        it('should survive vanilla Errors', function(done) {
+            var error = new Error('Kaboom!');
+            var myRequest = request.create({ method: 'get' }, { maxRetries: 1, authFlow: mockAuth.mockImplicitGrantFlow() });
+            var fun = getMockPromises(
+                Bluebird.reject(error),
+                Bluebird.resolve({ status: 200, headers: {} })
+            );
+            spyOn(axios, 'request').and.callFake(fun);
+
+            myRequest.send().catch(function(e) {
+                expect(e).toEqual(error);
+            }).finally(done);
+        });
     });
 });
