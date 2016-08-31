@@ -5,6 +5,8 @@ var Bluebird = require('bluebird');
 
 Bluebird.onPossiblyUnhandledRejection(function() {});
 
+jasmine.DEFAULT_TIMEOUT_INTERVAL = 10000;
+
 // Get a function to return promises in order
 function getMockPromises() {
     var responses = Array.prototype.slice.call(arguments);
@@ -77,7 +79,6 @@ describe('request', function() {
                 expect(ajaxSpy.calls.mostRecent().args[0].headers.Authorization).toEqual('Bearer auth-refreshed');
                 done();
             });
-
         });
 
         it('should fail and call authenticate if cannot refresh token', function(done) {
@@ -112,6 +113,35 @@ describe('request', function() {
                 expect(authRefreshSpy.calls.count()).toEqual(2);
                 expect(authAuthenticateSpy.calls.count()).toEqual(1);
             }).finally(done);
+        });
+
+        it('should not make multiple concurrent requests to refresh an access token', function(done) {
+            var mockAuthInterface = mockAuth.slowAuthCodeFlow();
+            var ajaxSpy = spyOn(axios, 'request').and.callFake(function (config) {
+                if (config.headers.Authorization === 'Bearer auth-refreshed-1') {
+                    return Bluebird.resolve({ status: 200, headers: {} });
+                }
+
+                return Bluebird.reject({
+                    response: mockAuth.unauthorisedError
+                });
+            });
+            var authRefreshSpy = spyOn(mockAuthInterface, 'refreshToken').and.callThrough();
+
+            Bluebird.all([
+                request.create({ method: 'get' }, { authFlow: mockAuthInterface }).send(),
+                request.create({ method: 'get' }, { authFlow: mockAuthInterface }).send(),
+                request.create({ method: 'get' }, { authFlow: mockAuthInterface }).send(),
+                request.create({ method: 'get' }, { authFlow: mockAuthInterface }).send(),
+                request.create({ method: 'get' }, { authFlow: mockAuthInterface }).send()
+            ])
+            .then(function() {
+                expect(authRefreshSpy.calls.count()).toEqual(1);
+                expect(ajaxSpy.calls.count()).toEqual(5);
+                expect(ajaxSpy.calls.mostRecent().args[0].headers.Authorization).toEqual('Bearer auth-refreshed-1');
+                expect(mockAuthInterface.getToken()).toEqual('auth-refreshed-1');
+                done();
+            });
         });
     });
 
