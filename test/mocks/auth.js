@@ -14,6 +14,7 @@ notFoundError.response = { status: 404 };
 module.exports = {
     mockImplicitGrantFlow: mockImplicitGrantFlow,
     mockAuthCodeFlow: mockAuthCodeFlow,
+    slowAuthCodeFlow: slowAuthCodeFlow,
     unauthorisedError: unauthorisedError,
     timeoutError: timeoutError,
     notFoundError: notFoundError
@@ -40,4 +41,23 @@ function mockAuthCodeFlow() {
             return Bluebird.resolve();
         }
     };
+}
+
+function slowAuthCodeFlow() {
+  var fakeToken = null;
+  var refreshCount = 0;
+
+  return {
+      getToken: function() { return fakeToken; },
+      authenticate: function() { return false; },
+      refreshToken: function() {
+          return new Bluebird(function (resolve) {
+              setTimeout(function () {
+                  refreshCount++;
+                  fakeToken = 'auth-refreshed-' + refreshCount;
+                  resolve();
+              }, 1000);
+          });
+      }
+  };
 }
