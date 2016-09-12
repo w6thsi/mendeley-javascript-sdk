@@ -92,7 +92,7 @@ describe('request', function() {
             var authRefreshSpy = spyOn(mockAuthInterface, 'refreshToken').and.returnValue(Bluebird.reject({ status: 500 }));
             var authAuthenticateSpy = spyOn(mockAuthInterface, 'authenticate').and.callThrough();
 
-            myRequest.send().catch(function() {
+            myRequest.send().then(function() {
                 expect(ajaxSpy.calls.count()).toEqual(1);
                 expect(authRefreshSpy.calls.count()).toEqual(1);
                 expect(authAuthenticateSpy.calls.count()).toEqual(1);
