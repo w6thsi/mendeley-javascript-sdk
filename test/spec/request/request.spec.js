@@ -89,7 +89,7 @@ describe('request', function() {
                 Bluebird.resolve({ status: 200, headers: {} }) // Original request success
             );
             var ajaxSpy = spyOn(axios, 'request').and.callFake(fun);
-            var authRefreshSpy = spyOn(mockAuthInterface, 'refreshToken').and.returnValue(Bluebird.reject({ status: 500 }));
+            var authRefreshSpy = spyOn(mockAuthInterface, 'refreshToken').and.returnValue(Bluebird.reject({ status: 401 }));
             var authAuthenticateSpy = spyOn(mockAuthInterface, 'authenticate').and.callThrough();
 
             myRequest.send().then(function() {
