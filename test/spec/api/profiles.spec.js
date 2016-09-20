@@ -176,5 +176,42 @@ describe('profiles api', function() {
             expect(ajaxRequest.data).not.toBeDefined();
         });
     });
+
+    describe('retrieve by identifier method', function() {
+        var ajaxSpy;
+
+        beforeEach(function() {
+            ajaxSpy = spyOn(axios, 'request').and.returnValue(Bluebird.resolve({headers: {}}));
+        });
+
+        it('should pass scopus id through to the api request', function(done) {
+            var params = {
+                scopus_author_id: '12345'
+            };
+
+            profilesApi.retrieveByIdentifier(params).finally(function() {
+                var ajaxRequest = ajaxSpy.calls.mostRecent().args[0];
+
+                expect(ajaxSpy).toHaveBeenCalled();
+                expect(ajaxRequest.params).toBe(params);
+                done();
+            });
+        });
+
+        it('should pass link paramter through to the api request', function(done) {
+            var params = {
+                link: 'hermione-granger'
+            };
+
+            profilesApi.retrieveByIdentifier(params).finally(function() {
+                var ajaxRequest = ajaxSpy.calls.mostRecent().args[0];
+
+                expect(ajaxSpy).toHaveBeenCalled();
+                expect(ajaxRequest.params).toBe(params);
+                done();
+            });
+        });
+    });
+
 });
 /* jshint camelcase: true */
