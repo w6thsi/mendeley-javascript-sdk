@@ -155,3 +155,21 @@ https://github.com/mzabriskie/axios#global-axios-defaults
     return page.next()
   })
   ```
+
+
+## Upgrading to v6.x
+
+1. Pagination has been added to the `document.search` method. Now, the result looks like what calls to `list` methods would return.
+
+  ```javascript
+  api.documents.search(searchParams)
+  .then(function (firstResultPage) {
+    console.info('I have ' + firstResultPage.total + 'search result items in total');
+    console.info('The items on the first page are ' + firstResultPage.items);
+
+    return firstResultPage.next();
+  })
+  .then(function (secondResultPage) {
+    console.info('Now I am on the next page')
+  });
+  ```
