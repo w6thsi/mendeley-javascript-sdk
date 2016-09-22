@@ -25,7 +25,7 @@ function mockImplicitGrantFlow() {
 
     return {
         getToken: function() { return fakeToken; },
-        authenticate: function() { return false; },
+        authenticate: function() {},
         refreshToken: function () { return false; }
     };
 }
@@ -35,7 +35,7 @@ function mockAuthCodeFlow() {
 
     return {
         getToken: function() { return fakeToken; },
-        authenticate: function() { return false; },
+        authenticate: function() { throw new Error('Cannot authenticate'); },
         refreshToken: function() {
             fakeToken = 'auth-refreshed';
             return Bluebird.resolve();
@@ -49,7 +49,7 @@ function slowAuthCodeFlow() {
 
   return {
       getToken: function() { return fakeToken; },
-      authenticate: function() { return false; },
+      authenticate: function() {},
       refreshToken: function() {
           return new Bluebird(function (resolve) {
               setTimeout(function () {

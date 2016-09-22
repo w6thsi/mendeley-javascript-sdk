@@ -89,10 +89,10 @@ describe('request', function() {
                 Bluebird.resolve({ status: 200, headers: {} }) // Original request success
             );
             var ajaxSpy = spyOn(axios, 'request').and.callFake(fun);
-            var authRefreshSpy = spyOn(mockAuthInterface, 'refreshToken').and.returnValue(Bluebird.reject({ status: 401 }));
+            var authRefreshSpy = spyOn(mockAuthInterface, 'refreshToken').and.returnValue(Bluebird.reject({ status: 500 }));
             var authAuthenticateSpy = spyOn(mockAuthInterface, 'authenticate').and.callThrough();
 
-            myRequest.send().then(function() {
+            myRequest.send().catch(function() {
                 expect(ajaxSpy.calls.count()).toEqual(1);
                 expect(authRefreshSpy.calls.count()).toEqual(1);
                 expect(authAuthenticateSpy.calls.count()).toEqual(1);
@@ -140,6 +140,19 @@ describe('request', function() {
                 expect(ajaxSpy.calls.count()).toEqual(5);
                 expect(ajaxSpy.calls.mostRecent().args[0].headers.Authorization).toEqual('Bearer auth-refreshed-1');
                 expect(mockAuthInterface.getToken()).toEqual('auth-refreshed-1');
+                done();
+            });
+        });
+
+        it('should propagate the refresh error if authenticate throws', function(done) {
+            var refreshError = new Error('refresh error');
+            var mockAuthInterface = mockAuth.mockAuthCodeFlow();
+            var myRequest = request.create({ method: 'get' }, { authFlow: mockAuthInterface });
+            spyOn(axios, 'request').and.returnValue(Bluebird.reject({ response: { status: 401 } }));
+            spyOn(mockAuthInterface, 'refreshToken').and.returnValue(Bluebird.reject(refreshError));
+
+            myRequest.send().catch(function(caughtError) {
+                expect(refreshError).toEqual(caughtError);
                 done();
             });
         });
