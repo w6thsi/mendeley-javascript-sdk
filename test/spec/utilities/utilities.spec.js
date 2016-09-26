@@ -305,101 +305,34 @@ describe('utilities', function() {
 
     describe('paginationFilter', function () {
 
-        var apiReponse = {
-            headers: {
-                link: {
-                    next: 'http://i.am.the.next.link',
-                    previous: 'http://i.am.the.previous.link',
-                    dontdo: 'something'
-                },
-                'mendeley-count': 199
-            },
-            data: [
-                { id: 1 }
-            ]
-        };
+        function getMockedUtils(spy) {
 
-        var options = {
-            authFlow: function () { return authFlow; },
-            baseUrl: 'baseUrl',
-            method: 'GET',
-            resource: '/communities/v1',
-            headers: {
-                'Accept': 'application/my/custom/mimetype',
-                'Development-Token': 'devToken'
-            },
-            responseFilter: function () { }
-        };
+            // Eak: Different proxy module for client (webpack) and server (node) tests.
+            if(typeof window !=='undefined') {
+                var proxy = require('proxy!../../../lib/utilities');
+                var mockedUtils = proxy({
+                    './pagination': {
+                        filter: spy
+                    }
+                });
+                return mockedUtils;
+            }
 
-        it('should return the correct pagination object with next/prev methods', function () {
-
-            var paginationResponse = utils.paginationFilter(options, apiReponse);
-
-            expect(paginationResponse.total).toBe(199);
-            expect(paginationResponse.items).toEqual([
-                { id: 1 }
-            ]);
-            expect(paginationResponse.next).toBeDefined();
-            expect(paginationResponse.previous).toBeDefined();
-            expect(paginationResponse.first).not.toBeDefined();
-            expect(paginationResponse.last).not.toBeDefined();
-            expect(paginationResponse.dontdo).not.toBeDefined();
-
-            expect(paginationResponse.headers).toEqual({
-                accept: 'application/my/custom/mimetype',
-                link: {
-                    next: 'http://i.am.the.next.link',
-                    previous: 'http://i.am.the.previous.link'
+            var proxyquire = require('proxyquire');
+            return proxyquire('../../../lib/utilities', {
+                './pagination': {
+                    filter: spy
                 }
             });
 
-        });
+        }
 
-        it('next link should call the correct endpoint', function () {
-
-            var paginationResponse = utils.paginationFilter(options, apiReponse);
-            paginationResponse.next();
-
-            expect(requestCreateSpy).toHaveBeenCalledWith({
-                method: 'GET',
-                url: 'http://i.am.the.next.link',
-                headers: {
-                    Accept: 'application/my/custom/mimetype',
-                    'Development-Token': 'devToken'
-                },
-                responseType: 'json'
-            }, {
-                    authFlow: authFlow,
-                    maxRetries: 1
-                });
+        it('should be delegate to pagination library', function () {
+            var spy = jasmine.createSpy();
+            getMockedUtils(spy).paginationFilter();
+            expect(spy).toHaveBeenCalled();
         });
 
     });
 
-    describe('getPaginationHandler', function () {
-
-        it('should return a method that calls the correct endpoint', function () {
-
-            var handler = utils.getPaginationHandler('http://mylink?page=2', authFlow, {
-                'Accept': 'application/custom',
-                'Development-Token': 'devToken'
-            });
-
-            handler();
-
-            expect(requestCreateSpy).toHaveBeenCalledWith({
-                method: 'GET',
-                url: 'http://mylink?page=2',
-                headers: {
-                    Accept: 'application/custom',
-                    'Development-Token': 'devToken'
-                },
-                responseType: 'json'
-            }, {
-                    authFlow: authFlow,
-                    maxRetries: 1
-                });
-
-        });
-    });
 });
