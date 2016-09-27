@@ -257,22 +257,60 @@ api.documents.list()
 
   console.info('The first page of documents is ' + result.page);
 
-  return result.nextPage();
+  return result.next();
 })
 .then(function (result) {
   console.info('The next page of documents is ' + result.page);
 
-  return result.previousPage();
+  return result.previous();
 })
 .then(function (result) {
   console.info('The previous page of documents is ' + result.page);
 
-  return result.lastPage();
+  return result.last();
 })
 .then(function (result) {
   console.info('The last page of documents is ' + result.page);
 });
 ```
+
+### "Handshake" between server and client.
+
+Sometimes its useful to be able to render from the server and paginate the rest from the client-side javascript. `pagination.decorate` method is ueful for adding the standard pagination methods from a stringified page result. Heres an example with expressjs.
+
+```javascript
+// server.js
+var express = require('express');
+var app = express();
+var api = require('@mendeley/api')(options);
+
+app.get('/', function (req, res) {
+
+  api.documents.list()
+  .then(function(result) {
+      res.send('<script>');
+      res.send('window.__data=' + JSON.stringify(result) + ';');
+      res.send('</script>')
+      res.end();
+  });
+});
+```
+```javascript
+// client.js
+var api = require('@mendeley/api');
+var pagination = require('@mendeley/api/pagination')
+
+// build pagination object with paging methods from the stringified object
+var page = pagination.decorate(window.__data, authFlow);
+
+// call the next page of pagination
+page.next()
+.then(function(result) {
+  // add the new page
+});
+
+```
+
 
 ## Examples
 
