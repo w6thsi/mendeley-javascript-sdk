@@ -238,7 +238,8 @@ describe('utilities', function() {
                 url: 'https://api.mendeley.com/test',
                 headers: headers,
                 data: file,
-                onUploadProgress: undefined
+                onUploadProgress: undefined,
+                onDownloadProgress: undefined
             }, {
                 authFlow: authFlow
             });
@@ -273,7 +274,8 @@ describe('utilities', function() {
                 url: 'https://api.mendeley.com/test',
                 headers: headers,
                 data: file,
-                onUploadProgress: progressHandler
+                onUploadProgress: progressHandler,
+                onDownloadProgress: progressHandler
             }, {
                 authFlow: authFlow
             });
@@ -295,7 +297,8 @@ describe('utilities', function() {
                     Link: '<https://api.mendeley.com/documents/zelda>; rel="document"'
                 }, headers),
                 data: file,
-                onUploadProgress: undefined
+                onUploadProgress: undefined,
+                onDownloadProgress: undefined
             }, {
                 authFlow: authFlow
             });
