@@ -302,4 +302,37 @@ describe('utilities', function() {
         });
 
     });
+
+    describe('paginationFilter', function () {
+
+        function getMockedUtils(spy) {
+
+            // Eak: Different proxy module for client (webpack) and server (node) tests.
+            if(typeof window !=='undefined') {
+                var proxy = require('proxy!../../../lib/utilities');
+                var mockedUtils = proxy({
+                    './pagination': {
+                        filter: spy
+                    }
+                });
+                return mockedUtils;
+            }
+
+            var proxyquire = require('proxyquire');
+            return proxyquire('../../../lib/utilities', {
+                './pagination': {
+                    filter: spy
+                }
+            });
+
+        }
+
+        it('should be delegate to pagination library', function () {
+            var spy = jasmine.createSpy();
+            getMockedUtils(spy).paginationFilter();
+            expect(spy).toHaveBeenCalled();
+        });
+
+    });
+
 });
