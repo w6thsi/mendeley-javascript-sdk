@@ -94,6 +94,77 @@ describe('files api', function() {
         });
     });
 
+    describe('retrieve method', function() {
+        var ajaxSpy;
+        var ajaxRequest;
+        var responsePromise;
+
+        var sampleResponse = {
+            headers: {}
+        };
+
+        it('be defined', function(done) {
+            expect(typeof filesApi.retrieve).toBe('function');
+            ajaxSpy = spyOn(axios, 'request').and.returnValue(Bluebird.resolve(sampleResponse));
+
+            responsePromise = filesApi.retrieve('someId').finally(function() {
+                expect(ajaxSpy).toHaveBeenCalled();
+                ajaxRequest = ajaxSpy.calls.mostRecent().args[0];
+                done();
+            });
+        });
+
+        it('should use GET', function() {
+            expect(ajaxRequest.method).toBe('get');
+        });
+
+        it('should use endpoint /files?document_id=someId', function() {
+            expect(ajaxRequest.url).toBe(baseUrl + '/files/someId');
+        });
+
+        it('should have an Accept header', function() {
+            expect(ajaxRequest.headers['Accept']).toBeDefined();
+        });
+
+        it('should NOT have a Content-Type header', function() {
+            expect(ajaxRequest.headers['Content-Type']).not.toBeDefined();
+        });
+
+        it('should have an Authorization header', function() {
+            expect(ajaxRequest.headers.Authorization).toBeDefined();
+            expect(ajaxRequest.headers.Authorization).toBe('Bearer auth');
+        });
+
+        it('should NOT unpack the response envelope', function(done) {
+            responsePromise.then(function(response) {
+                expect(JSON.stringify(response)).toEqual(JSON.stringify(sampleResponse));
+                done();
+            });
+        });
+
+        it('should not follow HTTP redirects', function() {
+            expect(typeof filesApi.retrieve).toBe('function');
+            ajaxSpy = spyOn(axios, 'request').and.returnValue(Bluebird.resolve({headers: {}}));
+            filesApi.retrieve('someId');
+
+            var requestArgs = ajaxSpy.calls.first().args[0];
+
+            expect(requestArgs.maxRedirects).toEqual(0);
+        });
+
+        it('should handle HTTP redirects like successful response', function() {
+            expect(typeof filesApi.retrieve).toBe('function');
+            ajaxSpy = spyOn(axios, 'request').and.returnValue(Bluebird.resolve({headers: {}}));
+            filesApi.retrieve('someId');
+
+            var requestArgs = ajaxSpy.calls.first().args[0];
+            var isStatusSuccessFunc = requestArgs.validateStatus;
+
+            expect(isStatusSuccessFunc(303)).toEqual(true);
+        });
+
+    });
+
     describe('list method', function() {
         var ajaxSpy;
         var ajaxRequest;
