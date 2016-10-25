@@ -115,6 +115,23 @@ describe('request', function() {
             }).finally(done);
         });
 
+        it('should NOT exceed maxAuthRetries for multiple requests', function(done) {
+            var mockAuthInterface = mockAuth.slowAuthCodeFlow();
+            var ajaxSpy = spyOn(axios, 'request').and.returnValue(Bluebird.reject(mockAuth.unauthorisedError));
+            var authRefreshSpy = spyOn(mockAuthInterface, 'refreshToken').and.callThrough();
+            var authAuthenticateSpy = spyOn(mockAuthInterface, 'authenticate').and.callThrough();
+
+            Bluebird.all([
+                request.create({ method: 'get' }, { authFlow: mockAuthInterface }).send(),
+                request.create({ method: 'get' }, { authFlow: mockAuthInterface }).send()
+            ]).catch(function() {
+                expect(ajaxSpy.calls.count()).toEqual(1);
+                expect(authRefreshSpy.calls.count()).toEqual(1);
+                expect(authAuthenticateSpy.calls.count()).toEqual(1);
+                done();
+            });
+        });
+
         it('should not make multiple concurrent requests to refresh an access token', function(done) {
             var mockAuthInterface = mockAuth.slowAuthCodeFlow();
             var ajaxSpy = spyOn(axios, 'request').and.callFake(function (config) {
