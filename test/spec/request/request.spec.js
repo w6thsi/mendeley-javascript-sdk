@@ -240,6 +240,34 @@ describe('request', function() {
                 done();
             }).catch(function() {});
         });
+
+        it('should not cache failing access token promises for single request', function(done) {
+            var mockAuthInterface = mockAuth.mockAuthCodeFlow();
+            var ajaxSpy = spyOn(axios, 'request').and.returnValues(
+                Bluebird.reject({ response: { status: 401 } }), // request auth fail
+                Bluebird.reject({ response: { status: 401 } }), // request auth fail
+                Bluebird.resolve({ status: 200, headers: {} }) // request success
+            );
+            var refreshTokenSpy = spyOn(mockAuthInterface, 'refreshToken').and.returnValues(
+                Bluebird.reject({ response: { status: 401 } }), // token request fail
+                Bluebird.resolve({ status: 200, headers: {} }) // token request success
+            );
+
+            request.create({ method: 'get' }, { authFlow: mockAuthInterface }).send()
+              .catch(function(err) {
+                  expect(err.response.status).toEqual(401);
+                  expect(ajaxSpy.calls.count()).toEqual(1);
+                  expect(refreshTokenSpy.calls.count()).toEqual(1);
+
+                  request.create({ method: 'get' }, { authFlow: mockAuthInterface }).send()
+                    .then(function(res) {
+                        expect(res.status).toEqual(200);
+                        expect(ajaxSpy.calls.count()).toEqual(3);
+                        expect(refreshTokenSpy.calls.count()).toEqual(2);
+                        done();
+                    });
+              });
+        });
     });
 
     describe('generic failures', function() {
