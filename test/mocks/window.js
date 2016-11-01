@@ -12,8 +12,9 @@ module.exports = function(protocol, host, pathname, hash) {
             host: host || 'example.com',
             pathname: pathname || '/foo',
             hash: hash || '',
+            origin: protocol + '//' + host,
             toString: function() {
-                return protocol + '//' + host + pathname + (hash ? '#' + hash : '');
+                return this.origin + this.pathname + (this.hash ? '#' + this.hash : '');
             }
         },
         document: {
