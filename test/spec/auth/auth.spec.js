@@ -55,7 +55,7 @@ describe('auth', function() {
         });
 
         it('should read the access token from a URL hash', function() {
-            var win = mockWindow('https:', 'example.com', 'app', 'token=auth');
+            var win = mockWindow('https:', 'example.com', 'app', '#access_token=auth');
             var options = {win: win, clientId: 9999};
 
             var flow = auth.implicitGrantFlow(options);
@@ -63,7 +63,7 @@ describe('auth', function() {
         });
 
         it('should prefer an access token in the hash over the URL', function() {
-            var win = mockWindow('https:', 'example.com', 'app', 'token=hash-auth');
+            var win = mockWindow('https:', 'example.com', 'app', '#access_token=hash-auth');
             win.document.cookie = 'accessToken=cookie-auth';
             var options = {win: win, clientId: 9999};
 
@@ -144,7 +144,7 @@ describe('auth', function() {
         });
 
         it('should NOT read the access token from a URL hash', function() {
-            var win = mockWindow('https:', 'example.com', 'app', 'token=auth');
+            var win = mockWindow('https:', 'example.com', 'app', '#access_token=auth');
             var options = {win: win, clientId: 9999};
 
             var flow = auth.authCodeFlow(options);
