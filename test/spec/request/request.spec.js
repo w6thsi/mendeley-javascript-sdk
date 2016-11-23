@@ -284,6 +284,19 @@ describe('request', function() {
             }).finally(done);
         });
 
+        it('should retry when a service is temporarily unavailable', function(done) {
+            var myRequest = request.create({ method: 'get' }, { maxRetries: 5, authFlow: mockAuth.mockImplicitGrantFlow() });
+            var fun = getMockPromises(
+                Bluebird.reject(mockAuth.unavailableError),
+                Bluebird.resolve({ status: 200, headers: {} })
+            );
+            var ajaxSpy = spyOn(axios, 'request').and.callFake(fun);
+
+            myRequest.send().finally(function() {
+                expect(ajaxSpy.calls.count()).toEqual(2);
+            }).finally(done);
+        });
+
         it('should survive vanilla Errors', function(done) {
             var error = new Error('Kaboom!');
             var myRequest = request.create({ method: 'get' }, { maxRetries: 1, authFlow: mockAuth.mockImplicitGrantFlow() });

@@ -8,6 +8,9 @@ unauthorisedError.response = { status: 401 };
 var timeoutError = new Error();
 timeoutError.response = { status: 504 };
 
+var unavailableError = new Error();
+unavailableError.response = { status: 503 };
+
 var notFoundError = new Error();
 notFoundError.response = { status: 404 };
 
@@ -17,7 +20,8 @@ module.exports = {
     slowAuthCodeFlow: slowAuthCodeFlow,
     unauthorisedError: unauthorisedError,
     timeoutError: timeoutError,
-    notFoundError: notFoundError
+    notFoundError: notFoundError,
+    unavailableError: unavailableError
 };
 
 function mockImplicitGrantFlow() {
