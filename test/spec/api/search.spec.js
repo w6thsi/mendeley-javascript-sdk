@@ -18,14 +18,17 @@ describe('search api', function() {
           title: 'Quantum Computation with Quantum Dots'
         };
 
-        it('should be defined', function(done) {
-          expect(typeof searchApi.catalog).toBe('function');
+        beforeEach(function(done) {
           ajaxSpy = spyOn(axios, 'request').and.returnValue(Bluebird.resolve({headers: {}}));
           searchApi.catalog(params).finally(function() {
               expect(ajaxSpy).toHaveBeenCalled();
               ajaxRequest = ajaxSpy.calls.mostRecent().args[0];
               done();
           });
+        });
+
+        it('should be defined', function() {
+          expect(typeof searchApi.catalog).toBe('function');
         });
 
         it('should use GET', function() {
