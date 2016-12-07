@@ -1,56 +1,56 @@
 'use strict';
 
-var axios = require('axios');
-var Bluebird = require('bluebird');
-var sdk = require('../../../');
-var baseUrl = 'https://api.mendeley.com';
-var mockAuth = require('../../mocks/auth');
+var search = require('../../../lib/api/search');
+var MIME_TYPES = require('../../../lib/mime-types');
+
+// fixtures
+var apiOptions = {
+    baseUrl: 'https://api.mendeley.com',
+    authFlow: function() {},
+};
+
+// test globals
+var search;
+var requestFunSpy;
+
+// server/browser aware dependency injection helper
+function getSearchProxy() {
+    return (typeof window !=='undefined') ?
+    require('proxy!../../../lib/api/search') :
+    require('proxyquire').bind(null, '../../../lib/api/search');
+}
+
 describe('search api', function() {
-    var searchApi = sdk({
-      baseUrl: baseUrl,
-      authFlow: mockAuth.mockImplicitGrantFlow()
-    }).search;
 
-    describe('catalog method', function() {
-        var ajaxSpy;
-        var ajaxRequest;
-        var params = {
-          title: 'Quantum Computation with Quantum Dots'
-        };
-
-        beforeEach(function(done) {
-          ajaxSpy = spyOn(axios, 'request').and.returnValue(Bluebird.resolve({headers: {}}));
-          searchApi.catalog(params).finally(function() {
-              expect(ajaxSpy).toHaveBeenCalled();
-              ajaxRequest = ajaxSpy.calls.mostRecent().args[0];
-              done();
-          });
-        });
-
-        it('should be defined', function() {
-          expect(typeof searchApi.catalog).toBe('function');
-        });
-
-        it('should use GET', function() {
-          expect(ajaxRequest.method).toBe('get');
-        });
-
-        it('should use endpoint /search/catalog/{title}', function() {
-          expect(ajaxRequest.url).toBe(baseUrl + '/search/catalog');
-        });
-
-        it('should NOT have a Content-Type header', function() {
-            expect(ajaxRequest.headers['Content-Type']).not.toBeDefined();
-        });
-
-        it('should have an Authorization header', function() {
-            expect(ajaxRequest.headers.Authorization).toBeDefined();
-            expect(ajaxRequest.headers.Authorization).toBe('Bearer auth');
-        });
-
-        it('should allow paramaters', function() {
-            expect(ajaxRequest.params).toEqual(params);
-        });
-
+    beforeAll(function() {
+        requestFunSpy = jasmine.createSpy('requestFunSpy');
+        var utilitiesMock = { requestFun: requestFunSpy };
+        search = getSearchProxy()({ '../utilities': utilitiesMock });
     });
+
+    describe('when initialised', function() {
+        it('calls utilities.requestFun with constructor options', function() {
+            search(apiOptions);
+            expect(requestFunSpy).toHaveBeenCalledWith(
+                jasmine.objectContaining(apiOptions)
+            );
+        });
+
+        it('calls utilities.requestFun with correct request setup', function() {
+            search(apiOptions);
+            expect(requestFunSpy).toHaveBeenCalledWith(
+                jasmine.objectContaining({
+                    method: 'GET',
+                    resource: '/search/catalog',
+                    headers: { 'Accept': MIME_TYPES.DOCUMENT }
+                })
+            );
+        });
+
+        it('returns api object with catalog search property', function() {
+            var searchApiMethods = Object.keys(search(apiOptions));
+            expect(searchApiMethods).toContain('catalog');
+        });
+    });
+
 });
