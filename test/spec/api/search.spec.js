@@ -6,7 +6,7 @@ var MIME_TYPES = require('../../../lib/mime-types');
 // fixtures
 var apiOptions = {
     baseUrl: 'https://api.mendeley.com',
-    authFlow: function() {},
+    authFlow: function() {}
 };
 
 // test globals
