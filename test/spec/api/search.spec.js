@@ -1,17 +1,11 @@
 'use strict';
 
-var search = require('../../../lib/api/search');
+var utilitiesMock = require('../../mocks/utilities');
+var apiOptions = require('../../mocks/apiOptions');
 var MIME_TYPES = require('../../../lib/mime-types');
-
-// fixtures
-var apiOptions = {
-    baseUrl: 'https://api.mendeley.com',
-    authFlow: function() {}
-};
 
 // test globals
 var search;
-var requestFunSpy;
 
 // server/browser aware dependency injection helper
 function getSearchProxy() {
@@ -23,22 +17,22 @@ function getSearchProxy() {
 describe('search api', function() {
 
     beforeAll(function() {
-        requestFunSpy = jasmine.createSpy('requestFunSpy');
-        var utilitiesMock = { requestFun: requestFunSpy };
+        spyOn(utilitiesMock, 'requestFun').and.callThrough();
         search = getSearchProxy()({ '../utilities': utilitiesMock });
     });
+    afterEach(function() { utilitiesMock.requestFun.calls.reset(); });
 
     describe('when initialised', function() {
         it('calls utilities.requestFun with constructor options', function() {
             search(apiOptions);
-            expect(requestFunSpy).toHaveBeenCalledWith(
+            expect(utilitiesMock.requestFun).toHaveBeenCalledWith(
                 jasmine.objectContaining(apiOptions)
             );
         });
 
         it('calls utilities.requestFun with correct request setup', function() {
             search(apiOptions);
-            expect(requestFunSpy).toHaveBeenCalledWith(
+            expect(utilitiesMock.requestFun).toHaveBeenCalledWith(
                 jasmine.objectContaining({
                     method: 'GET',
                     resource: '/search/catalog',
@@ -47,9 +41,9 @@ describe('search api', function() {
             );
         });
 
-        it('returns api object with catalog search property', function() {
-            var searchApiMethods = Object.keys(search(apiOptions));
-            expect(searchApiMethods).toContain('catalog');
+        it('returns api object with "catalog" property containing the request function', function() {
+            var searchApi = search(apiOptions);
+            expect(searchApi.catalog).toEqual(utilitiesMock.requestFun());
         });
     });
 

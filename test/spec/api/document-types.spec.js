@@ -1,17 +1,11 @@
 'use strict';
 
-var documentTypes = require('../../../lib/api/document-types');
+var utilitiesMock = require('../../mocks/utilities');
+var apiOptions = require('../../mocks/apiOptions');
 var MIME_TYPES = require('../../../lib/mime-types');
-
-// fixtures
-var apiOptions = {
-    baseUrl: 'https://api.mendeley.com',
-    authFlow: function() {}
-};
 
 // test globals
 var documentTypes;
-var requestFunSpy;
 
 // server/browser aware dependency injection helper
 function getDocumentTypesProxy() {
@@ -23,22 +17,22 @@ function getDocumentTypesProxy() {
 describe('documentTypes api', function() {
 
     beforeAll(function() {
-        requestFunSpy = jasmine.createSpy('requestFunSpy');
-        var utilitiesMock = { requestFun: requestFunSpy };
+        spyOn(utilitiesMock, 'requestFun').and.callThrough();
         documentTypes = getDocumentTypesProxy()({ '../utilities': utilitiesMock });
     });
+    afterEach(function() { utilitiesMock.requestFun.calls.reset(); });
 
     describe('when initialised', function() {
         it('calls utilities.requestFun with constructor options', function() {
             documentTypes(apiOptions);
-            expect(requestFunSpy).toHaveBeenCalledWith(
+            expect(utilitiesMock.requestFun).toHaveBeenCalledWith(
                 jasmine.objectContaining(apiOptions)
             );
         });
 
         it('calls utilities.requestFun with correct request setup', function() {
             documentTypes(apiOptions);
-            expect(requestFunSpy).toHaveBeenCalledWith(
+            expect(utilitiesMock.requestFun).toHaveBeenCalledWith(
                 jasmine.objectContaining({
                     method: 'GET',
                     resource: '/document_types',
@@ -47,9 +41,9 @@ describe('documentTypes api', function() {
             );
         });
 
-        it('returns api object with retrieve property', function() {
-            var documentTypesApiMethods = Object.keys(documentTypes(apiOptions));
-            expect(documentTypesApiMethods).toContain('retrieve');
+        it('returns api object with "retrieve" property containing the request function', function() {
+            var documentTypesApi = documentTypes(apiOptions);
+            expect(documentTypesApi.retrieve).toEqual(utilitiesMock.requestFun());
         });
     });
 
