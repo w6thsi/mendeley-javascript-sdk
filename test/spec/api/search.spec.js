@@ -36,7 +36,8 @@ describe('search api', function() {
                 jasmine.objectContaining({
                     method: 'GET',
                     resource: '/search/catalog',
-                    headers: { 'Accept': MIME_TYPES.DOCUMENT }
+                    headers: { 'Accept': MIME_TYPES.DOCUMENT },
+                    responseFilter: utilitiesMock.paginationFilter
                 })
             );
         });

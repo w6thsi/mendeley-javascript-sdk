@@ -1,9 +1,8 @@
 'use strict';
 
 module.exports = {
-    requestFun: requestFun
+    requestFun: function () { return requestFunction; },
+    paginationFilter: function() {}
 };
-
-function requestFun() { return requestFunction; }
 
 function requestFunction() {}
