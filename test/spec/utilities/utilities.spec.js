@@ -236,6 +236,75 @@ describe('utilities', function() {
 
     });
 
+    describe('requestWithRawDataFun', function() {
+
+        it('should create a request with given properties', function() {
+            var requestData = {
+                id: '123'
+            };
+            var requestFunction = utils.requestWithRawDataFun(assign({
+                method: 'POST',
+                resource: '/test',
+                headers: {
+                    Accept: 'mime/type1',
+                    'Content-Type': 'mime/type2'
+                },
+                followLocation: true
+            }, defaultOptions));
+
+            requestFunction(requestData);
+
+            expect(requestCreateSpy).toHaveBeenCalledWith({
+                method: 'POST',
+                url: 'https://api.mendeley.com/test',
+                headers: {
+                    Accept: 'mime/type1',
+                    'Content-Type': 'mime/type2'
+                },
+                data: requestData
+            }, {
+                authFlow: authFlow,
+                followLocation: true
+            });
+        });
+
+        it('should construct the url from supplied pattern and arguments', function() {
+            var requestFunction = utils.requestWithRawDataFun(assign({
+                method: 'POST',
+                resource: '/test/{first}/{second}',
+                args: ['first', 'second']
+            }, defaultOptions));
+
+            requestFunction(1, 2);
+
+            expect(requestCreateSpy).toHaveBeenCalledWith({
+                method: 'POST',
+                url: 'https://api.mendeley.com/test/1/2',
+                headers: {},
+                data: undefined
+            }, {
+                authFlow: authFlow,
+                followLocation: undefined
+            });
+        });
+
+        it('should allow properties to be filtered from the response using a responseFilter', function(done) {
+            var requestFunction = utils.requestWithRawDataFun(assign({
+                responseFilter: function(options, response) {
+                    return response.headers;
+                },
+                method: 'POST',
+                resource: '/test'
+            }, defaultOptions));
+
+            requestFunction().then(function(data) {
+                expect(data.Header).toBe('123');
+                done();
+            });
+        });
+
+    });
+
     describe('requestWithFileFun', function() {
 
         var file = {
