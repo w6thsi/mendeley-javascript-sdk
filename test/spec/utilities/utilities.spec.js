@@ -67,6 +67,29 @@ describe('utilities', function() {
             });
         });
 
+        it('should allow setting the paramsSerializer for different end points', function() {
+
+            var requestFunction = utils.requestFun(assign({
+                method: 'GET',
+                resource: '/test/',
+                paramsSerializer: 'injected_paramsSerializer'
+            }, defaultOptions));
+
+            requestFunction();
+
+            expect(requestCreateSpy).toHaveBeenCalledWith({
+                method: 'GET',
+                responseType: 'json',
+                url: 'https://api.mendeley.com/test/',
+                headers: {},
+                params: undefined,
+                paramsSerializer: 'injected_paramsSerializer'
+            }, {
+                authFlow: authFlow,
+                maxRetries: 1
+            });
+        });
+
         it('should construct the url from supplied pattern and arguments', function() {
             var requestFunction = utils.requestFun(assign({
                 method: 'GET',
