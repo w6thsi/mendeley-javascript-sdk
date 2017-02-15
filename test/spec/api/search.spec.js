@@ -3,35 +3,22 @@
 var utilitiesMock = require('../../mocks/utilities');
 var apiOptions = require('../../mocks/apiOptions');
 var MIME_TYPES = require('../../../lib/mime-types');
-
-// test globals
-var search;
-
-// server/browser aware dependency injection helper
-function getSearchProxy() {
-    return (typeof window !=='undefined') ?
-    require('proxy!../../../lib/api/search') :
-    require('proxyquire').bind(null, '../../../lib/api/search');
-}
+var search = require('../../../lib/api/search');
 
 describe('search api', function() {
-
-    beforeAll(function() {
-        spyOn(utilitiesMock, 'requestFun').and.callThrough();
-        search = getSearchProxy()({ '../utilities': utilitiesMock });
-    });
+    beforeAll(function() { spyOn(utilitiesMock, 'requestFun').and.callThrough(); });
     afterEach(function() { utilitiesMock.requestFun.calls.reset(); });
 
     describe('when initialised', function() {
         it('calls utilities.requestFun with constructor options', function() {
-            search(apiOptions);
+            search(apiOptions, utilitiesMock);
             expect(utilitiesMock.requestFun).toHaveBeenCalledWith(
                 jasmine.objectContaining(apiOptions)
             );
         });
 
         it('calls utilities.requestFun with correct request setup', function() {
-            search(apiOptions);
+            search(apiOptions, utilitiesMock);
             expect(utilitiesMock.requestFun).toHaveBeenCalledWith(
                 jasmine.objectContaining({
                     method: 'GET',
@@ -43,7 +30,7 @@ describe('search api', function() {
         });
 
         it('returns api object with "catalog" property containing the request function', function() {
-            var searchApi = search(apiOptions);
+            var searchApi = search(apiOptions, utilitiesMock);
             expect(searchApi.catalog).toEqual(utilitiesMock.requestFun());
         });
     });
