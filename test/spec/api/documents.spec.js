@@ -137,10 +137,11 @@ describe('documents api', function() {
             });
         });
 
-        it('should have a body of JSON string', function(done) {
-            documentsApi.create({ title: 'foo' }).finally(function() {
+        it('should pass request data in body', function(done) {
+            var requestData = { title: 'foo' };
+            documentsApi.create(requestData).finally(function() {
                 ajaxRequest = ajaxSpy.calls.first().args[0];
-                expect(ajaxRequest.data).toBe('{"title":"foo"}');
+                expect(ajaxRequest.data).toBe(requestData);
                 done();
             });
         });
@@ -332,11 +333,12 @@ describe('documents api', function() {
     describe('update method', function() {
 
         var ajaxRequest;
+        var requestData = { title: 'bar' };
 
         it('should be defined', function(done) {
             expect(typeof documentsApi.update).toBe('function');
             var ajaxSpy = spyOn(axios, 'request').and.callFake(getMockPromises(mockPromiseUpdate));
-            documentsApi.update(15, { title: 'bar' }).finally(function() {
+            documentsApi.update(15, requestData).finally(function() {
                 expect(ajaxSpy).toHaveBeenCalled();
                 ajaxRequest = ajaxSpy.calls.mostRecent().args[0];
                 done();
@@ -360,21 +362,21 @@ describe('documents api', function() {
             expect(ajaxRequest.headers.Authorization).toBe('Bearer auth');
         });
 
-        it('should have a body of JSON string', function() {
-            expect(ajaxRequest.data).toBe('{"title":"bar"}');
+        it('should pass request data in body', function() {
+            expect(ajaxRequest.data).toBe(requestData);
         });
-
     });
 
     describe('clone method', function() {
-
         var ajaxRequest,
             apiRequest;
+
+        var requestData = { 'group_id': 'bar' };
 
         it('should be defined', function(done) {
             expect(typeof documentsApi.clone).toBe('function');
             var ajaxSpy = spyOn(axios, 'request').and.callFake(getMockPromises(mockPromiseClone));
-            apiRequest = documentsApi.clone(15, { 'group_id': 'bar' }).finally(function() {
+            apiRequest = documentsApi.clone(15, requestData).finally(function() {
                 expect(ajaxSpy).toHaveBeenCalled();
                 ajaxRequest = ajaxSpy.calls.mostRecent().args[0];
                 done();
@@ -398,8 +400,8 @@ describe('documents api', function() {
             expect(ajaxRequest.headers.Authorization).toBe('Bearer auth');
         });
 
-        it('should have a body of JSON string', function() {
-            expect(ajaxRequest.data).toBe('{"group_id":"bar"}');
+        it('should pass request data in body', function() {
+            expect(ajaxRequest.data).toBe(requestData);
         });
 
         it('should resolve with the response', function(done) {

@@ -46,8 +46,8 @@ describe('followers api', function() {
             expect(ajaxRequest.headers.Authorization).toBe('Bearer auth');
         });
 
-        it('should allow paramaters', function() {
-            expect(ajaxRequest.data).toEqual('{"followed":"c52e97f5-dd72-3cbe-a4cc-14bea2ed88f0"}');
+        it('should allow parameters', function() {
+            expect(ajaxRequest.data).toEqual(params);
         });
 
     });

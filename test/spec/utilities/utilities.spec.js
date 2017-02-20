@@ -192,7 +192,7 @@ describe('utilities', function() {
                     Accept: 'mime/type1',
                     'Content-Type': 'mime/type2'
                 },
-                data: JSON.stringify(requestData)
+                data: requestData
             }, {
                 authFlow: authFlow,
                 followLocation: true

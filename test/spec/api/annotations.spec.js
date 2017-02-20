@@ -93,11 +93,12 @@ describe('annotations api', function() {
 
     describe('create method', function() {
         var ajaxSpy, ajaxRequest;
+        var requestData = { document_id: 123, text: 'new annotation' };
 
         it('should be defined', function(done) {
             expect(typeof annotationsApi.create).toBe('function');
             ajaxSpy = spyOn(axios, 'request').and.returnValue(Bluebird.resolve({headers: {}}));
-            annotationsApi.create({document_id: 123, text: 'new annotation'}).finally(function() {
+            annotationsApi.create(requestData).finally(function() {
                 expect(ajaxSpy).toHaveBeenCalled();
                 ajaxRequest = ajaxSpy.calls.mostRecent().args[0];
                 done();
@@ -121,8 +122,8 @@ describe('annotations api', function() {
             expect(ajaxRequest.headers.Authorization).toBe('Bearer auth');
         });
 
-        it('should have a body of JSON string', function() {
-            expect(ajaxRequest.data).toBe('{"document_id":123,"text":"new annotation"}');
+        it('should pass request data in body', function() {
+            expect(ajaxRequest.data).toBe(requestData);
         });
 
     });
@@ -161,11 +162,12 @@ describe('annotations api', function() {
 
     describe('patch method', function() {
         var ajaxSpy, ajaxRequest;
+        var requestData = { text: 'updated annotation' };
 
         it('should be defined', function(done) {
             expect(typeof annotationsApi.patch).toBe('function');
             ajaxSpy = spyOn(axios, 'request').and.returnValue(Bluebird.resolve({headers: {}}));
-            annotationsApi.patch(123, {text: 'updated annotation'}).finally(function() {
+            annotationsApi.patch(123, requestData).finally(function() {
                 expect(ajaxSpy).toHaveBeenCalled();
                 ajaxRequest = ajaxSpy.calls.mostRecent().args[0];
                 done();
@@ -189,10 +191,9 @@ describe('annotations api', function() {
             expect(ajaxRequest.headers.Authorization).toBe('Bearer auth');
         });
 
-        it('should have a body of JSON', function() {
-            expect(ajaxRequest.data).toBe('{"text":"updated annotation"}');
+        it('should pass request data in body', function() {
+            expect(ajaxRequest.data).toBe(requestData);
         });
-
     });
 
     describe('pagination', function() {
