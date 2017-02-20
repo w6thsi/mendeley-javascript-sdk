@@ -173,3 +173,7 @@ https://github.com/mzabriskie/axios#global-axios-defaults
     console.info('Now I am on the next page')
   });
   ```
+
+## Upgrading to v7.x
+
+1. Removes legacy `JSON.stringify` of request data as Axios handles this natively. This should be backwards compatible, but making a major release as could break user's unit tests if they attempt to extend the built-in Request object.
