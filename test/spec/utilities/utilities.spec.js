@@ -165,6 +165,32 @@ describe('utilities', function() {
             });
         });
 
+        it('should allow the request to be modified using a requestFilter', function() {
+            var requestFunction = utils.requestFun(assign({
+                requestFilter: function(options, request) {
+                    request.headers.foo = 'bar';
+
+                    return request;
+                },
+                method: 'GET',
+                resource: '/test'
+            }, defaultOptions));
+
+            requestFunction();
+
+            expect(requestCreateSpy).toHaveBeenCalledWith({
+                method: 'GET',
+                responseType: 'json',
+                url: 'https://api.mendeley.com/test',
+                headers: {
+                    foo: 'bar'
+                },
+                params: undefined
+            }, {
+                authFlow: authFlow,
+                maxRetries: 1
+            });
+        });
     });
 
     describe('requestWithDataFun', function() {
@@ -234,6 +260,31 @@ describe('utilities', function() {
             });
         });
 
+        it('should allow the request to be modified using a requestFilter', function() {
+            var requestFunction = utils.requestWithDataFun(assign({
+                requestFilter: function(options, request) {
+                    request.headers.foo = 'bar';
+
+                    return request;
+                },
+                method: 'POST',
+                resource: '/test'
+            }, defaultOptions));
+
+            requestFunction();
+
+            expect(requestCreateSpy).toHaveBeenCalledWith({
+                method: 'POST',
+                url: 'https://api.mendeley.com/test',
+                headers: {
+                    foo: 'bar'
+                },
+                data: undefined
+            }, {
+                authFlow: authFlow,
+                followLocation: undefined
+            });
+        });
     });
 
     describe('requestWithFileFun', function() {
@@ -327,6 +378,32 @@ describe('utilities', function() {
             });
         });
 
+        it('should allow the request to be modified using a requestFilter', function() {
+            var requestFunction = utils.requestWithFileFun(assign({
+                requestFilter: function(options, request) {
+                    request.headers.foo = 'bar';
+
+                    return request;
+                },
+                method: 'POST',
+                resource: '/test'
+            }, defaultOptions));
+
+            requestFunction(file, 'zelda');
+
+            expect(requestCreateSpy).toHaveBeenCalledWith({
+                method: 'POST',
+                url: 'https://api.mendeley.com/test',
+                headers: assign({
+                  foo: 'bar'
+                }, headers),
+                data: file,
+                onUploadProgress: undefined,
+                onDownloadProgress: undefined
+            }, {
+                authFlow: authFlow
+            });
+        });
     });
 
     describe('paginationFilter', function () {
