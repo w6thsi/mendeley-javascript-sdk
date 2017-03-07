@@ -105,11 +105,12 @@ describe('profiles api', function() {
 
     describe('update method', function() {
         var ajaxRequest;
+        var requestData = { first_name: 'John', last_name: 'Doe' };
 
         it('should be defined', function(done) {
             expect(typeof profilesApi.update).toBe('function');
             var ajaxSpy = spyOn(axios, 'request').and.callFake(getMockPromises(mockPromiseUpdate));
-            profilesApi.update({first_name: 'John', last_name: 'Doe'}).finally(function() {
+            profilesApi.update(requestData).finally(function() {
                 expect(ajaxSpy).toHaveBeenCalled();
                 ajaxRequest = ajaxSpy.calls.mostRecent().args[0];
                 done();
@@ -133,10 +134,9 @@ describe('profiles api', function() {
             expect(ajaxRequest.headers.Authorization).toBe('Bearer auth');
         });
 
-        it('should have a body of JSON string', function() {
-            expect(ajaxRequest.data).toBe('{"first_name":"John","last_name":"Doe"}');
+        it('should pass request data in body', function() {
+            expect(ajaxRequest.data).toBe(requestData);
         });
-
     });
 
     describe('retrieve by email method', function() {

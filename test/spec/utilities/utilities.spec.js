@@ -67,6 +67,29 @@ describe('utilities', function() {
             });
         });
 
+        it('should allow setting the paramsSerializer for different end points', function() {
+
+            var requestFunction = utils.requestFun(assign({
+                method: 'GET',
+                resource: '/test/',
+                paramsSerializer: 'injected_paramsSerializer'
+            }, defaultOptions));
+
+            requestFunction();
+
+            expect(requestCreateSpy).toHaveBeenCalledWith({
+                method: 'GET',
+                responseType: 'json',
+                url: 'https://api.mendeley.com/test/',
+                headers: {},
+                params: undefined,
+                paramsSerializer: 'injected_paramsSerializer'
+            }, {
+                authFlow: authFlow,
+                maxRetries: 1
+            });
+        });
+
         it('should construct the url from supplied pattern and arguments', function() {
             var requestFunction = utils.requestFun(assign({
                 method: 'GET',
@@ -142,6 +165,32 @@ describe('utilities', function() {
             });
         });
 
+        it('should allow the request to be modified using a requestFilter', function() {
+            var requestFunction = utils.requestFun(assign({
+                requestFilter: function(options, request) {
+                    request.headers.foo = 'bar';
+
+                    return request;
+                },
+                method: 'GET',
+                resource: '/test'
+            }, defaultOptions));
+
+            requestFunction();
+
+            expect(requestCreateSpy).toHaveBeenCalledWith({
+                method: 'GET',
+                responseType: 'json',
+                url: 'https://api.mendeley.com/test',
+                headers: {
+                    foo: 'bar'
+                },
+                params: undefined
+            }, {
+                authFlow: authFlow,
+                maxRetries: 1
+            });
+        });
     });
 
     describe('requestWithDataFun', function() {
@@ -169,7 +218,7 @@ describe('utilities', function() {
                     Accept: 'mime/type1',
                     'Content-Type': 'mime/type2'
                 },
-                data: JSON.stringify(requestData)
+                data: requestData
             }, {
                 authFlow: authFlow,
                 followLocation: true
@@ -211,6 +260,31 @@ describe('utilities', function() {
             });
         });
 
+        it('should allow the request to be modified using a requestFilter', function() {
+            var requestFunction = utils.requestWithDataFun(assign({
+                requestFilter: function(options, request) {
+                    request.headers.foo = 'bar';
+
+                    return request;
+                },
+                method: 'POST',
+                resource: '/test'
+            }, defaultOptions));
+
+            requestFunction();
+
+            expect(requestCreateSpy).toHaveBeenCalledWith({
+                method: 'POST',
+                url: 'https://api.mendeley.com/test',
+                headers: {
+                    foo: 'bar'
+                },
+                data: undefined
+            }, {
+                authFlow: authFlow,
+                followLocation: undefined
+            });
+        });
     });
 
     describe('requestWithFileFun', function() {
@@ -304,6 +378,32 @@ describe('utilities', function() {
             });
         });
 
+        it('should allow the request to be modified using a requestFilter', function() {
+            var requestFunction = utils.requestWithFileFun(assign({
+                requestFilter: function(options, request) {
+                    request.headers.foo = 'bar';
+
+                    return request;
+                },
+                method: 'POST',
+                resource: '/test'
+            }, defaultOptions));
+
+            requestFunction(file, 'zelda');
+
+            expect(requestCreateSpy).toHaveBeenCalledWith({
+                method: 'POST',
+                url: 'https://api.mendeley.com/test',
+                headers: assign({
+                  foo: 'bar'
+                }, headers),
+                data: file,
+                onUploadProgress: undefined,
+                onDownloadProgress: undefined
+            }, {
+                authFlow: authFlow
+            });
+        });
     });
 
     describe('paginationFilter', function () {

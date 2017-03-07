@@ -83,10 +83,11 @@ describe('folders api', function() {
 
         });
 
-        it('should have a body of JSON string', function(done) {
-            foldersApi.create({ name: 'foo' }).finally(function() {
+        it('should pass request data in body', function(done) {
+            var requestData = { name: 'foo' };
+            foldersApi.create(requestData).finally(function() {
                 ajaxRequest = ajaxSpy.calls.first().args[0];
-                expect(ajaxRequest.data).toBe('{"name":"foo"}');
+                expect(ajaxRequest.data).toBe(requestData);
                 done();
             });
         });
@@ -193,10 +194,12 @@ describe('folders api', function() {
                 headers: {}
             });
         };
+        var requestData = { name: 'bar' };
+
         it('should be defined', function() {
             expect(typeof foldersApi.update).toBe('function');
             ajaxSpy = spyOn(axios, 'request').and.callFake(ajaxResponse);
-            foldersApi.update(123, { name: 'bar' });
+            foldersApi.update(123, requestData);
             expect(ajaxSpy).toHaveBeenCalled();
             ajaxRequest = ajaxSpy.calls.mostRecent().args[0];
         });
@@ -218,10 +221,9 @@ describe('folders api', function() {
             expect(ajaxRequest.headers.Authorization).toBe('Bearer auth');
         });
 
-        it('should have a body of JSON string', function() {
-            expect(ajaxRequest.data).toBe('{"name":"bar"}');
+        it('should pass request data in body', function() {
+            expect(ajaxRequest.data).toBe(requestData);
         });
-
     });
 
     describe('list method', function() {
