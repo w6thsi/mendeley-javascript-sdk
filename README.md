@@ -33,7 +33,7 @@ Depending on your target browsers, you may need to polyfill Promise because the 
 ```
 {
     plugins: [new webpack.ProvidePlugin({
-        Promise: 'bluebird'
+        Promise: 'es6-promise'
     })];
 }
 ```
@@ -195,7 +195,7 @@ Once the OAuth flow is complete you can start grabbing data for the user. CORS i
 
 Each API is exposed as a property of the SDK, for example `api.documents`, `api.folders`.
 
-Methods that make API calls return [Bluebird promises][]. Each call will either resolve with some data or reject with a response object according to the response from [axios][]. Here's an example using the standalone version:
+Methods that make API calls return [ES6 Promises][]. Each call will either resolve with some data or reject with a response object according to the response from [axios][]. Here's an example using the standalone version:
 
 ```javascript
 api.documents.list().then(function(docs) {
@@ -365,7 +365,7 @@ If you make changes please check coverage reports under `/coverage` to make sure
 Please note the aim of this SDK is to connect to the existing Mendeley API, not to add to that API. For more information about the API and to give any feedback please visit [the Mendeley developers site].
 
 
-[Bluebird promises]:http://bluebirdjs.com/docs/api-reference.html
+[ES6 Promises]:https://developer.mozilla.org/en/docs/Web/JavaScript/Reference/Global_Objects/Promise
 [axios]:https://github.com/mzabriskie/axios#response-schema
 [es5-shim]:https://github.com/es-shims/es5-shim
 [browserify]:http://browserify.org/

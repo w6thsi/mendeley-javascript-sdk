@@ -1,6 +1,8 @@
 // Karma configuration
 // Generated on Fri Sep 12 2014 15:16:30 GMT+0100 (BST)
 
+var webpack = require('webpack');
+
 module.exports = function(config) {
 
     'use strict';
@@ -67,7 +69,10 @@ module.exports = function(config) {
         // if true, Karma captures browsers, runs the tests and exits
         singleRun: false,
 
-        webpack: require(process.cwd() + '/webpack.config'),
+        webpack: Object.assign( {},
+                     require(process.cwd() + '/webpack.config'),
+                     { plugins: [new webpack.ProvidePlugin({ Promise: 'bluebird' })] }
+                 ),
 
         // Prevents webpack from logging stats on all the chunks
         webpackMiddleware: {
