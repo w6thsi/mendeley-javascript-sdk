@@ -33,7 +33,7 @@ Depending on your target browsers, you may need to polyfill Promise because the 
 ```
 {
     plugins: [new webpack.ProvidePlugin({
-        Promise: 'es6-promise'
+        Promise: 'es6-promise-promise'
     })];
 }
 ```

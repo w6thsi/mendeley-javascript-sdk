@@ -1,7 +1,6 @@
 'use strict';
 
 var axios = require('axios');
-var Bluebird = require('bluebird');
 var sdk = require('../../../');
 var baseUrl = 'https://api.mendeley.com';
 var mockAuth = require('../../mocks/auth');
@@ -20,14 +19,14 @@ describe('folders api', function() {
         var ajaxCalls = 0;
         var ajaxResponse = function() {
             if (ajaxCalls++ % 2 === 0) {
-                return Bluebird.resolve({
+                return Promise.resolve({
                     status: 201,
                     headers: {
                         location: baseUrl + '/folders/123'
                     }
                 });
             } else {
-                return Bluebird.resolve({
+                return Promise.resolve({
                     status: 200,
                     data: { id: '123', name: 'foo' },
                     headers: {}
@@ -41,64 +40,75 @@ describe('folders api', function() {
 
         it('should be defined', function(done) {
             expect(typeof foldersApi.create).toBe('function');
-            foldersApi.create({ name: 'foo' }).finally(function() {
+            foldersApi.create({ name: 'foo' }).then(_finally, _finally);
+
+            function _finally() {
                 expect(ajaxSpy).toHaveBeenCalled();
                 done();
-            });
+            }
         });
 
         it('should use POST', function(done) {
-            foldersApi.create({ name: 'foo' }).finally(function() {
+            foldersApi.create({ name: 'foo' }).then(_finally, _finally);
+
+            function _finally() {
                 ajaxRequest = ajaxSpy.calls.first().args[0];
                 expect(ajaxRequest.method).toBe('post');
                 done();
-            });
+            }
         });
 
         it('should use endpoint /folders', function(done) {
-            foldersApi.create({ name: 'foo' }).finally(function() {
+            foldersApi.create({ name: 'foo' }).then(_finally, _finally);
+
+            function _finally() {
                 ajaxRequest = ajaxSpy.calls.first().args[0];
                 expect(ajaxRequest.url).toBe(baseUrl + '/folders');
                 done();
-            });
-
+            }
         });
 
         it('should have a Content-Type header', function(done) {
-            foldersApi.create({ name: 'foo' }).finally(function() {
+            foldersApi.create({ name: 'foo' }).then(_finally, _finally);
+
+            function _finally() {
                 ajaxRequest = ajaxSpy.calls.first().args[0];
                 expect(ajaxRequest.headers['Content-Type']).toBeDefined();
                 done();
-            });
-
+            }
         });
 
         it('should have an Authorization header', function(done) {
-            foldersApi.create({ name: 'foo' }).finally(function() {
+            foldersApi.create({ name: 'foo' }).then(_finally, _finally);
+
+            function _finally() {
                 ajaxRequest = ajaxSpy.calls.first().args[0];
                 expect(ajaxRequest.headers.Authorization).toBeDefined();
                 expect(ajaxRequest.headers.Authorization).toBe('Bearer auth');
                 done();
-            });
-
+            }
         });
 
         it('should pass request data in body', function(done) {
             var requestData = { name: 'foo' };
-            foldersApi.create(requestData).finally(function() {
+            foldersApi.create(requestData).then(_finally, _finally);
+
+            function _finally() {
                 ajaxRequest = ajaxSpy.calls.first().args[0];
                 expect(ajaxRequest.data).toBe(requestData);
                 done();
-            });
+            }
         });
 
         it('should follow Location header', function(done) {
-            foldersApi.create({ name: 'foo' }).finally(function() {
+            foldersApi.create({ name: 'foo' }).then(_finally, _finally);
+
+            function _finally() {
                 var ajaxRedirect = ajaxSpy.calls.mostRecent().args[0];
                 expect(ajaxRedirect.method).toBe('get');
                 expect(ajaxRedirect.url).toBe(baseUrl + '/folders/123');
                 done();
-            });
+            }
         });
 
         it('should resolve with the data', function(done) {
@@ -113,7 +123,7 @@ describe('folders api', function() {
 
         it('should reject create errors with the response', function(done) {
             var ajaxFailureResponse = function() {
-                return Bluebird.reject({ response: { status: 500 } });
+                return Promise.reject({ response: { status: 500 } });
             };
             spyOn(axios, 'request').and.callFake(ajaxFailureResponse);
             foldersApi.create({ name: 'foo' }).catch(function(error) {
@@ -127,7 +137,7 @@ describe('folders api', function() {
             var ajaxMixedResponse = function() {
                 // First call apparently works and returns location
                 if (ajaxMixedCalls++ === 0) {
-                    return Bluebird.resolve({
+                    return Promise.resolve({
                         headers: {
                             location: baseUrl + '/folders/123'
                         },
@@ -136,7 +146,7 @@ describe('folders api', function() {
                 }
                 // But following the location fails
                 else {
-                    return Bluebird.reject({ response: { status: 404 } });
+                    return Promise.reject({ response: { status: 404 } });
                 }
             };
             spyOn(axios, 'request').and.callFake(ajaxMixedResponse);
@@ -154,7 +164,7 @@ describe('folders api', function() {
 
         it('should be defined', function() {
             expect(typeof foldersApi.retrieve).toBe('function');
-            ajaxSpy = spyOn(axios, 'request').and.returnValue(Bluebird.resolve({headers: {}}));
+            ajaxSpy = spyOn(axios, 'request').and.returnValue(Promise.resolve({headers: {}}));
             foldersApi.retrieve(123);
             expect(ajaxSpy).toHaveBeenCalled();
             ajaxRequest = ajaxSpy.calls.mostRecent().args[0];
@@ -189,7 +199,7 @@ describe('folders api', function() {
         var ajaxSpy;
         var ajaxRequest;
         var ajaxResponse = function() {
-            return Bluebird.resolve({
+            return Promise.resolve({
                 data: { id: '123', name: 'bar' },
                 headers: {}
             });
@@ -236,7 +246,7 @@ describe('folders api', function() {
 
         it('be defined', function() {
             expect(typeof foldersApi.list).toBe('function');
-            ajaxSpy = spyOn(axios, 'request').and.returnValue(Bluebird.resolve({headers: {}}));
+            ajaxSpy = spyOn(axios, 'request').and.returnValue(Promise.resolve({headers: {}}));
 
             foldersApi.list(params);
             expect(ajaxSpy).toHaveBeenCalled();
@@ -286,7 +296,7 @@ describe('folders api', function() {
                 headers.link = ['<' + linkNext + '>; rel="next"', '<' + linkLast + '>; rel="last"'].join(', ');
             }
 
-            spy.and.returnValue(Bluebird.resolve({
+            spy.and.returnValue(Promise.resolve({
                 data: [],
                 headers: headers
             }));
@@ -315,10 +325,12 @@ describe('folders api', function() {
             .then(function (page) {
                 return page.next();
             })
-            .finally(function () {
+            .then(_finally, _finally);
+
+            function _finally() {
                 expect(spy.calls.mostRecent().args[0].url).toEqual(linkNext);
                 done();
-            });
+            }
         });
 
         it('should get correct link on last()', function(done) {
@@ -328,10 +340,12 @@ describe('folders api', function() {
             .then(function (page) {
                 return page.last();
             })
-            .finally(function () {
+            .then(_finally, _finally);
+
+            function _finally() {
                 expect(spy.calls.mostRecent().args[0].url).toEqual(linkLast);
                 done();
-            });
+            }
         });
 
         it('should store the total document count', function(done) {

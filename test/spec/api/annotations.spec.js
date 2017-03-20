@@ -2,7 +2,6 @@
 'use strict';
 
 var axios = require('axios');
-var Bluebird = require('bluebird');
 var sdk = require('../../../');
 var baseUrl = 'https://api.mendeley.com';
 var mockAuth = require('../../mocks/auth');
@@ -23,13 +22,15 @@ describe('annotations api', function() {
 
         it('be defined', function(done) {
             expect(typeof annotationsApi.list).toBe('function');
-            ajaxSpy = spyOn(axios, 'request').and.returnValue(Bluebird.resolve({headers: {}}));
+            ajaxSpy = spyOn(axios, 'request').and.returnValue(Promise.resolve({headers: {}}));
 
-            annotationsApi.list(params).finally(function() {
+            annotationsApi.list(params).then(_finally, _finally);
+
+            function _finally() {
                 expect(ajaxSpy).toHaveBeenCalled();
                 ajaxRequest = ajaxSpy.calls.mostRecent().args[0];
                 done();
-            });
+            }
         });
 
         it('should use GET', function() {
@@ -61,12 +62,14 @@ describe('annotations api', function() {
 
         it('should be defined', function(done) {
             expect(typeof annotationsApi.retrieve).toBe('function');
-            ajaxSpy = spyOn(axios, 'request').and.returnValue(Bluebird.resolve({headers: {}}));
-            annotationsApi.retrieve(123).finally(function() {
+            ajaxSpy = spyOn(axios, 'request').and.returnValue(Promise.resolve({headers: {}}));
+            annotationsApi.retrieve(123).then(_finally, _finally);
+
+            function _finally() {
                 expect(ajaxSpy).toHaveBeenCalled();
                 ajaxRequest = ajaxSpy.calls.mostRecent().args[0];
                 done();
-            });
+            }
         });
 
         it('should use GET', function() {
@@ -97,12 +100,14 @@ describe('annotations api', function() {
 
         it('should be defined', function(done) {
             expect(typeof annotationsApi.create).toBe('function');
-            ajaxSpy = spyOn(axios, 'request').and.returnValue(Bluebird.resolve({headers: {}}));
-            annotationsApi.create(requestData).finally(function() {
+            ajaxSpy = spyOn(axios, 'request').and.returnValue(Promise.resolve({headers: {}}));
+            annotationsApi.create(requestData).then(_finally, _finally);
+
+            function _finally() {
                 expect(ajaxSpy).toHaveBeenCalled();
                 ajaxRequest = ajaxSpy.calls.mostRecent().args[0];
                 done();
-            });
+            }
         });
 
         it('should use POST', function() {
@@ -133,12 +138,14 @@ describe('annotations api', function() {
 
         it('should be defined', function(done) {
             expect(typeof annotationsApi.delete).toBe('function');
-            ajaxSpy = spyOn(axios, 'request').and.returnValue(Bluebird.resolve({headers: {}}));
-            annotationsApi.delete(123).finally(function() {
+            ajaxSpy = spyOn(axios, 'request').and.returnValue(Promise.resolve({headers: {}}));
+            annotationsApi.delete(123).then(_finally, _finally);
+
+            function _finally() {
                 expect(ajaxSpy).toHaveBeenCalled();
                 ajaxRequest = ajaxSpy.calls.mostRecent().args[0];
                 done();
-            });
+            }
         });
 
         it('should use DELETE', function() {
@@ -166,12 +173,14 @@ describe('annotations api', function() {
 
         it('should be defined', function(done) {
             expect(typeof annotationsApi.patch).toBe('function');
-            ajaxSpy = spyOn(axios, 'request').and.returnValue(Bluebird.resolve({headers: {}}));
-            annotationsApi.patch(123, requestData).finally(function() {
+            ajaxSpy = spyOn(axios, 'request').and.returnValue(Promise.resolve({headers: {}}));
+            annotationsApi.patch(123, requestData).then(_finally, _finally);
+
+            function _finally() {
                 expect(ajaxSpy).toHaveBeenCalled();
                 ajaxRequest = ajaxSpy.calls.mostRecent().args[0];
                 done();
-            });
+            }
         });
 
         it('should use PATCH', function() {
@@ -203,7 +212,7 @@ describe('annotations api', function() {
         var linkLast = baseUrl + '/annotations/?limit=5&reverse=true';
 
         function ajaxSpy() {
-            return spyOn(axios, 'request').and.returnValue(Bluebird.resolve({
+            return spyOn(axios, 'request').and.returnValue(Promise.resolve({
                 headers: {
                     link: '<' + linkNext + '>; rel="next",<' + linkLast + '>; rel="last",<' + linkFirst + '>; rel="first"',
                     'mendeley-count': 56
@@ -229,10 +238,12 @@ describe('annotations api', function() {
             annotationsApi.list().then(function(page) {
                 return page.next();
             })
-            .finally(function() {
+            .then(_finally, _finally);
+
+            function _finally() {
                 expect(spy.calls.mostRecent().args[0].url).toEqual(linkNext);
                 done();
-            });
+            }
         });
 
         it('should get correct link on lastPage()', function(done) {
@@ -241,10 +252,12 @@ describe('annotations api', function() {
             annotationsApi.list().then(function(page) {
                 return page.last();
             })
-            .finally(function() {
+            .then(_finally, _finally);
+
+            function _finally() {
                 expect(spy.calls.mostRecent().args[0].url).toEqual(linkLast);
                 done();
-            });
+            }
         });
 
         it('should store the total document count', function(done) {

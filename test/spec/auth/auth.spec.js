@@ -1,7 +1,6 @@
 'use strict';
 
 var axios = require('axios');
-var Bluebird = require('bluebird');
 
 if (typeof process === 'object' && process + '' === '[object process]') {
     global.window = {};
@@ -153,7 +152,7 @@ describe('auth', function() {
 
         it('should support refresh token URL', function() {
             var ajaxRequest;
-            var ajaxSpy = spyOn(axios, 'get').and.returnValue(Bluebird.resolve());
+            var ajaxSpy = spyOn(axios, 'get').and.returnValue(Promise.resolve());
             var win = mockWindow();
             var options = {win: win, clientId: 9999, refreshAccessTokenUrl: '/refresh'};
 
@@ -218,7 +217,7 @@ describe('auth', function() {
             });
 
             var accessToken = 'accessToken';
-            var ajaxSpy = spyOn(axios, 'post').and.returnValue(Bluebird.resolve({
+            var ajaxSpy = spyOn(axios, 'post').and.returnValue(Promise.resolve({
                 data: {
                     'access_token': accessToken
                 }
@@ -273,7 +272,7 @@ describe('auth', function() {
             var accessToken = 'accessToken';
             var refreshToken = 'newRefreshToken';
 
-            var ajaxSpy = spyOn(axios, 'post').and.returnValue(Bluebird.resolve({
+            var ajaxSpy = spyOn(axios, 'post').and.returnValue(Promise.resolve({
                 data: {
                     'access_token': accessToken,
                     'refresh_token': refreshToken

@@ -1,6 +1,5 @@
 'use strict';
 
-var Bluebird = require('bluebird');
 var assign = require('object-assign');
 var pagination = require('../../../lib/pagination');
 var Request = require('../../../lib/request');
@@ -12,7 +11,7 @@ var authFlow = mockAuth.mockImplicitGrantFlow();
 describe('pagination', function() {
 
     var requestCreateSpy;
-    var responsePromise = Bluebird.resolve({
+    var responsePromise = Promise.resolve({
         headers: {
             Header: '123'
         },

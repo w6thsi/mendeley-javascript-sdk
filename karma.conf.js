@@ -71,7 +71,7 @@ module.exports = function(config) {
 
         webpack: Object.assign( {},
                      require(process.cwd() + '/webpack.config'),
-                     { plugins: [new webpack.ProvidePlugin({ Promise: 'bluebird' })] }
+                     { plugins: [new webpack.ProvidePlugin({ Promise: 'es6-promise-promise' })] }
                  ),
 
         // Prevents webpack from logging stats on all the chunks

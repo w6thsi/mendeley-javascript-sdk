@@ -11,7 +11,6 @@ module.exports = function(app, config) {
 
     var cookieParser = require('cookie-parser');
     var sdk = require('../lib/api');
-    var Bluebird = require('bluebird');
     var accessTokenCookieName = 'accessToken';
     var refreshTokenCookieName = 'refreshToken';
     var examplesPath = '/examples';
@@ -115,9 +114,9 @@ module.exports = function(app, config) {
 
             refreshToken: function() {
                 if (!refreshToken) {
-                    return Bluebird.reject(new Error('No refresh token'));
+                    return Promise.reject(new Error('No refresh token'));
                 } else {
-                    return new Bluebird(function(resolve, reject) {
+                    return new Promise(function(resolve, reject) {
                         oauth2.accessToken.create({
                             access_token: accessToken,
                             refresh_token: refreshToken
@@ -153,7 +152,7 @@ module.exports = function(app, config) {
 
             refreshToken: function() {
                 console.log('Refreshing token');
-                return new Bluebird(function(resolve, reject) {
+                return new Promise(function(resolve, reject) {
                     oauth2.client.getToken({
                         scope: 'all'
                     }, function(error, token) {

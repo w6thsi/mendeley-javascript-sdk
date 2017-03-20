@@ -20,7 +20,7 @@ or .always() - you must use .then(), .catch(), and .finally()
     ```javascript
     spyOn(api.documents, 'create').and.returnValue($.Deferred().resolve());
     // becomes
-    spyOn(api.documents, 'create').and.returnValue(Bluebird.resolve());
+    spyOn(api.documents, 'create').and.returnValue(Promise.resolve());
     ```
 
 1. The .then() success handler now only gets one parameter - the data returned by
@@ -33,7 +33,7 @@ For projects using Webpack, include the following plugin in your config:
     ```javascript
     {
         plugins: [new webpack.ProvidePlugin({
-            Promise: 'bluebird'
+            Promise: 'es6-promise-promise'
         })];
     }
     ```
