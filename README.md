@@ -38,6 +38,12 @@ Depending on your target browsers, you may need to polyfill Promise because the 
 }
 ```
 
+Alternatively, you can pass your own Promise implementation at runtime:
+
+```js
+var sdk = require('@mendeley/api').withPromise(require('bluebird'));
+```
+
 Some ECMAScript5 features are used so for older browsers you may need to shim these methods, for example with [es5-shim][].
 
 
