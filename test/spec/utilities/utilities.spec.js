@@ -5,6 +5,7 @@ describe('utilities', function() {
     var Request = require('../../../lib/request');
     var mockAuth = require('../../mocks/auth');
     var assign = require('object-assign');
+    var Promise = require('../../../lib/promise-proxy');
     var authFlow = mockAuth.mockImplicitGrantFlow();
     var requestCreateSpy;
 

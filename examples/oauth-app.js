@@ -11,6 +11,7 @@ module.exports = function(app, config) {
 
     var cookieParser = require('cookie-parser');
     var sdk = require('../lib/api');
+    var Promise = require('../lib/promise-proxy');
     var accessTokenCookieName = 'accessToken';
     var refreshTokenCookieName = 'refreshToken';
     var examplesPath = '/examples';

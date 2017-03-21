@@ -1,6 +1,7 @@
 'use strict';
 
 var axios = require('axios');
+var Promise = require('../../../lib/promise-proxy');
 
 process.on('unhandledRejection', function() {});
 

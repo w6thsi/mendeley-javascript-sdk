@@ -1,6 +1,7 @@
 'use strict';
 
 var axios = require('axios');
+var Promise = require('../../../lib/promise-proxy');
 var sdk = require('../../../');
 var baseUrl = 'https://api.mendeley.com';
 var mockAuth = require('../../mocks/auth');

@@ -1,6 +1,7 @@
 'use strict';
 
 var assign = require('object-assign');
+var Promise = require('../../../lib/promise-proxy');
 var pagination = require('../../../lib/pagination');
 var Request = require('../../../lib/request');
 var mockAuth = require('../../mocks/auth');

@@ -1,5 +1,7 @@
 'use strict';
 
+var Promise = require('../../lib/promise-proxy');
+
 var unauthorisedError = new Error();
 unauthorisedError.response = { status: 401 };
 
