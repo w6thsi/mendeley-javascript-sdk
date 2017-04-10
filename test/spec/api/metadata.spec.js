@@ -2,7 +2,7 @@
 'use strict';
 
 var axios = require('axios');
-var Bluebird = require('bluebird');
+var Promise = require('../../../lib/promise-proxy');
 var sdk = require('../../../');
 var baseUrl = 'https://api.mendeley.com';
 var mockAuth = require('../../mocks/auth');
@@ -22,12 +22,14 @@ describe('metadata api', function() {
 
         it('should be defined', function(done) {
             expect(typeof metadataApi.retrieve).toBe('function');
-            ajaxSpy = spyOn(axios, 'request').and.returnValue(Bluebird.resolve({headers: {}}));
-            metadataApi.retrieve(params).finally(function() {
+            ajaxSpy = spyOn(axios, 'request').and.returnValue(Promise.resolve({headers: {}}));
+            metadataApi.retrieve(params).then(_finally, _finally);
+
+            function _finally() {
                 expect(ajaxSpy).toHaveBeenCalled();
                 ajaxRequest = ajaxSpy.calls.mostRecent().args[0];
                 done();
-            });
+            }
         });
 
         it('should use GET', function() {

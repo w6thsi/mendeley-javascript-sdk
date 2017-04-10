@@ -2,7 +2,7 @@
 'use strict';
 
 var axios = require('axios');
-var Bluebird = require('bluebird');
+var Promise = require('../../../lib/promise-proxy');
 var sdk = require('../../../');
 var baseUrl = 'https://api.mendeley.com';
 var mockAuth = require('../../mocks/auth');
@@ -23,13 +23,15 @@ describe('subject areas api', function() {
 
         it('be defined', function(done) {
             expect(typeof subjectAreasApi.list).toBe('function');
-            ajaxSpy = spyOn(axios, 'request').and.returnValue(Bluebird.resolve({headers: {}}));
+            ajaxSpy = spyOn(axios, 'request').and.returnValue(Promise.resolve({headers: {}}));
 
-            subjectAreasApi.list(params).finally(function() {
+            subjectAreasApi.list(params).then(_finally, _finally);
+
+            function _finally() {
                 expect(ajaxSpy).toHaveBeenCalled();
                 ajaxRequest = ajaxSpy.calls.mostRecent().args[0];
                 done();
-            });
+            }
         });
 
         it('should use GET', function() {

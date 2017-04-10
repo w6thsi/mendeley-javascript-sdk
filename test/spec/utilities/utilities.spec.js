@@ -5,7 +5,7 @@ describe('utilities', function() {
     var Request = require('../../../lib/request');
     var mockAuth = require('../../mocks/auth');
     var assign = require('object-assign');
-    var Bluebird = require('bluebird');
+    var Promise = require('../../../lib/promise-proxy');
     var authFlow = mockAuth.mockImplicitGrantFlow();
     var requestCreateSpy;
 
@@ -18,7 +18,7 @@ describe('utilities', function() {
         }
     };
 
-    var responsePromise = Bluebird.resolve({
+    var responsePromise = Promise.resolve({
         headers: {
             Header: '123'
         },

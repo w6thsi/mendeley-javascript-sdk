@@ -20,7 +20,7 @@ or .always() - you must use .then(), .catch(), and .finally()
     ```javascript
     spyOn(api.documents, 'create').and.returnValue($.Deferred().resolve());
     // becomes
-    spyOn(api.documents, 'create').and.returnValue(Bluebird.resolve());
+    spyOn(api.documents, 'create').and.returnValue(Promise.resolve());
     ```
 
 1. The .then() success handler now only gets one parameter - the data returned by
@@ -33,7 +33,7 @@ For projects using Webpack, include the following plugin in your config:
     ```javascript
     {
         plugins: [new webpack.ProvidePlugin({
-            Promise: 'bluebird'
+            Promise: 'es6-promise-promise'
         })];
     }
     ```
@@ -177,3 +177,15 @@ https://github.com/mzabriskie/axios#global-axios-defaults
 ## Upgrading to v7.x
 
 1. Removes legacy `JSON.stringify` of request data as Axios handles this natively. This should be backwards compatible, but making a major release as could break user's unit tests if they attempt to extend the built-in Request object.
+
+## Upgrading to v8.x
+
+1. Removes the implicit Bluebird dependency. Bluebird, or any Promises/A+ implementation, can be provided to this SDK and all methods that previously returned a Bluebird promise will now return an instance of the implemention explicitly provided. For example:
+
+  ```javascript
+  // old
+  var api = require('@mendeley/api');
+  
+  // new
+  var api = require('@mendeley/api').withPromise(require('bluebird'));
+  ```
