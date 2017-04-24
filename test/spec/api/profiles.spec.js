@@ -2,7 +2,7 @@
 'use strict';
 
 var axios = require('axios');
-var Bluebird = require('bluebird');
+var Promise = require('../../../lib/promise-proxy');
 var sdk = require('../../../');
 var baseUrl = 'https://api.mendeley.com';
 var mockAuth = require('../../mocks/auth');
@@ -13,7 +13,7 @@ describe('profiles api', function() {
       authFlow: mockAuth.mockImplicitGrantFlow()
     }).profiles;
 
-    var mockPromiseUpdate = Bluebird.resolve({
+    var mockPromiseUpdate = Promise.resolve({
         data: [],
         status: 200,
         headers: {
@@ -36,12 +36,14 @@ describe('profiles api', function() {
 
         it('should be defined', function(done) {
             expect(typeof profilesApi.me).toBe('function');
-            ajaxSpy = spyOn(axios, 'request').and.returnValue(Bluebird.resolve({headers: {}}));
-            profilesApi.me().finally(function() {
+            ajaxSpy = spyOn(axios, 'request').and.returnValue(Promise.resolve({headers: {}}));
+            profilesApi.me().then(_finally, _finally);
+
+            function _finally() {
                 expect(ajaxSpy).toHaveBeenCalled();
                 ajaxRequest = ajaxSpy.calls.mostRecent().args[0];
                 done();
-            });
+            }
         });
 
         it('should use GET', function() {
@@ -73,12 +75,14 @@ describe('profiles api', function() {
 
         it('should be defined', function(done) {
             expect(typeof profilesApi.retrieve).toBe('function');
-            ajaxSpy = spyOn(axios, 'request').and.returnValue(Bluebird.resolve({headers: {}}));
-            profilesApi.retrieve(123).finally(function() {
+            ajaxSpy = spyOn(axios, 'request').and.returnValue(Promise.resolve({headers: {}}));
+            profilesApi.retrieve(123).then(_finally, _finally);
+
+            function _finally() {
                 expect(ajaxSpy).toHaveBeenCalled();
                 ajaxRequest = ajaxSpy.calls.mostRecent().args[0];
                 done();
-            });
+            }
         });
 
         it('should use GET', function() {
@@ -110,11 +114,13 @@ describe('profiles api', function() {
         it('should be defined', function(done) {
             expect(typeof profilesApi.update).toBe('function');
             var ajaxSpy = spyOn(axios, 'request').and.callFake(getMockPromises(mockPromiseUpdate));
-            profilesApi.update(requestData).finally(function() {
+            profilesApi.update(requestData).then(_finally, _finally);
+
+            function _finally() {
                 expect(ajaxSpy).toHaveBeenCalled();
                 ajaxRequest = ajaxSpy.calls.mostRecent().args[0];
                 done();
-            });
+            }
         });
 
         it('should use PATCH', function() {
@@ -144,12 +150,14 @@ describe('profiles api', function() {
         var ajaxRequest;
 
         beforeEach(function(done) {
-            ajaxSpy = spyOn(axios, 'request').and.returnValue(Bluebird.resolve({headers: {}}));
-            profilesApi.retrieveByEmail('test@test.com').finally(function() {
+            ajaxSpy = spyOn(axios, 'request').and.returnValue(Promise.resolve({headers: {}}));
+            profilesApi.retrieveByEmail('test@test.com').then(_finally, _finally);
+
+            function _finally() {
                 expect(ajaxSpy).toHaveBeenCalled();
                 ajaxRequest = ajaxSpy.calls.mostRecent().args[0];
                 done();
-            });
+            }
         });
 
         it('should be defined', function() {
@@ -181,7 +189,7 @@ describe('profiles api', function() {
         var ajaxSpy;
 
         beforeEach(function() {
-            ajaxSpy = spyOn(axios, 'request').and.returnValue(Bluebird.resolve({headers: {}}));
+            ajaxSpy = spyOn(axios, 'request').and.returnValue(Promise.resolve({headers: {}}));
         });
 
         it('should pass scopus id through to the api request', function(done) {
@@ -189,13 +197,15 @@ describe('profiles api', function() {
                 scopus_author_id: '12345'
             };
 
-            profilesApi.retrieveByIdentifier(params).finally(function() {
+            profilesApi.retrieveByIdentifier(params).then(_finally, _finally);
+
+            function _finally() {
                 var ajaxRequest = ajaxSpy.calls.mostRecent().args[0];
 
                 expect(ajaxSpy).toHaveBeenCalled();
                 expect(ajaxRequest.params).toBe(params);
                 done();
-            });
+            }
         });
 
         it('should pass link paramter through to the api request', function(done) {
@@ -203,13 +213,15 @@ describe('profiles api', function() {
                 link: 'hermione-granger'
             };
 
-            profilesApi.retrieveByIdentifier(params).finally(function() {
+            profilesApi.retrieveByIdentifier(params).then(_finally, _finally);
+
+            function _finally() {
                 var ajaxRequest = ajaxSpy.calls.mostRecent().args[0];
 
                 expect(ajaxSpy).toHaveBeenCalled();
                 expect(ajaxRequest.params).toBe(params);
                 done();
-            });
+            }
         });
     });
 

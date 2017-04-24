@@ -1,7 +1,7 @@
 'use strict';
 
 var axios = require('axios');
-var Bluebird = require('bluebird');
+var Promise = require('../../../lib/promise-proxy');
 var sdk = require('../../../');
 var baseUrl = 'https://api.mendeley.com';
 var mockAuth = require('../../mocks/auth');
@@ -21,13 +21,15 @@ describe('groups api', function() {
 
         it('be defined', function(done) {
             expect(typeof groupApi.list).toBe('function');
-            ajaxSpy = spyOn(axios, 'request').and.returnValue(Bluebird.resolve({headers: {}}));
+            ajaxSpy = spyOn(axios, 'request').and.returnValue(Promise.resolve({headers: {}}));
 
-            groupApi.list(params).finally(function() {
+            groupApi.list(params).then(_finally, _finally);
+
+            function _finally() {
                 expect(ajaxSpy).toHaveBeenCalled();
                 ajaxRequest = ajaxSpy.calls.mostRecent().args[0];
                 done();
-            });
+            }
         });
 
         it('should use GET', function() {
@@ -62,12 +64,14 @@ describe('groups api', function() {
 
         it('should be defined', function(done) {
             expect(typeof groupApi.retrieve).toBe('function');
-            ajaxSpy = spyOn(axios, 'request').and.returnValue(Bluebird.resolve({headers: {}}));
-            groupApi.retrieve(123).finally(function() {
+            ajaxSpy = spyOn(axios, 'request').and.returnValue(Promise.resolve({headers: {}}));
+            groupApi.retrieve(123).then(_finally, _finally);
+
+            function _finally() {
                 expect(ajaxSpy).toHaveBeenCalled();
                 ajaxRequest = ajaxSpy.calls.mostRecent().args[0];
                 done();
-            });
+            }
         });
 
         it('should use GET', function() {
@@ -101,7 +105,7 @@ describe('groups api', function() {
         linkLast = baseUrl + '/groups/?limit=5&reverse=true';
 
         function ajaxSpy() {
-            return spyOn(axios, 'request').and.returnValue(Bluebird.resolve({
+            return spyOn(axios, 'request').and.returnValue(Promise.resolve({
                 data: [],
                 headers: {
                     link: ['<' + linkNext + '>; rel="next"', '<' + linkLast + '>; rel="last"'].join(', '),
@@ -128,10 +132,12 @@ describe('groups api', function() {
             groupApi.list().then(function(page) {
                 return page.next();
             })
-            .finally(function() {
+            .then(_finally, _finally);
+
+            function _finally() {
                 expect(spy.calls.mostRecent().args[0].url).toEqual(linkNext);
                 done();
-            });
+            }
         });
 
         it('should get correct link on last()', function(done) {
@@ -140,10 +146,12 @@ describe('groups api', function() {
             groupApi.list().then(function(page) {
                 return page.last();
             })
-            .finally(function() {
+            .then(_finally, _finally);
+
+            function _finally() {
                 expect(spy.calls.mostRecent().args[0].url).toEqual(linkLast);
                 done();
-            });
+            }
         });
 
         it('should store the total document count', function(done) {
