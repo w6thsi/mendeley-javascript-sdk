@@ -35,7 +35,7 @@ describe('groups api', function() {
         });
 
         it('should use endpoint /groups', function() {
-            expect(ajaxRequest.url).toBe(baseUrl + '/groups');
+            expect(ajaxRequest.url).toBe(baseUrl + '/groups/v2');
         });
 
         it('should NOT have a Content-Type header', function() {
@@ -71,7 +71,7 @@ describe('groups api', function() {
         });
 
         it('should use endpoint /groups/{id}', function() {
-            expect(ajaxRequest.url).toBe(baseUrl + '/groups/123');
+            expect(ajaxRequest.url).toBe(baseUrl + '/groups/v2/123');
         });
 
         it('should NOT have a Content-Type header', function() {
