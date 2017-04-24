@@ -17,21 +17,42 @@ describe('search api', function() {
             );
         });
 
-        it('calls utilities.requestFun with correct request setup', function() {
-            search(apiOptions, utilitiesMock);
-            expect(utilitiesMock.requestFun).toHaveBeenCalledWith(
-                jasmine.objectContaining({
-                    method: 'GET',
-                    resource: '/search/catalog',
-                    headers: { 'Accept': MIME_TYPES.DOCUMENT },
-                    responseFilter: utilitiesMock.paginationFilter
-                })
-            );
+        describe('catalog search', function() {
+            it('calls utilities.requestFun with correct request setup', function() {
+                search(apiOptions, utilitiesMock);
+                expect(utilitiesMock.requestFun).toHaveBeenCalledWith(
+                    jasmine.objectContaining({
+                        method: 'GET',
+                        resource: '/search/catalog',
+                        headers: { 'Accept': MIME_TYPES.DOCUMENT },
+                        responseFilter: utilitiesMock.paginationFilter
+                    })
+                );
+            });
+
+            it('returns api object with "catalog" property containing the request function', function() {
+                var searchApi = search(apiOptions, utilitiesMock);
+                expect(searchApi.catalog).toEqual(utilitiesMock.requestFun());
+            });
         });
 
-        it('returns api object with "catalog" property containing the request function', function() {
-            var searchApi = search(apiOptions, utilitiesMock);
-            expect(searchApi.catalog).toEqual(utilitiesMock.requestFun());
+        describe('profiles search', function() {
+            it('calls utilities.requestFun with correct request setup', function() {
+                search(apiOptions, utilitiesMock);
+                expect(utilitiesMock.requestFun).toHaveBeenCalledWith(
+                    jasmine.objectContaining({
+                        method: 'GET',
+                        resource: '/search/profiles',
+                        headers: { 'Accept': MIME_TYPES.PROFILE },
+                        responseFilter: utilitiesMock.paginationFilter
+                    })
+                );
+            });
+
+            it('returns api object with "profiles" property containing the request function', function() {
+                var searchApi = search(apiOptions, utilitiesMock);
+                expect(searchApi.profiles).toEqual(utilitiesMock.requestFun());
+            });
         });
     });
 
