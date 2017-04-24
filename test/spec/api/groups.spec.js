@@ -38,6 +38,10 @@ describe('groups api', function() {
             expect(ajaxRequest.url).toBe(baseUrl + '/groups/v2');
         });
 
+        it('should use the correct "Accept" header', function() {
+            expect(ajaxRequest.headers.Accept).toEqual('application/vnd.mendeley-group-list+json');
+        });
+
         it('should NOT have a Content-Type header', function() {
             expect(ajaxRequest.headers['Content-Type']).not.toBeDefined();
         });
@@ -72,6 +76,10 @@ describe('groups api', function() {
 
         it('should use endpoint /groups/{id}', function() {
             expect(ajaxRequest.url).toBe(baseUrl + '/groups/v2/123');
+        });
+
+        it('should use the correct "Accept" header', function() {
+            expect(ajaxRequest.headers.Accept).toEqual('application/vnd.mendeley-group+json');
         });
 
         it('should NOT have a Content-Type header', function() {
