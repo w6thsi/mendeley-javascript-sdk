@@ -54,6 +54,26 @@ describe('search api', function() {
                 expect(searchApi.profiles).toEqual(utilitiesMock.requestFun());
             });
         });
+
+        describe('groups search', function() {
+            it('calls utilities.requestFun with correct request setup', function() {
+                search(apiOptions, utilitiesMock);
+                expect(utilitiesMock.requestFun).toHaveBeenCalledWith(
+                    jasmine.objectContaining({
+                        method: 'GET',
+                        resource: '/search/v2/groups',
+                        headers: {
+                          'Accept': MIME_TYPES.GROUP_SEARCH_RESULTS
+                        }
+                    })
+                );
+            });
+
+            it('returns api object with "groups" property containing the request function', function() {
+                var searchApi = search(apiOptions, utilitiesMock);
+                expect(searchApi.groups).toEqual(utilitiesMock.requestFun());
+            });
+        });
     });
 
 });
