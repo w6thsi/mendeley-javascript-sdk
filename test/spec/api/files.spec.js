@@ -215,6 +215,49 @@ describe('files api', function() {
 
     });
 
+    describe('listAll method', function() {
+        var ajaxSpy;
+        var ajaxRequest;
+
+        it('be defined', function(done) {
+            expect(typeof filesApi.listAll).toBe('function');
+            ajaxSpy = spyOn(axios, 'request').and.returnValue(Promise.resolve({headers: {}}));
+            filesApi.listAll().then(_finally, _finally);
+
+            function _finally() {
+                expect(ajaxSpy).toHaveBeenCalled();
+                ajaxRequest = ajaxSpy.calls.mostRecent().args[0];
+                done();
+            }
+        });
+
+        it('should use GET', function() {
+            expect(ajaxRequest.method).toBe('get');
+        });
+
+        it('should use endpoint /files', function() {
+            expect(ajaxRequest.url).toBe(baseUrl + '/files');
+        });
+
+        it('should have an Accept header', function() {
+            expect(ajaxRequest.headers['Accept']).toBeDefined();
+        });
+
+        it('should NOT have a Content-Type header', function() {
+            expect(ajaxRequest.headers['Content-Type']).not.toBeDefined();
+        });
+
+        it('should have an Authorization header', function() {
+            expect(ajaxRequest.headers.Authorization).toBeDefined();
+            expect(ajaxRequest.headers.Authorization).toBe('Bearer auth');
+        });
+
+        it('should NOT have a body', function() {
+            expect(ajaxRequest.data).toBeUndefined();
+        });
+
+    });
+
     describe('remove method', function() {
 
         var ajaxSpy;
