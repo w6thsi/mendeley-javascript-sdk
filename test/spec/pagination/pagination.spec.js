@@ -38,7 +38,8 @@ describe('pagination', function() {
                     previous: 'http://i.am.the.previous.link',
                     dontdo: 'something'
                 },
-                'mendeley-count': 199
+                'mendeley-count': 199,
+                'date': new Date(1).toISOString()
             },
             data: [
                 { id: 1 }
@@ -62,6 +63,7 @@ describe('pagination', function() {
             var paginationResponse = pagination.filter(options, apiReponse);
 
             expect(paginationResponse.total).toBe(199);
+            expect(paginationResponse.date).toBe(new Date(1).toISOString());
             expect(paginationResponse.items).toEqual([
                 { id: 1 }
             ]);
